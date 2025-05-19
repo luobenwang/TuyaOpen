@@ -3,8 +3,6 @@
 # @brief 
 #/
 
-if (CONFIG_ENABLE_PWM STREQUAL "y")
-
 # APP_PATH
 set(APP_PATH ${CMAKE_CURRENT_LIST_DIR})
 
@@ -14,9 +12,22 @@ get_filename_component(APP_NAME ${APP_PATH} NAME)
 # APP_SRCS
 aux_source_directory(${APP_PATH}/src APP_SRCS)
 
-add_definitions(-DSTATIC_IN_RELEASE=static)
-add_definitions(-DMAJOR_VERSION=4 -DMINOR_VERSION=1 -DMICRO_VERSION=1 -DVERSION=\"4.1.1\")
+file(GLOB_RECURSE ai_audio_srcs "${APP_PATH}/src/ai_audio/*.c")
+file(GLOB_RECURSE media_srcs "${APP_PATH}/src/ai_audio/media/*.c")
+list(APPEND APP_SRCS ${ai_audio_srcs} ${media_srcs})
 
+set(APP_INC 
+            ${APP_PATH}/include
+            ${APP_PATH}/include/ai_audio
+            ${APP_PATH}/include/ai_audio/media
+)
+
+# ESP32 cannot use app header files
+if (NOT CONFIG_PLATFORM_CHOICE STREQUAL "ESP32")
+    list(APPEND APP_INC "${APP_PATH}/assets")
+endif()
+
+list(APPEND APP_INC "${APP_PATH}/src/minimp3")
 ########################################
 # Target Configure
 ########################################
@@ -26,6 +37,19 @@ target_sources(${EXAMPLE_LIB}
     PRIVATE
         ${APP_SRCS}
     )
-else()
-message(FATAL_ERROR "pwm cannot work when CONFIG_ENABLE_PWM is not set")
+
+target_include_directories(${EXAMPLE_LIB}
+    PRIVATE
+        ${APP_INC}
+    )
+
+########################################
+# Add subdirectory
+########################################
+
+if (NOT CONFIG_PLATFORM_CHOICE STREQUAL "ESP32")
+    # esp32 use idf lvgl
+    if (CONFIG_ENABLE_CHAT_DISPLAY STREQUAL "y")
+            add_subdirectory(${APP_PATH}/src/display)
+    endif()
 endif()
