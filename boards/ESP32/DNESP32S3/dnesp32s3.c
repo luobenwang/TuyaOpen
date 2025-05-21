@@ -10,7 +10,6 @@
 #include "app_board_api.h"
 
 #include "board_config.h"
-#include "oled_display.h"
 
 #include "tal_log.h"
 #include "tdd_audio_codec_bus.h"
@@ -61,14 +60,4 @@ int app_audio_driver_init(const char *name)
         .defaule_volume = 80,
     };
     return tdd_audio_es8388_codec_register(name, codec);
-}
-
-OPERATE_RET app_display_init(void)
-{
-    return OPRT_OK;
-}
-
-OPERATE_RET app_display_send_msg(TY_DISPLAY_TYPE_E tp, uint8_t *data, int len)
-{
-    return OPRT_OK;
 }
