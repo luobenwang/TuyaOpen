@@ -9,7 +9,6 @@
 #define __APP_BOARD_API_H__
 
 #include "tuya_cloud_types.h"
-#include "display_common.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,25 +26,13 @@ extern "C" {
 ********************function declaration********************
 ***********************************************************/
 
-OPERATE_RET app_audio_driver_init(const char *name);
-
 /**
- * @brief Initialize the display system
+ * @brief Initialize the audio driver
  *
- * @param None
+ * @param name Name of the audio driver
  * @return OPERATE_RET Initialization result, OPRT_OK indicates success
  */
-OPERATE_RET app_display_init(void);
-
-/**
- * @brief Send display message to the display system
- *
- * @param tp Type of the display message
- * @param data Pointer to the message data
- * @param len Length of the message data
- * @return OPERATE_RET Result of sending the message, OPRT_OK indicates success
- */
-OPERATE_RET app_display_send_msg(TY_DISPLAY_TYPE_E tp, uint8_t *data, int len);
+OPERATE_RET app_audio_driver_init(const char *name);
 
 #ifdef __cplusplus
 }
