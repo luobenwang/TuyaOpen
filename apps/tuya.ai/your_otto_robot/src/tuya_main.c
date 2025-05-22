@@ -52,12 +52,13 @@ tuya_iot_client_t ai_client;
 #define PROJECT_VERSION "1.0.0"
 #endif
 
-#define DPID_VOLUME 3
+#define DPID_VOLUME 6
 #define DPID_MOVE 5
 
 static uint8_t _need_reset = 0;
 
 extern void otto_robot_main();
+extern void otto_robot_dp_proc(uint32_t move_type);
 
 /**
  * @brief user defined log output api, in this demo, it will use uart0 as log-tx
@@ -110,9 +111,10 @@ OPERATE_RET dp_obj_proc(dp_obj_recv_t *dpobj)
         }
 
         case DPID_MOVE: {
-            uint8_t move_type = dp->value.dp_value;
+            uint32_t move_type = dp->value.dp_enum;
             PR_DEBUG("move_type:%d", move_type);
-            otto_robot_main();
+            // otto_robot_main();
+            otto_robot_dp_proc(move_type);
             break;
         }
         default:
@@ -340,6 +342,8 @@ void user_main(void)
     tkl_wifi_set_lp_mode(0,0);
 
     reset_netconfig_check();
+    extern void otto_power_on();
+    otto_power_on();
 
     for (;;) {
         /* Loop to receive packets, and handles client keepalive */

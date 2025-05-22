@@ -1,3 +1,11 @@
+//--------------------------------------------------------------
+//-- Oscillator.c
+//-- Generate sinusoidal oscillations in the servos
+//--------------------------------------------------------------
+//-- Original work (c) Juan Gonzalez-Gomez (Obijuan), Dec 2011
+//-- GPL license
+//-- Ported to Tuya AI development board by [txp666], 2025
+//--------------------------------------------------------------
 /**
  * @file example_pwm.c
  * @brief PWM driver example for Tuya IoT projects.
@@ -42,6 +50,26 @@ static THREAD_HANDLE sg_pwm_handle;
 ***********************function define**********************
 ***********************************************************/
 
+void otto_power_on()
+{
+    PR_NOTICE("开始初始化Otto机器人...");
+    
+    // 初始化Otto机器人
+    otto_init(PIN_LEFT_LEG, PIN_RIGHT_LEG, PIN_LEFT_FOOT, PIN_RIGHT_FOOT);
+    
+    // 设置舵机微调值 (如果舵机零位不准确，可以在这里调整)
+    otto_set_trims(0, 0, 0, 0);
+    
+    // 启用舵机速度限制，防止舵机运动过快
+    otto_enable_servo_limit(SERVO_LIMIT_DEFAULT);
+    
+    // 回到初始位置
+    otto_home();
+    // tal_system_sleep(1000);
+    
+    PR_NOTICE("Otto初始化完成");
+
+}
 /**
  * @brief pwm task
  *
@@ -119,7 +147,64 @@ static void __example_pwm_task(void *param)
     tal_thread_delete(sg_pwm_handle);
     return;
 }
+enum ActionType {
+    ACTION_WALK_F = 0,
+    ACTION_WALK_B ,
+    ACTION_WALK_L,
+    ACTION_WALK_R ,
+    ACTION_NONE ,
+    ACTION_BEND = 6,
+    ACTION_SHAKE_LEG = 7,
+    ACTION_UPDOWN = 8,
+    ACTION_TIPTOE_SWING = 9,
+    ACTION_JITTER = 10,
+    ACTION_ASCENDING_TURN = 11,
+    ACTION_CRUSAITO = 12,
+    ACTION_FLAPPING = 13,
+    ACTION_HANDS_UP = 14,
+    ACTION_HANDS_DOWN = 15,
+    ACTION_HAND_WAVE = 16
+};
 
+void otto_robot_dp_proc(uint32_t move_type)
+{
+    switch(move_type){
+        case ACTION_WALK_F:
+            PR_NOTICE("向前走");
+            otto_walk(1, 1000, FORWARD);  // 向前走1步
+            // tal_system_sleep(500);
+        break;
+        case ACTION_WALK_B:
+            PR_NOTICE("向后走");
+            otto_walk(1, 1000, BACKWARD);  // 向后走1步
+            // tal_system_sleep(500);
+        break;
+        case ACTION_WALK_L:
+            PR_NOTICE("向左走");
+            otto_turn(1, 1000, LEFT);  // 向左走1步
+            // tal_system_sleep(500);
+        break;
+        case ACTION_WALK_R:
+            PR_NOTICE("向右走");
+            otto_turn(1, 1000, RIGHT);  // 向右走1步
+            // tal_system_sleep(500);
+        break;
+
+        case ACTION_NONE:
+            // 设置舵机微调值 (如果舵机零位不准确，可以在这里调整)
+            otto_set_trims(0, 0, 0, 0);
+            otto_home();
+            // tal_system_sleep(1000);
+            PR_NOTICE("回到初始位置结束");
+        break;
+
+    }
+    // 设置舵机微调值 (如果舵机零位不准确，可以在这里调整)
+    otto_set_trims(0, 0, 0, 0);
+    otto_home();
+    // tal_system_sleep(1000);
+    PR_NOTICE("回到初始位置结束");
+}
 /**
  * @brief user_main
  *

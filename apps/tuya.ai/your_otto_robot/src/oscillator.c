@@ -1,3 +1,12 @@
+//--------------------------------------------------------------
+//-- Oscillator.c
+//-- Generate sinusoidal oscillations in the servos
+//--------------------------------------------------------------
+//-- Original work (c) Juan Gonzalez-Gomez (Obijuan), Dec 2011
+//-- GPL license
+//-- Ported to Tuya AI development board by [txp666], 2025
+//--------------------------------------------------------------
+
 #include "oscillator.h"
 #include <math.h>
 #include <string.h>
@@ -194,6 +203,7 @@ void oscillator_refresh(int idx) {
             if (osc->rev)
                 pos = -pos;
             oscillator_write(idx, pos + 90);
+            // PR_NOTICE("------------->[idx:%d]pos=%d",idx,pos);
         }
 
         osc->phase = osc->phase + osc->inc;

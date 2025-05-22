@@ -1,3 +1,12 @@
+//--------------------------------------------------------------
+//-- Oscillator.c
+//-- Generate sinusoidal oscillations in the servos
+//--------------------------------------------------------------
+//-- Original work (c) Juan Gonzalez-Gomez (Obijuan), Dec 2011
+//-- GPL license
+//-- Ported to Tuya AI development board by [txp666], 2025
+//--------------------------------------------------------------
+
 #include "otto_movements.h"
 #include "oscillator.h"
 #include <math.h>
@@ -190,7 +199,7 @@ void otto_execute(int amplitude[SERVO_COUNT], int offset[SERVO_COUNT], int perio
 //-- HOME = Otto at rest position -------------------------------//
 ///////////////////////////////////////////////////////////////////
 void otto_home() {
-    if (g_otto.is_otto_resting == false) {  // Go to rest position only if necessary
+    // if (g_otto.is_otto_resting == false) {  // Go to rest position only if necessary
         // 为所有舵机准备初始位置值
         int homes[SERVO_COUNT];
         for (int i = 0; i < SERVO_COUNT; i++) {
@@ -199,8 +208,8 @@ void otto_home() {
         }
 
         otto_move_servos(500, homes);  // Move the servos in half a second
-        g_otto.is_otto_resting = true;
-    }
+        // g_otto.is_otto_resting = true;
+    // }
 
     tal_system_sleep(100);
 }

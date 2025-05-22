@@ -1,3 +1,12 @@
+//--------------------------------------------------------------
+//-- Oscillator.c
+//-- Generate sinusoidal oscillations in the servos
+//--------------------------------------------------------------
+//-- Original work (c) Juan Gonzalez-Gomez (Obijuan), Dec 2011
+//-- GPL license
+//-- Ported to Tuya AI development board by [txp666], 2025
+//--------------------------------------------------------------
+
 #ifndef __OTTO_MOVEMENTS_H__
 #define __OTTO_MOVEMENTS_H__
 
