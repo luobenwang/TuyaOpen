@@ -2,23 +2,26 @@
 #
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
+import os
+import sys
+import datetime
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+current_year = datetime.datetime.now().year
 
 project = 'TuyaOpen 开发指南'
-copyright = '2021-%Y, 杭州涂鸦信息技术有限公司'
+copyright = u'2021-{}, 杭州涂鸦信息技术有限公司'.format(current_year)
 author = 'Tuya'
-release = '1.2.0'
+release = '1.3.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-# 新增站点地图基础URL配置
 html_baseurl = 'https://github.com/tuya/TuyaOpen' 
 
 extensions = [
-	'sphinx.ext.autodoc',
+    'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinx.ext.todo',
     'myst_parser',
@@ -27,6 +30,7 @@ extensions = [
     'sphinxcontrib.mermaid',
     'sphinx_design',
     'sphinx_sitemap',
+    'sphinx_multiversion',
 	]
 
 templates_path = ['_templates']
@@ -50,7 +54,7 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
 html_theme_options = {
-    # 'display_version': True,
+    'display_version': True,
     'prev_next_buttons_location': 'both',           # 在文档页面的顶部和底部同时显示 "上一页 / 下一页" 导航按钮。
     'style_external_links': False,                  # 允许外部链接的样式。
     'sticky_navigation': True,                      # 使侧边栏导航菜单在页面滚动时保持固定位置。
@@ -69,12 +73,15 @@ html_js_files = [
 ]
 
 # -- GitHub 相关配置 ---------------------------------------------------
+# 获取当前构建版本（sphinx-multiversion提供）
+current_version = os.environ.get('smv_current_version', 'master')
+
 html_context = {
     # GitHub 仓库设置（必需）
     "display_github": True,  # 启用 GitHub 链接
     "github_user": "tuya",   # 组织/用户名
     "github_repo": "TuyaOpen",  # 仓库名
-    "github_version": "master",  # 默认分支（如 main/master）
+    "github_version": current_version,  # 动态绑定当前版本
     
     # 页面路径配置（自动生成编辑链接）
     "conf_py_path": "/docs/zh/",  # 配置文件的仓库相对路径
@@ -83,3 +90,14 @@ html_context = {
 highlight_language = 'c'  # 默认高亮C语言代码
 primary_domain = 'c'      # 主文档域为C语言
 
+# sphinx-multiversion
+smv_branch_whitelist = r'^(master|release/.*)$'
+smv_remote_whitelist = r'origin'
+smv_tag_whitelist = None
+smv_outputdir_format = '{ref.name}'
+
+html_sidebars = {
+    '**': [
+        'versions.html',
+    ],
+}

@@ -366,7 +366,9 @@ OPERATE_RET app_chat_bot_init(void)
     OPERATE_RET rt = OPRT_OK;
     AI_AUDIO_CONFIG_T ai_audio_cfg;
 
-    __app_chat_bot_config_dump();
+#if defined(ENABLE_CHAT_DISPLAY) && (ENABLE_CHAT_DISPLAY == 1)
+    app_display_init();
+#endif
 
     ai_audio_cfg.work_mode = sg_chat_bot.work->auido_mode;
     ai_audio_cfg.inform_cb = __app_ai_audio_inform_cb;

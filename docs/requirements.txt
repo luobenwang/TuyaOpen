@@ -5,6 +5,7 @@ sphinx-design
 sphinx-reredirects
 typing-extensions
 sphinxcontrib-mermaid
+sphinx-multiversion
 sphinx-markdown-tables>=0.0.17
 sphinx-rtd-theme>=2.0.0
 recommonmark>=0.7.1
