@@ -157,7 +157,7 @@ pwm_chan_t ty_to_bk_pwm(TUYA_PWM_NUM_E ch_id)
 - 左右移动
 - 前后移动
 
-1. 使用语音控制Otto机器人前后左右移动（唤醒词："你好，涂鸦"等）
+4. 使用语音控制Otto机器人前后左右移动（唤醒词："你好，涂鸦"等）
 
 ### 2. AI聊天
 
@@ -172,7 +172,7 @@ pwm_chan_t ty_to_bk_pwm(TUYA_PWM_NUM_E ch_id)
 
 ## 六、资源支持
 
-- **技术交流**：加入涂鸦AI开发QQ群获取技术支持
+- **技术交流**：加入涂鸦AI开发微信&QQ群获取技术支持
 - **社区分享**：欢迎在 GitHub 或涂鸦开发者社区分享您的项目心得
   祝您成功打造属于自己的智能Otto机器人！
 
@@ -187,9 +187,7 @@ pwm_chan_t ty_to_bk_pwm(TUYA_PWM_NUM_E ch_id)
 本项目感谢以下开源项目的支持：
 
 1. OttoDIYLib
-2. OTTO ESP32
-3. Peak
-4. ElectronBot-Peripheral
+
 
 
 
