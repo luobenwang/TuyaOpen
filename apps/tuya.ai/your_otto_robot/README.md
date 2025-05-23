@@ -89,6 +89,7 @@ Otto Robot 是一个开源的人形机器人平台，支持多种功能扩展。
 ### 以上配置完成后保存：再tos build哦
 编译完成后才会下拉platform/T5AI/tuyaos/tuyaos_adapter/src/driver/tkl_pwm.c文件
 记得修改tpwm_chan_t ty_to_bk_pwm(TUYA_PWM_NUM_E ch_id)接口里面的PWM的映射表：
+```
 pwm_chan_t ty_to_bk_pwm(TUYA_PWM_NUM_E ch_id)
 {
     pwm_chan_t pwm = PWM_ID_MAX;
@@ -114,6 +115,7 @@ pwm_chan_t ty_to_bk_pwm(TUYA_PWM_NUM_E ch_id)
 
     return  pwm;
 }
+```
 
 记得再次编译：tos build
 
