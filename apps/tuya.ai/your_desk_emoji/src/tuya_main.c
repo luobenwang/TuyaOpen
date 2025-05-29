@@ -53,6 +53,7 @@ tuya_iot_client_t ai_client;
 #endif
 
 #define DPID_VOLUME 3
+#define DPID_SERVO  5
 
 static uint8_t _need_reset = 0;
 
@@ -102,6 +103,32 @@ OPERATE_RET audio_dp_obj_proc(dp_obj_recv_t *dpobj)
 #if defined(ENABLE_CHAT_DISPLAY) && (ENABLE_CHAT_DISPLAY == 1)
             snprintf(volume_str, sizeof(volume_str), "%s%d", VOLUME, volume);
             app_display_send_msg(TY_DISPLAY_TP_NOTIFICATION, (uint8_t *)volume_str, strlen(volume_str));
+#endif
+            break;
+        }
+        case DPID_SERVO: {
+            char emotion_str[20] = {0};
+            // 0-up, 1-down, 2-left, 3-right, 5-return
+            uint32_t servo_angle = dp->value.dp_enum;
+            PR_DEBUG("servo angle:%d", servo_angle);
+            switch (servo_angle) {
+                case 0:
+                case 1:
+                case 5:
+                    snprintf(emotion_str, sizeof(emotion_str), "%s", "BLINK");
+                    break;
+                case 2:
+                    snprintf(emotion_str, sizeof(emotion_str), "%s", "LEFT");
+                    break;
+                case 3:
+                    snprintf(emotion_str, sizeof(emotion_str), "%s", "RIGHT");
+                    break;
+                default:
+                    snprintf(emotion_str, sizeof(emotion_str), "%s", "NEUTRAL");
+                    break;
+            }
+#if defined(ENABLE_CHAT_DISPLAY) && (ENABLE_CHAT_DISPLAY == 1)
+            app_display_send_msg(TY_DISPLAY_TP_EMOTION, (uint8_t *)emotion_str, strlen(emotion_str));
 #endif
             break;
         }
