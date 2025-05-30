@@ -44,6 +44,7 @@
 #include "ai_audio.h"
 #include "reset_netcfg.h"
 #include "app_system_info.h"
+#include "app_servo.h"
 
 /* Tuya device handle */
 tuya_iot_client_t ai_client;
@@ -113,9 +114,16 @@ OPERATE_RET audio_dp_obj_proc(dp_obj_recv_t *dpobj)
             PR_DEBUG("servo angle:%d", servo_angle);
             switch (servo_angle) {
                 case 0:
+                    snprintf(emotion_str, sizeof(emotion_str), "%s", "BLINK");
+                    app_servo_up();
+                    break;
                 case 1:
+                    snprintf(emotion_str, sizeof(emotion_str), "%s", "BLINK");
+                    app_servo_down();
+                    break;
                 case 5:
                     snprintf(emotion_str, sizeof(emotion_str), "%s", "BLINK");
+                    app_servo_center();
                     break;
                 case 2:
                     snprintf(emotion_str, sizeof(emotion_str), "%s", "LEFT");
@@ -354,6 +362,11 @@ void user_main(void)
     tkl_wifi_set_lp_mode(0,0);
 
     reset_netconfig_check();
+
+    ret = app_servo_init();
+    if (ret != OPRT_OK) {
+        PR_ERR("app_servo_init failed: %d", ret);
+    }
 
     for (;;) {
         /* Loop to receive packets, and handles client keepalive */
