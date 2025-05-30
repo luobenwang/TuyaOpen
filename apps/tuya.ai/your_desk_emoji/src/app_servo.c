@@ -4,7 +4,7 @@
 
 #include "app_servo.h"
 
-#define SERVO_PWM_CH         TUYA_PWM_NUM_0
+#define SERVO_PWM_CH         TUYA_PWM_NUM_3
 #define SERVO_PWM_FREQ       50      // 50Hz
 #define SERVO_MIN_DUTY       250     // 0°, duty = 0.5ms/20ms * cycle = 250
 #define SERVO_MAX_DUTY       1250    // 180°, duty = 2.5ms/20ms * cycle = 1250
