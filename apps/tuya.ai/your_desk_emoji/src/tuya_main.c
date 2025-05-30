@@ -126,9 +126,11 @@ OPERATE_RET audio_dp_obj_proc(dp_obj_recv_t *dpobj)
                     app_servo_center();
                     break;
                 case 2:
+                    app_servo_left();
                     snprintf(emotion_str, sizeof(emotion_str), "%s", "LEFT");
                     break;
                 case 3:
+                    app_servo_right();
                     snprintf(emotion_str, sizeof(emotion_str), "%s", "RIGHT");
                     break;
                 default:

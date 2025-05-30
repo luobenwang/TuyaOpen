@@ -11,6 +11,8 @@ OPERATE_RET app_servo_init(VOID);
 VOID app_servo_up(VOID);
 VOID app_servo_down(VOID);
 VOID app_servo_center(VOID);
+VOID app_servo_left(VOID);
+VOID app_servo_right(VOID);
 
 #ifdef __cplusplus
 }
