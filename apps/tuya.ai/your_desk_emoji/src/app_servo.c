@@ -10,12 +10,20 @@
 #define SERVO_MIN_DUTY               250     // 0°, duty = 0.5ms/20ms * cycle = 250
 #define SERVO_MAX_DUTY               1250    // 180°, duty = 2.5ms/20ms * cycle = 1250
 #define SERVO_PWM_CYCLE              10000   // tkl_pwm cycle = 10000
-#define SERVO_STEP_COUNT             200     // Number of steps for smooth movement
+#define SERVO_STEP_COUNT             100     // Number of steps for smooth movement
 #define SERVO_MOVE_TIME_MS           2000    // Total move time in ms
 
+// 舵机动作角度常量
+#define SERVO_ANGLE_UP           0
+#define SERVO_ANGLE_DOWN         70
+#define SERVO_ANGLE_CENTER_VERT  35
+#define SERVO_ANGLE_CENTER_HORI  90
+#define SERVO_ANGLE_LEFT         30
+#define SERVO_ANGLE_RIGHT        150
+
 // 维护水平和垂直两个舵机的当前角度
-STATIC UINT_T s_servo_horizontal_angle = 90;
-STATIC UINT_T s_servo_vertical_angle   = 90;
+STATIC UINT_T s_servo_horizontal_angle = SERVO_ANGLE_CENTER_HORI;
+STATIC UINT_T s_servo_vertical_angle   = SERVO_ANGLE_CENTER_VERT;
 
 STATIC UINT32_T angle_to_duty(INT_T angle)
 {
@@ -75,13 +83,13 @@ OPERATE_RET app_servo_init(VOID)
     OPERATE_RET rt = OPRT_OK;
     TUYA_PWM_BASE_CFG_T cfg_x = {
         .frequency = SERVO_PWM_FREQ,
-        .duty = angle_to_duty(90), // 中位
+        .duty = angle_to_duty(SERVO_ANGLE_CENTER_HORI), // 中位
         .polarity = TUYA_PWM_POSITIVE,
     };
 
     TUYA_PWM_BASE_CFG_T cfg_y = {
         .frequency = SERVO_PWM_FREQ,
-        .duty = angle_to_duty(90), // 中位
+        .duty = angle_to_duty(SERVO_ANGLE_CENTER_VERT), // 中位
         .polarity = TUYA_PWM_NEGATIVE,
     };
 
@@ -96,44 +104,44 @@ OPERATE_RET app_servo_init(VOID)
     PR_DEBUG("Servo initialized on channels %d (horizontal) and %d (vertical) with frequency %dHz", 
         SERVO_PWM_HORIZONTAL, SERVO_PWM_VERTICAL, SERVO_PWM_FREQ);
 
-    s_servo_horizontal_angle = 90;
-    s_servo_vertical_angle = 90;
+    s_servo_horizontal_angle = SERVO_ANGLE_CENTER_VERT;
+    s_servo_vertical_angle = SERVO_ANGLE_CENTER_VERT;
 
     return OPRT_OK;
 }
 
-// 向上（垂直180°）
+// 向上（垂直0°）
 VOID app_servo_up(VOID)
 {
-    PR_DEBUG("Moving vertical servo to 180 degrees");
-    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, 180);
+    PR_DEBUG("Moving vertical servo to %d degrees", SERVO_ANGLE_UP);
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_UP);
 }
 
-// 向下（垂直0°）
+// 向下（垂直90°）
 VOID app_servo_down(VOID)
 {
-    PR_DEBUG("Moving vertical servo to 0 degrees");
-    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, 0);
+    PR_DEBUG("Moving vertical servo to %d degrees", SERVO_ANGLE_DOWN);
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_DOWN);
 }
 
 // 垂直回正（90°）
 VOID app_servo_center(VOID)
 {
-    PR_DEBUG("Moving vertical and horizontal servo to 90 degrees");
-    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, 90);
-    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, 90);
+    PR_DEBUG("Moving vertical and horizontal servo to %d and %d degrees", SERVO_ANGLE_CENTER_VERT, SERVO_ANGLE_CENTER_HORI);
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI);
 }
 
 // 向左（水平0°）
 VOID app_servo_left(VOID)
 {
-    PR_DEBUG("Moving horizontal servo to 0 degrees");
-    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, 0);
+    PR_DEBUG("Moving horizontal servo to %d degrees", SERVO_ANGLE_LEFT);
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_LEFT);
 }
 
 // 向右（水平180°）
 VOID app_servo_right(VOID)
 {
-    PR_DEBUG("Moving horizontal servo to 180 degrees");
-    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, 180);
+    PR_DEBUG("Moving horizontal servo to %d degrees", SERVO_ANGLE_RIGHT);
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_RIGHT);
 }
