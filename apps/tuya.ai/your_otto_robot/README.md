@@ -15,7 +15,7 @@ Otto Robot 是一个开源的人形机器人平台，支持多种功能扩展。
 ### 1. 外壳
 
 - **型号**： Otto Robot 3D打印机体外壳  
-- **购买链接**：[闲鱼](https://m.tb.cn/h.6u9sTDd?tk=FIxcVknrt7J)
+- **购买链接**：[闲鱼]
 
 ### 2. 舵机
 
@@ -52,7 +52,7 @@ Otto Robot 是一个开源的人形机器人平台，支持多种功能扩展。
 
 ### 1. 代码下载
 
-- **GitHub仓库**：[Otto Robot Demo](https://github.com/luobenwang/TuyaOpen/tree/feature/diy_demo/apps/tuya.ai/your_otto_robot)（开发者fork的demo，非TuyaOpen Master）
+- **GitHub仓库**：[Otto Robot Demo](https://github.com/luobenwang/TuyaOpen/tree/feature/diy_demo/apps/tuya.ai/your_otto_robot)（开发者fork的demo，非TuyaOpen 主仓库）
 - **主仓库**：https://github.com/tuya/TuyaOpen
 
 本次制作机器人使用第一个仓库：[Otto Robot Demo](https://github.com/luobenwang/TuyaOpen/tree/feature/diy_demo/apps/tuya.ai/your_otto_robot)

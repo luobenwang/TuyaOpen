@@ -207,7 +207,8 @@ void otto_home() {
             homes[i] = 90;
         }
 
-        otto_move_servos(500, homes);  // Move the servos in half a second
+        //otto_move_servos(500, homes);  // Move the servos in half a second
+        otto_move_servos(250, homes);  // Move the servos in one second
         // g_otto.is_otto_resting = true;
     // }
 

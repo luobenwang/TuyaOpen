@@ -52,7 +52,7 @@ static THREAD_HANDLE sg_pwm_handle;
 
 void otto_power_on()
 {
-    PR_NOTICE("开始初始化Otto机器人...");
+    PR_DEBUG("开始初始化Otto机器人...");
     
     // 初始化Otto机器人
     otto_init(PIN_LEFT_LEG, PIN_RIGHT_LEG, PIN_LEFT_FOOT, PIN_RIGHT_FOOT);
@@ -67,20 +67,19 @@ void otto_power_on()
     otto_home();
     // tal_system_sleep(1000);
     
-    PR_NOTICE("Otto初始化完成");
+    PR_DEBUG("Otto初始化完成");
 
 }
 /**
- * @brief pwm task
+ * @brief otto_Show
  *
- * @param[in] param:Task parameters
  * @return none
  */
-static void __example_pwm_task(void *param)
+static void otto_Show()
 {
     OPERATE_RET rt = OPRT_OK;
 
-    PR_NOTICE("开始初始化Otto机器人...");
+    PR_DEBUG("开始初始化Otto机器人...");
     
     // 初始化Otto机器人
     otto_init(PIN_LEFT_LEG, PIN_RIGHT_LEG, PIN_LEFT_FOOT, PIN_RIGHT_FOOT);
@@ -95,107 +94,138 @@ static void __example_pwm_task(void *param)
     otto_home();
     tal_system_sleep(1000);
     
-    PR_NOTICE("Otto初始化完成，开始演示移动...");
+    PR_DEBUG("Otto initialized,starting to show...");
 
     // 演示一系列动作
-    PR_NOTICE("演示行走动作");
+    PR_DEBUG("otto_walk");
     otto_walk(4, 1000, FORWARD);  // 向前走4步
     tal_system_sleep(500);
     
-    PR_NOTICE("演示转向动作");
+    PR_DEBUG("otto_turn");
     otto_turn(4, 1000, LEFT);  // 向左转4步
     tal_system_sleep(500);
     
-    PR_NOTICE("演示摇摆动作");
+    PR_DEBUG("otto_swing");
     otto_swing(4, 1000, 20);  // 左右摇摆4次
     tal_system_sleep(500);
     
-    PR_NOTICE("演示上下运动");
+    PR_DEBUG("otto_up_down");
     otto_up_down(4, 1000, 20);  // 上下运动4次
     tal_system_sleep(500);
     
-    PR_NOTICE("演示弯腰动作");
+    PR_DEBUG("otto_bend");
     otto_bend(2, 1000, LEFT);  // 向左弯腰2次
     tal_system_sleep(500);
     
-    PR_NOTICE("演示颤抖动作");
+    PR_DEBUG("otto_jitter");
     otto_jitter(4, 500, 20);  // 颤抖4次
     tal_system_sleep(500);
     
     // 演示其他动作
-    PR_NOTICE("演示月球漫步");
+    PR_DEBUG("otto_moonwalker");
     otto_moonwalker(4, 1000, 20, LEFT);
     tal_system_sleep(500);
     
-    PR_NOTICE("演示跳跃");
+    PR_DEBUG("otto_jump");
     otto_jump(2, 1000);
     tal_system_sleep(500);
     
-    PR_NOTICE("演示舵机自由移动");
+    //PR_DEBUG("演示舵机自由移动");
     // 通过MoveServos可以直接控制所有舵机到指定位置
-    int positions[SERVO_COUNT] = {110, 70, 120, 60};
-    otto_move_servos(1000, positions);
+    //int positions[SERVO_COUNT] = {110, 70, 120, 60};
+    //otto_move_servos(1000, positions);
     tal_system_sleep(1000);
     
     // 回到初始位置
-    PR_NOTICE("回到初始位置");
+    PR_DEBUG("otto_home");
     otto_home();
     tal_system_sleep(1000);
     
-    PR_NOTICE("演示结束");
+    PR_DEBUG("oto_show complete.");
 
-    tal_thread_delete(sg_pwm_handle);
     return;
 }
+
+
 enum ActionType {
     ACTION_WALK_F = 0,
     ACTION_WALK_B ,
     ACTION_WALK_L,
     ACTION_WALK_R ,
     ACTION_NONE ,
-    ACTION_BEND = 6,
-    ACTION_SHAKE_LEG = 7,
-    ACTION_UPDOWN = 8,
-    ACTION_TIPTOE_SWING = 9,
-    ACTION_JITTER = 10,
-    ACTION_ASCENDING_TURN = 11,
-    ACTION_CRUSAITO = 12,
-    ACTION_FLAPPING = 13,
-    ACTION_HANDS_UP = 14,
-    ACTION_HANDS_DOWN = 15,
-    ACTION_HAND_WAVE = 16
+    ACTION_SWING = 5,
+    ACTION_UP_DOWN = 6,
+    ACTION_BEND = 7,
+    ACTION_JITTER = 8,
+    ACTION_MOONWALKER = 9,
+    ACTION_JUMP = 10,
+    ACTION_SHOW = 11,
 };
 
 void otto_robot_dp_proc(uint32_t move_type)
 {
     switch(move_type){
-        case ACTION_WALK_F:
-            PR_NOTICE("向前走");
-            otto_walk(1, 1000, FORWARD);  // 向前走1步
-            // tal_system_sleep(500);
-        break;
+    case ACTION_WALK_F:
+            PR_DEBUG("Walking forward");
+            otto_walk(2, 1000, FORWARD);  // Walk forward 1 step
+            break;
+            
         case ACTION_WALK_B:
-            PR_NOTICE("向后走");
-            otto_walk(1, 1000, BACKWARD);  // 向后走1步
-            // tal_system_sleep(500);
-        break;
+            PR_DEBUG("Walking backward");
+            otto_walk(2, 1000, BACKWARD);  // Walk backward 1 step
+            break;
+            
         case ACTION_WALK_L:
-            PR_NOTICE("向左走");
-            otto_turn(1, 1000, LEFT);  // 向左走1步
-            // tal_system_sleep(500);
-        break;
+            PR_DEBUG("Walking left");
+            otto_turn(2, 1000, LEFT);  // Turn left 1 step
+            break;
+            
         case ACTION_WALK_R:
-            PR_NOTICE("向右走");
-            otto_turn(1, 1000, RIGHT);  // 向右走1步
-            // tal_system_sleep(500);
-        break;
+            PR_DEBUG("Walking right");
+            otto_turn(2, 1000, RIGHT);  // Turn right 1 step
+            break;
+            
+        case ACTION_SWING:
+            PR_DEBUG("Swinging");
+            otto_swing(4, 1000, 20);  // Swing 4 times
+            break;
+            
+        case ACTION_UP_DOWN:
+            PR_DEBUG("Moving up and down");
+            otto_up_down(4, 1000, 20);  // Move up and down 4 times
+            break;
+            
+        case ACTION_BEND:
+            PR_DEBUG("Bending");
+            otto_bend(2, 1000, LEFT);  // Bend left 2 times
+            break;
+            
+        case ACTION_JITTER:
+            PR_DEBUG("Jittering");
+            otto_jitter(4, 500, 20);  // Jitter 4 times
+            break;
+            
+        case ACTION_MOONWALKER:
+            PR_DEBUG("Performing moonwalker");
+            otto_moonwalker(4, 1000, 20, LEFT);  // Moonwalk left 4 times
+            break;
+            
+        case ACTION_JUMP:
+            PR_DEBUG("Jumping");
+            otto_jump(2, 1000);  // Jump 2 times
+            break;
+
+        case ACTION_SHOW:
+            PR_DEBUG("Performing Show");
+            otto_Show();
+            break;
 
         case ACTION_NONE:
             // 设置舵机微调值 (如果舵机零位不准确，可以在这里调整)
             otto_set_trims(0, 0, 0, 0);
             otto_home();
             // tal_system_sleep(1000);
-            PR_NOTICE("回到初始位置结束");
+            PR_DEBUG("otto_home");
         break;
 
     }
@@ -203,67 +233,6 @@ void otto_robot_dp_proc(uint32_t move_type)
     otto_set_trims(0, 0, 0, 0);
     otto_home();
     // tal_system_sleep(1000);
-    PR_NOTICE("回到初始位置结束");
-}
-/**
- * @brief user_main
- *
- * @return none
- */
-void otto_robot_main()
-{
-    OPERATE_RET rt = OPRT_OK;
-
-    /* basic init */
-    // tal_log_init(TAL_LOG_LEVEL_DEBUG, 1024, (TAL_LOG_OUTPUT_CB)tkl_log_output);
-
-    /* a pwm thread */
-    THREAD_CFG_T pwm_param = {.priority = TASK_PWM_PRIORITY, .stackDepth = TASK_PWM_SIZE, .thrdname = "pwm_task"};
-    TUYA_CALL_ERR_LOG(tal_thread_create_and_start(&sg_pwm_handle, NULL, NULL, __example_pwm_task, NULL, &pwm_param));
-
-    return;
+    PR_DEBUG("otto_home");
 }
 
-#if 0
-/**
- * @brief main
- *
- * @param argc
- * @param argv
- * @return void
- */
-#if OPERATING_SYSTEM == SYSTEM_LINUX
-void main(int argc, char *argv[])
-{
-    user_main();
-
-    while (1) {
-        tal_system_sleep(500);
-    }
-}
-#else
-
-/* Tuya thread handle */
-static THREAD_HANDLE ty_app_thread = NULL;
-
-/**
- * @brief  task thread
- *
- * @param[in] arg:Parameters when creating a task
- * @return none
- */
-static void tuya_app_thread(void *arg)
-{
-    user_main();
-
-    tal_thread_delete(ty_app_thread);
-    ty_app_thread = NULL;
-}
-
-void tuya_app_main(void)
-{
-    THREAD_CFG_T thrd_param = {4096, 4, "tuya_app_main"};
-    tal_thread_create_and_start(&ty_app_thread, NULL, NULL, tuya_app_thread, NULL, &thrd_param);
-}
-#endif
-#endif
