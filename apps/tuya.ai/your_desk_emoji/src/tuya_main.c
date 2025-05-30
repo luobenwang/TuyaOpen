@@ -109,7 +109,7 @@ OPERATE_RET audio_dp_obj_proc(dp_obj_recv_t *dpobj)
         }
         case DPID_SERVO: {
             char emotion_str[20] = {0};
-            // 0-up, 1-down, 2-left, 3-right, 5-return
+            // 0-up, 1-down, 2-left, 3-right, 4-return
             uint32_t servo_angle = dp->value.dp_enum;
             PR_DEBUG("servo angle:%d", servo_angle);
             switch (servo_angle) {
@@ -121,7 +121,7 @@ OPERATE_RET audio_dp_obj_proc(dp_obj_recv_t *dpobj)
                     snprintf(emotion_str, sizeof(emotion_str), "%s", "BLINK");
                     app_servo_down();
                     break;
-                case 5:
+                case 4:
                     snprintf(emotion_str, sizeof(emotion_str), "%s", "BLINK");
                     app_servo_center();
                     break;
