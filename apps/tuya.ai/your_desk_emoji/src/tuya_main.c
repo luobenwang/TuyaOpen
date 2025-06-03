@@ -45,6 +45,7 @@
 #include "reset_netcfg.h"
 #include "app_system_info.h"
 #include "app_servo.h"
+#include "app_gesture.h"
 
 /* Tuya device handle */
 tuya_iot_client_t ai_client;
@@ -402,6 +403,11 @@ void user_main(void)
     ret = app_servo_init();
     if (ret != OPRT_OK) {
         PR_ERR("app_servo_init failed: %d", ret);
+    }
+
+    ret = app_gesture_init();
+    if (ret != OPRT_OK) {
+        PR_ERR("app_gesture_init failed: %d", ret);
     }
 
     for (;;) {
