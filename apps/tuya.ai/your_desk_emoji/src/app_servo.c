@@ -78,6 +78,92 @@ STATIC VOID app_servo_move_to(TUYA_PWM_NUM_E ch_id, UINT_T *p_angle, INT_T targe
     *p_angle = target_angle;
 }
 
+// 垂直回正（90°）
+STATIC VOID app_servo_center(VOID)
+{
+    PR_DEBUG("Moving vertical and horizontal servo to %d and %d degrees", SERVO_ANGLE_CENTER_VERT, SERVO_ANGLE_CENTER_HORI);
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI);
+}
+
+// 点头动作：回正->下(一半)->上(一半)，循环3次，最后回正
+STATIC VOID app_servo_nod(VOID)
+{
+    UINT_T i;
+    INT_T nod_down = (SERVO_ANGLE_CENTER_VERT + SERVO_ANGLE_DOWN) / 2;
+    INT_T nod_up = (SERVO_ANGLE_CENTER_VERT + SERVO_ANGLE_UP) / 2;
+
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
+    tal_system_sleep(200);
+    for (i = 0; i < 3; ++i) {
+        app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, nod_down);
+        tal_system_sleep(150);
+        app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, nod_up);
+        tal_system_sleep(150);
+    }
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
+}
+
+// 顺时针动作：回正->同时向左和下->单独向上->单独向右->单独向下->回正
+STATIC VOID app_servo_clockwise(VOID)
+{
+    // 回正
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI);
+    tal_system_sleep(200);
+
+    // 同时向左和下
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_DOWN);
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_LEFT);
+    tal_system_sleep(200);
+
+    // 单独向上
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_UP);
+    tal_system_sleep(200);
+
+    // 单独向右
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_RIGHT);
+    tal_system_sleep(200);
+
+    // 单独向下
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_DOWN);
+    tal_system_sleep(200);
+
+    // 回正
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI);
+}
+
+// 逆时针动作：回正->同时向右和上->单独向下->单独向左->单独向上->回正
+STATIC VOID app_servo_anticlockwise(VOID)
+{
+    // 回正
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI);
+    tal_system_sleep(200);
+
+    // 同时向右和上
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_UP);
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_RIGHT);
+    tal_system_sleep(200);
+
+    // 单独向下
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_DOWN);
+    tal_system_sleep(200);
+
+    // 单独向左
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_LEFT);
+    tal_system_sleep(200);
+
+    // 单独向上
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_UP);
+    tal_system_sleep(200);
+
+    // 回正
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI);
+}
+
 OPERATE_RET app_servo_init(VOID)
 {
     OPERATE_RET rt = OPRT_OK;
@@ -110,38 +196,37 @@ OPERATE_RET app_servo_init(VOID)
     return OPRT_OK;
 }
 
-// 向上（垂直0°）
-VOID app_servo_up(VOID)
+VOID app_servo_move(SERVO_ACTION_E action)
 {
-    PR_DEBUG("Moving vertical servo to %d degrees", SERVO_ANGLE_UP);
-    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_UP);
-}
+    PR_DEBUG("servo action: %d", action);
 
-// 向下（垂直90°）
-VOID app_servo_down(VOID)
-{
-    PR_DEBUG("Moving vertical servo to %d degrees", SERVO_ANGLE_DOWN);
-    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_DOWN);
-}
-
-// 垂直回正（90°）
-VOID app_servo_center(VOID)
-{
-    PR_DEBUG("Moving vertical and horizontal servo to %d and %d degrees", SERVO_ANGLE_CENTER_VERT, SERVO_ANGLE_CENTER_HORI);
-    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
-    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI);
-}
-
-// 向左（水平0°）
-VOID app_servo_left(VOID)
-{
-    PR_DEBUG("Moving horizontal servo to %d degrees", SERVO_ANGLE_LEFT);
-    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_LEFT);
-}
-
-// 向右（水平180°）
-VOID app_servo_right(VOID)
-{
-    PR_DEBUG("Moving horizontal servo to %d degrees", SERVO_ANGLE_RIGHT);
-    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_RIGHT);
+    switch (action) {
+        case SERVO_UP:
+            app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_UP);
+            break;
+        case SERVO_DOWN:
+            app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_DOWN);
+            break;
+        case SERVO_LEFT:
+            app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_LEFT);
+            break;
+        case SERVO_RIGHT:
+            app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_RIGHT);
+            break;
+        case SERVO_NOD:
+            app_servo_nod();
+            break;
+        case SERVO_CLOCKWISE:
+            app_servo_clockwise();
+            break;
+        case SERVO_ANTICLOCKWISE:
+            app_servo_anticlockwise();
+            break;
+        case SERVO_CENTER:
+            app_servo_center();
+            break;
+        default:
+            PR_ERR("Unsupported servo action: %d", action);
+            break;
+    }
 }

@@ -57,15 +57,8 @@ tuya_iot_client_t ai_client;
 #define DPID_VOLUME 3
 #define DPID_SERVO  5
 
-typedef uint8_t USER_SERVO_CTRL_E;
-#define USER_SERVO_UP        0
-#define USER_SERVO_DOWN      1
-#define USER_SERVO_LEFT      2
-#define USER_SERVO_RIGHT     3
-#define USER_SERVO_CENTER    4
-
 static uint8_t _need_reset = 0;
-static USER_SERVO_CTRL_E _s_servo_ctrl = USER_SERVO_CENTER;
+static SERVO_ACTION_E _s_servo_action = SERVO_CENTER;
 
 /**
  * @brief user defined log output api, in this demo, it will use uart0 as log-tx
@@ -99,26 +92,65 @@ void user_upgrade_notify_on(tuya_iot_client_t *client, cJSON *upgrade)
 
 static void __servo_control_wk_cb(void *data)
 {
-    PR_DEBUG("Servo control callback, direction: %d", _s_servo_ctrl);
+    static bool _servo_busy = FALSE;
 
-    switch (_s_servo_ctrl) {
-        case USER_SERVO_UP:
-            app_servo_up();
+    PR_DEBUG("Servo action: %d", _s_servo_action);
+
+    if (_servo_busy) {
+        PR_WARN("Servo is busy");
+        return;
+    }
+    _servo_busy = TRUE;
+
+    switch (_s_servo_action) {
+        case SERVO_UP:
+        case SERVO_DOWN:
+        case SERVO_LEFT:
+        case SERVO_RIGHT:
+        case SERVO_CENTER:
+        case SERVO_NOD:
+        case SERVO_CLOCKWISE:
+        case SERVO_ANTICLOCKWISE:
+            app_servo_move(_s_servo_action);
             break;
-        case USER_SERVO_DOWN:
-            app_servo_down();
-            break;
-        case USER_SERVO_LEFT:
-            app_servo_left();
-            break;
-        case USER_SERVO_RIGHT:
-            app_servo_right();
-            break;
-        case USER_SERVO_CENTER:
         default:
-            app_servo_center();
+            PR_WARN("Unknown servo action: %d", _s_servo_action);
             break;
     }
+
+    _servo_busy = FALSE;
+}
+
+static void __gesture_detect_cb(GESTURE_TYPE_E gesture)
+{
+    PR_DEBUG("Gesture detected: %d", gesture);
+
+    switch (gesture) {
+        case GESTURE_RIGHT:
+            _s_servo_action = SERVO_RIGHT;
+            break;
+        case GESTURE_LEFT:
+            _s_servo_action = SERVO_LEFT;
+            break;
+        case GESTURE_UP:
+            _s_servo_action = SERVO_UP;
+            break;
+        case GESTURE_DOWN:
+            _s_servo_action = SERVO_DOWN;
+            break;
+        case GESTURE_CLOCKWISE:
+            break;
+        case GESTURE_ANTICLOCKWISE:
+            break;
+        case GESTURE_WAVE:
+            break;
+        case GESTURE_FORWARD:
+        case GESTURE_BACKWARD:
+        default:
+            _s_servo_action = SERVO_CENTER;
+            break;
+    }
+    tal_workq_schedule(WORKQ_SYSTEM, __servo_control_wk_cb, NULL);
 }
 
 OPERATE_RET audio_dp_obj_proc(dp_obj_recv_t *dpobj)
@@ -147,27 +179,27 @@ OPERATE_RET audio_dp_obj_proc(dp_obj_recv_t *dpobj)
             PR_DEBUG("servo angle:%d", servo_angle);
             switch (servo_angle) {
                 case 0: // up
-                    _s_servo_ctrl = USER_SERVO_UP;
+                    _s_servo_action = SERVO_UP;
                     snprintf(emotion_str, sizeof(emotion_str), "%s", "ANGRY");
                     break;
                 case 1: // down
-                    _s_servo_ctrl = USER_SERVO_DOWN;
+                    _s_servo_action = SERVO_DOWN;
                     snprintf(emotion_str, sizeof(emotion_str), "%s", "SLEEP");
                     break;
                 case 2: // left
-                    _s_servo_ctrl = USER_SERVO_LEFT;
+                    _s_servo_action = SERVO_LEFT;
                     snprintf(emotion_str, sizeof(emotion_str), "%s", "LEFT");
                     break;
                 case 3: // right
-                    _s_servo_ctrl = USER_SERVO_RIGHT;
+                    _s_servo_action = SERVO_RIGHT;
                     snprintf(emotion_str, sizeof(emotion_str), "%s", "RIGHT");
                     break;
                 case 4: // return
-                    _s_servo_ctrl = USER_SERVO_CENTER;
+                    _s_servo_action = SERVO_CENTER;
                     snprintf(emotion_str, sizeof(emotion_str), "%s", "BLINK");
                     break;
                 default:
-                    _s_servo_ctrl = USER_SERVO_CENTER;
+                    _s_servo_action = SERVO_CENTER;
                     snprintf(emotion_str, sizeof(emotion_str), "%s", "NEUTRAL");
                     break;
             }
@@ -405,7 +437,7 @@ void user_main(void)
         PR_ERR("app_servo_init failed: %d", ret);
     }
 
-    ret = app_gesture_init();
+    ret = app_gesture_init(__gesture_detect_cb);
     if (ret != OPRT_OK) {
         PR_ERR("app_gesture_init failed: %d", ret);
     }
