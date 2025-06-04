@@ -66,9 +66,9 @@ Otto Robot 是一个开源的人形机器人平台，支持多种功能扩展。
 - **UUID获取**：访问 [Tuya Open 仓库](https://github.com/tuya/TuyaOpen/tree/master) 点击 右上角"Star" 后进群获取 UUID
 - **配置T5 mini开发板引脚：**在apps/tuya.ai/your_otto_robot/ 使用命令**：**tos menuconfig 按下图操作选择
 
-![img](https://cdn.nlark.com/yuque/0/2025/png/55332580/1747998999474-55373dc6-a9af-40ab-8fcd-16f0e26539e7.png)
+![img](./imgs/project-select.png)
 
-![img](https://cdn.nlark.com/yuque/0/2025/png/55332580/1747999040807-a83e6fd0-ae2e-4aa2-9a1d-0d867b400f06.png)
+![img](./imgs/project-select.png)
 
 - **选择st7789屏幕**：在apps/tuya.ai/your_otto_robot/ 使用命令：tos menuconfig 按下图操作选择
 
