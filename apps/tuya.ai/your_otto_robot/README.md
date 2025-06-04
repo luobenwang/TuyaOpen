@@ -6,7 +6,7 @@ Otto Robot 是一个开源的人形机器人平台，支持多种功能扩展。
 
 ## 演示视频
 
-**点击观看效果**：[Otto 演示视频](https://images.tuyacn.com/rms-static/d035a230-37cb-11f0-9f57-5d628208d2a7-1748000895955.mov?tyName=otto%E6%9C%BA%E5%99%A8%E4%BA%BA.mov)
+**点击观看效果**：[Otto 演示视频](https://t.tuya.com/AY1D3VxAQs)
 
 ## 一、材料清单
 
@@ -51,10 +51,7 @@ Otto Robot 是一个开源的人形机器人平台，支持多种功能扩展。
 
 ### 1. 代码下载
 
-- **GitHub仓库**：[Otto Robot Demo](https://github.com/luobenwang/TuyaOpen/tree/feature/diy_demo/apps/tuya.ai/your_otto_robot)（开发者fork的demo，非TuyaOpen 主仓库）
 - **主仓库**：https://github.com/tuya/TuyaOpen
-
-本次制作机器人使用第一个仓库：[Otto Robot Demo](https://github.com/luobenwang/TuyaOpen/tree/feature/diy_demo/apps/tuya.ai/your_otto_robot)
 
 ### 2. 开发文档
 
