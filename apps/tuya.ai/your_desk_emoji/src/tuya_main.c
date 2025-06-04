@@ -101,23 +101,7 @@ static void __servo_control_wk_cb(void *data)
         return;
     }
     _servo_busy = TRUE;
-
-    switch (_s_servo_action) {
-        case SERVO_UP:
-        case SERVO_DOWN:
-        case SERVO_LEFT:
-        case SERVO_RIGHT:
-        case SERVO_CENTER:
-        case SERVO_NOD:
-        case SERVO_CLOCKWISE:
-        case SERVO_ANTICLOCKWISE:
-            app_servo_move(_s_servo_action);
-            break;
-        default:
-            PR_WARN("Unknown servo action: %d", _s_servo_action);
-            break;
-    }
-
+    app_servo_move(_s_servo_action);
     _servo_busy = FALSE;
 }
 
@@ -126,30 +110,32 @@ static void __gesture_detect_cb(GESTURE_TYPE_E gesture)
     PR_DEBUG("Gesture detected: %d", gesture);
 
     switch (gesture) {
-        case GESTURE_RIGHT:
-            _s_servo_action = SERVO_RIGHT;
-            break;
-        case GESTURE_LEFT:
-            _s_servo_action = SERVO_LEFT;
-            break;
-        case GESTURE_UP:
-            _s_servo_action = SERVO_UP;
-            break;
-        case GESTURE_DOWN:
-            _s_servo_action = SERVO_DOWN;
-            break;
-        case GESTURE_CLOCKWISE:
-            break;
-        case GESTURE_ANTICLOCKWISE:
-            break;
-        case GESTURE_WAVE:
-            break;
-        case GESTURE_FORWARD:
-        case GESTURE_BACKWARD:
-        default:
-            _s_servo_action = SERVO_CENTER;
-            break;
+    case GESTURE_RIGHT:
+        _s_servo_action = SERVO_RIGHT;
+        break;
+    case GESTURE_LEFT:
+        _s_servo_action = SERVO_LEFT;
+        break;
+    case GESTURE_UP:
+        _s_servo_action = SERVO_UP;
+        break;
+    case GESTURE_DOWN:
+        _s_servo_action = SERVO_DOWN;
+        break;
+    case GESTURE_CLOCKWISE:
+        _s_servo_action = SERVO_CLOCKWISE;
+        break;
+    case GESTURE_ANTICLOCKWISE:
+        _s_servo_action = SERVO_ANTICLOCKWISE;
+        break;
+    case GESTURE_WAVE:
+        _s_servo_action = SERVO_NOD;
+        break;
+    default:
+        PR_WARN("Unsupported servo action for gesture: %d", gesture);
+        return;
     }
+
     tal_workq_schedule(WORKQ_SYSTEM, __servo_control_wk_cb, NULL);
 }
 
