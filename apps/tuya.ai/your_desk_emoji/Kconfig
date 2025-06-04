@@ -65,6 +65,16 @@ config CHAT_INDICATE_LED_PIN
     range 0 64
     default 1
 
+config IIC0_SDA_PIN
+    int "the pin of IIC0 SDA"
+    range 0 64
+    default 31
+
+config IIC0_SCL_PIN
+    int "the pin of IIC0 SCL"
+    range 0 64
+    default 30
+
 config ENABLE_CHAT_DISPLAY
     bool "enable the display module"
     default n

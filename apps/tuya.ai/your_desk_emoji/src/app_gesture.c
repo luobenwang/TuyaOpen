@@ -1,4 +1,5 @@
 #include "tkl_i2c.h"
+#include "tkl_pinmux.h"
 #include "tal_log.h"
 #include "tal_thread.h"
 #include "tal_system.h"
@@ -119,6 +120,10 @@ OPERATE_RET app_gesture_init(GESTURE_CB_T cb)
     thrd_param.thrdname = "gesture_monitor";
     thrd_param.priority = THREAD_PRIO_1;
     thrd_param.stackDepth = 1024;
+
+    PR_DEBUG("i2c0 scl pin: %d, sda pin: %d", IIC0_SCL_PIN, IIC0_SDA_PIN);
+    tkl_io_pinmux_config(IIC0_SCL_PIN, TUYA_IIC0_SCL);
+    tkl_io_pinmux_config(IIC0_SDA_PIN, TUYA_IIC0_SDA);
 
     // 保存回调
     s_gesture_cb = cb;
