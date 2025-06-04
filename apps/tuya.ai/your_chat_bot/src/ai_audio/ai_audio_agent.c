@@ -19,6 +19,8 @@
 #include "tuya_ai_event.h"
 
 #include "ai_audio.h"
+#include "ai_audio_debug.h"
+
 /***********************************************************
 ************************macro define************************
 ***********************************************************/
@@ -88,18 +90,18 @@ static OPERATE_RET __ai_agent_audio_recv(AI_BIZ_ATTR_INFO_T *attr, AI_BIZ_HEAD_I
     case AI_STREAM_END: {
         AI_AGENT_MSG_T ai_msg;
 
-        if(len > 0) {
-            ai_msg.type = AI_AGENT_MSG_TP_AUDIO_DATA,
+        if (len > 0) {
+            ai_msg.type = AI_AGENT_MSG_TP_AUDIO_DATA;
             ai_msg.data_len = len;
             ai_msg.data = (uint8_t *)data;
 
             sg_ai.cbs.ai_agent_msg_cb(&ai_msg);
         }
-        
-        if(AI_STREAM_END == head->stream_flag){
-            ai_msg.type = AI_AGENT_MSG_TP_AUDIO_STOP,
+
+        if (AI_STREAM_END == head->stream_flag) {
+            ai_msg.type = AI_AGENT_MSG_TP_AUDIO_STOP;
             ai_msg.data_len = 0;
-            ai_msg.data = NULL;  
+            ai_msg.data = NULL;
 
             sg_ai.cbs.ai_agent_msg_cb(&ai_msg);
         }
@@ -115,7 +117,7 @@ static OPERATE_RET __ai_agent_audio_recv(AI_BIZ_ATTR_INFO_T *attr, AI_BIZ_HEAD_I
 
 static OPERATE_RET _parse_asr(cJSON *json)
 {
-    cJSON  *node;
+    cJSON *node;
     AI_AGENT_MSG_T ai_msg = {0};
 
     node = cJSON_GetObjectItem(json, "data");
@@ -132,7 +134,7 @@ static OPERATE_RET _parse_asr(cJSON *json)
     }
     ai_msg.type = AI_AGENT_MSG_TP_TEXT_ASR;
 
-    if(sg_ai.cbs.ai_agent_msg_cb) {
+    if (sg_ai.cbs.ai_agent_msg_cb) {
         sg_ai.cbs.ai_agent_msg_cb(&ai_msg);
     }
 
@@ -141,35 +143,35 @@ static OPERATE_RET _parse_asr(cJSON *json)
 
 static OPERATE_RET _parse_nlg(cJSON *json, uint8_t eof)
 {
-    cJSON  *node;
+    cJSON *node;
     AI_AGENT_MSG_T ai_msg = {0};
 
     node = cJSON_GetObjectItem(json, "data");
     node = cJSON_GetObjectItem(node, "content");
     const char *content = cJSON_GetStringValue(node);
 
-    if(AI_AGENT_CHAT_STREAM_START == sg_ai.stream_status) {
+    if (AI_AGENT_CHAT_STREAM_START == sg_ai.stream_status) {
         sg_ai.stream_status = AI_AGENT_CHAT_STREAM_DATA;
 
         ai_msg.type = AI_AGENT_MSG_TP_TEXT_NLG_START;
         ai_msg.data_len = strlen(sg_ai.stream_event_id);
         ai_msg.data = (uint8_t *)sg_ai.stream_event_id;
 
-        if(sg_ai.cbs.ai_agent_msg_cb) {
+        if (sg_ai.cbs.ai_agent_msg_cb) {
             sg_ai.cbs.ai_agent_msg_cb(&ai_msg);
         }
     }
 
-    if(AI_AGENT_CHAT_STREAM_DATA == sg_ai.stream_status) {
+    if (AI_AGENT_CHAT_STREAM_DATA == sg_ai.stream_status) {
         ai_msg.type = (eof ? AI_AGENT_MSG_TP_TEXT_NLG_STOP : AI_AGENT_MSG_TP_TEXT_NLG_DATA);
         ai_msg.data_len = strlen(content);
         ai_msg.data = (uint8_t *)content;
 
-        if(sg_ai.cbs.ai_agent_msg_cb) {
+        if (sg_ai.cbs.ai_agent_msg_cb) {
             sg_ai.cbs.ai_agent_msg_cb(&ai_msg);
         }
 
-        if(eof) {
+        if (eof) {
             sg_ai.stream_status = AI_AGENT_CHAT_STREAM_STOP;
         }
     }
@@ -210,14 +212,14 @@ static OPERATE_RET _parse_skill_emo(cJSON *json)
         .data = (uint8_t *)&ai_emotion,
     };
 
-    if(sg_ai.cbs.ai_agent_msg_cb) {
+    if (sg_ai.cbs.ai_agent_msg_cb) {
         sg_ai.cbs.ai_agent_msg_cb(&ai_msg);
     }
 }
 
 static OPERATE_RET _parse_skill(cJSON *json)
 {
-    cJSON  *node, *code;
+    cJSON *node, *code;
     const char *code_str;
 
     // {"bizId":"xxx","bizType":"SKILL","eof":1,"data":{"code":"emo","skillContent":{"emotion":["NEUTRAL"],"text":["😐"]}}}
@@ -233,7 +235,7 @@ static OPERATE_RET _parse_skill(cJSON *json)
     if (strcmp(code_str, "emo") == 0) {
         _parse_skill_emo(skillContent);
     }
-  
+
     return OPRT_OK;
 }
 
@@ -277,20 +279,19 @@ static OPERATE_RET __ai_agent_event_recv(AI_EVENT_TYPE type, AI_SESSION_ID sessi
     if (type == AI_EVENT_START) {
         // update stream event id
         strncpy(sg_ai.stream_event_id, event_id, AI_UUID_V4_LEN);
-        sg_ai.stream_status= AI_AGENT_CHAT_STREAM_START;
+        sg_ai.stream_status = AI_AGENT_CHAT_STREAM_START;
     } else if (type == AI_EVENT_PAYLOADS_END) {
         // clear stream event id
     } else if (type == AI_EVENT_END) {
         // stream end
-    } else if (type == AI_EVENT_CHAT_BREAK ||
-               type == AI_EVENT_SERVER_VAD) {
+    } else if (type == AI_EVENT_CHAT_BREAK || type == AI_EVENT_SERVER_VAD) {
         if (strcmp(event_id, sg_ai.stream_event_id) != 0) {
             PR_DEBUG("recv chat break or srv vad, but current stream is empty");
             return OPRT_OK;
         } else {
             // clear stream event id
             memset(sg_ai.stream_event_id, 0, AI_UUID_V4_LEN);
-        }         
+        }
     }
 
     // notify event
@@ -387,8 +388,6 @@ static OPERATE_RET __ai_agent_session_destroy(void)
     return OPRT_OK;
 }
 
-
-
 static int __ai_agent_session_new(void *data)
 {
     OPERATE_RET rt = OPRT_OK;
@@ -436,7 +435,7 @@ OPERATE_RET ai_audio_agent_init(AI_AGENT_CBS_T *cbs)
 
     memset(&sg_ai, 0, sizeof(AI_AGENT_SESSION_T));
 
-    if(cbs) {
+    if (cbs) {
         memcpy(&sg_ai.cbs, cbs, sizeof(AI_AGENT_CBS_T));
     }
 
@@ -504,7 +503,7 @@ OPERATE_RET ai_audio_agent_upload_start(uint8_t enable_vad)
 OPERATE_RET ai_audio_agent_upload_data(uint8_t *data, uint32_t len)
 {
     OPERATE_RET rt = OPRT_OK;
-    static bool is_first = true; 
+    static bool is_first = true;
 
 #if defined(AI_AUDIO_DEBUG) && (AI_AUDIO_DEBUG == 1)
     ai_audio_debug_data((char *)data, len);
@@ -537,10 +536,10 @@ OPERATE_RET ai_audio_agent_upload_data(uint8_t *data, uint32_t len)
     if (sg_ai.is_audio_upload_first_frame) {
         head.stream_flag = AI_STREAM_START;
         sg_ai.is_audio_upload_first_frame = false;
-    } else if(NULL == data) {
+    } else if (NULL == data) {
         head.stream_flag = AI_STREAM_END;
         sg_ai.is_audio_upload_first_frame = true;
-    }else {
+    } else {
         head.stream_flag = AI_STREAM_ING;
     }
 

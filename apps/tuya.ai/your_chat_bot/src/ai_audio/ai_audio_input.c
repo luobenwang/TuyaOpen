@@ -49,6 +49,7 @@ typedef struct {
 typedef struct {
     bool                          is_init;
     bool                          is_enable_get_valid_data;
+    bool                          is_manual_get_valid_data;
 
     AI_AUDIO_INPUT_STATE_E         state;
     AI_AUDIO_INPUT_VALID_METHOD_E  method;
@@ -275,7 +276,9 @@ AI_AUDIO_INPUT_STATE_E __ai_audio_input_get_new_state(AI_AUDIO_INPUT_VALID_METHO
 
     switch (method) {
     case AI_AUDIO_INPUT_VALID_METHOD_MANUAL:
-        // the state is manually controlled from the outside.
+        state = sg_audio_input.is_manual_get_valid_data ? \
+                AI_AUDIO_INPUT_STATE_GET_VALID_DATA : \
+                AI_AUDIO_INPUT_STATE_DETECTING;
         break;
     case AI_AUDIO_INPUT_VALID_METHOD_VAD:
         if (TKL_VAD_STATUS_SPEECH == tkl_vad_get_status()) {
@@ -548,7 +551,7 @@ OPERATE_RET ai_audio_input_manual_open_get_valid_data(bool is_open)
         return OPRT_NOT_SUPPORTED;
     }
 
-    sg_audio_input.state = is_open ? AI_AUDIO_INPUT_STATE_GET_VALID_DATA : AI_AUDIO_INPUT_STATE_DETECTING;
+    sg_audio_input.is_manual_get_valid_data = is_open;
 
     return OPRT_OK;
 }

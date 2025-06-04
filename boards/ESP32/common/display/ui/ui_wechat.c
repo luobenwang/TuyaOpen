@@ -401,12 +401,15 @@ static void __stream_timer_cb(lv_timer_t *lv_timer)
 
     lv_coord_t content_height = lv_obj_get_height(stream->msg_cont);
     lv_coord_t height = lv_obj_get_height(sg_ui.ui.content);
-    lv_coord_t y_position = content_height;
 
-    if (content_height > height) {
-        lv_obj_scroll_to_y(sg_ui.ui.content, y_position, LV_ANIM_OFF);
-    } else {
-        lv_obj_scroll_to_view_recursive(stream->msg_cont, LV_ANIM_OFF);
+    if(content_height > height) {
+        lv_coord_t offset = 0;
+        offset = lv_obj_get_scroll_bottom(sg_ui.ui.content);
+        if(offset > 0) {
+            lv_obj_scroll_by_bounded(sg_ui.ui.content, 0, -offset, LV_ANIM_OFF);
+        }
+    }else {
+        lv_obj_scroll_to_view_recursive(stream->msg_cont, LV_ANIM_OFF);   
     }
 
     lv_obj_update_layout(sg_ui.ui.content);

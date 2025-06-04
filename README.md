@@ -45,7 +45,9 @@ Or add the TuyaOpen path to your system environment variables.
 
 TuyaOpen can be compiled and debugged using the tos command, which will search for the TuyaOpen repository based on the path set in the environment variables and execute the corresponding operations.
 
-For detailed usage of the tos command, please refer to [tos command](./docs/en/tos_guide.rst).
+To enable auto-completion, add source `tools/completion/tos.sh` to your terminal environment configuration files such as `.bashrc` or `.zshrc`.
+
+For detailed usage of the tos command, please refer to [tos command](docs/en/tos_guide.rst).
 
 ### Step2. Select the project to be compiled
 

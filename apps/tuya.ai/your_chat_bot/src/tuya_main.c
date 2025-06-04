@@ -313,9 +313,6 @@ void user_main(void)
 
     PR_DEBUG("tuya_iot_init success");
     
-#if defined(ENABLE_CHAT_DISPLAY) && (ENABLE_CHAT_DISPLAY == 1)
-    app_display_init();
-#endif
 
     ret = app_chat_bot_init();
     if (ret != OPRT_OK) {

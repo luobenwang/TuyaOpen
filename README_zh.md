@@ -45,7 +45,9 @@ $ export PATH=$PATH:$PWD
 
 TuyaOpen 通过 tos 命令进行编译、调试等操作，tos 命令会根据环境变量中设置的路径查找 TuyaOpen 仓库，并执行对应操作。
 
-tos 命令的详细使用方法，请参考 [tos 命令](./docs/zh/tos_guide.rst)。
+如果希望使用自动补全，请将`tools/completion/tos.sh`使用`source`放入终端环境中，如`.bashrc`或`.zshrc`中。
+
+tos 命令的详细使用方法，请参考 [tos 命令](docs/zh/tos_guide/index.rst)。
 
 ### step2. 选择待编译项目
 - 方式1：编译 example
@@ -186,7 +188,7 @@ $ tos flash upgrade
 
 ## 示例工程 <span id="example"></span>
 
-不同的芯片都会对应的示例，需在 TuyaOpen 根目录下通过 `tos set_example` 命令设置示例工程，可点击 [tos set_example](https://github.com/tuya/TuyaOpen/blob/master/docs/zh/tos_guide.md#%E8%AE%BE%E7%BD%AE%E7%A4%BA%E4%BE%8B) 了解详情。
+不同的芯片都会对应的示例，需在 TuyaOpen 根目录下通过 `tos set_example` 命令设置示例工程，可点击 [tos set_example](docs/zh/tos_guide/index.rst#%E9%85%8D%E7%BD%AE%E7%AE%A1%E7%90%86) 了解详情。
 
 ```sh
 $ tos set_example
@@ -255,7 +257,7 @@ tuya.ai 是一个综合性的 AI 服务平台,提供以下核心能力:
 - 视频处理服务  
 - 多模态 AI 服务
 
-详细使用说明请参考 [tuya.ai 文档](apps/tuya.ai/README.md)
+详细使用说明请参考 [tuya.ai 文档](apps/tuya.ai/README_zh.md)
 
 ## 云连接应用
 
@@ -263,11 +265,11 @@ TuyaOpen 提供了丰富的云连接应用示例，相关应用位于 apps 目�
 
 ## platform 新增与适配
 
-TuyaOpen 支持新增与适配新的 platform，具体操作请参考 [platform 新增与适配](./docs/zh/new_platform.rst)。
+TuyaOpen 支持新增与适配新的 platform，具体操作请参考 [platform 新增与适配](./docs/zh/new_platform/index.rst)。
 
 ## board 新增与适配
 
-TuyaOpen 支持新增与适配新的 board，具体操作请参考 [board 新增与适配](./docs/zh/new_board.rst)。
+TuyaOpen 支持新增与适配新的 board，具体操作请参考 [board 新增与适配](./docs/zh/new_board/index.rst)。
 
 ## FAQ
 1. TuyaOpen 支持的 platform 通过子仓库动态下载，更新 TuyaOpen 仓库不会主动更新子仓库，如遇到问题无法正常编译，请至 platform 文件夹下对应的目录下使用 `git pull` 命令更新，或删除 platform 文件夹下对应目录后再次下载。
@@ -278,7 +280,7 @@ TuyaOpen 支持新增与适配新的 board，具体操作请参考 [board 新增
 本项目的分发遵循 Apache License 版本 2.0。有关更多信息，请参见 LICENSE 文件。
 
 ## 贡献代码
-如果您对 TuyaOpen 感兴趣，并希望参与 TuyaOpen 的开发并成为代码贡献者，请先参阅 [贡献指南](./docs/zh/contribute_guide.rst)。
+如果您对 TuyaOpen 感兴趣，并希望参与 TuyaOpen 的开发并成为代码贡献者，请先参阅 [贡献指南](./docs/zh/contribute_guide/index.rst)。
 
 ## 免责与责任条款
 
