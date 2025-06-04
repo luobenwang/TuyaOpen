@@ -1,4 +1,4 @@
-menu "configure app (your_chat_bot) "
+menu "configure app (your_otto_robot) "
 
 config ENABLE_CHAT_BOT
     bool
