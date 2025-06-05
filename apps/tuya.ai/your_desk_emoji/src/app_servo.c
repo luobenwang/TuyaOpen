@@ -94,12 +94,9 @@ STATIC VOID app_servo_nod(VOID)
     INT_T nod_up = (SERVO_ANGLE_CENTER_VERT + SERVO_ANGLE_UP) / 2;
 
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
-    tal_system_sleep(200);
     for (i = 0; i < 3; ++i) {
         app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, nod_down);
-        tal_system_sleep(150);
         app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, nod_up);
-        tal_system_sleep(150);
     }
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
 }
@@ -110,24 +107,19 @@ STATIC VOID app_servo_clockwise(VOID)
     // 回正
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
     app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI);
-    tal_system_sleep(200);
 
     // 同时向左和下
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_DOWN);
     app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_LEFT);
-    tal_system_sleep(200);
 
     // 单独向上
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_UP);
-    tal_system_sleep(200);
 
     // 单独向右
     app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_RIGHT);
-    tal_system_sleep(200);
 
     // 单独向下
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_DOWN);
-    tal_system_sleep(200);
 
     // 回正
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
@@ -140,24 +132,19 @@ STATIC VOID app_servo_anticlockwise(VOID)
     // 回正
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
     app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI);
-    tal_system_sleep(200);
 
     // 同时向右和上
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_UP);
     app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_RIGHT);
-    tal_system_sleep(200);
 
     // 单独向下
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_DOWN);
-    tal_system_sleep(200);
 
     // 单独向左
     app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_LEFT);
-    tal_system_sleep(200);
 
     // 单独向上
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_UP);
-    tal_system_sleep(200);
 
     // 回正
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);

@@ -57,6 +57,7 @@ tuya_iot_client_t ai_client;
 #define DPID_VOLUME 3
 #define DPID_SERVO  5
 
+static bool _s_servo_busy = FALSE;
 static uint8_t _need_reset = 0;
 static SERVO_ACTION_E _s_servo_action = SERVO_CENTER;
 
@@ -92,17 +93,10 @@ void user_upgrade_notify_on(tuya_iot_client_t *client, cJSON *upgrade)
 
 static void __servo_control_wk_cb(void *data)
 {
-    static bool _servo_busy = FALSE;
-
     PR_DEBUG("Servo action: %d", _s_servo_action);
-
-    if (_servo_busy) {
-        PR_WARN("Servo is busy");
-        return;
-    }
-    _servo_busy = TRUE;
+    _s_servo_busy = TRUE;
     app_servo_move(_s_servo_action);
-    _servo_busy = FALSE;
+    _s_servo_busy = FALSE;
 }
 
 static void __gesture_detect_cb(GESTURE_TYPE_E gesture)
@@ -140,6 +134,10 @@ static void __gesture_detect_cb(GESTURE_TYPE_E gesture)
         return;
     }
 
+    if (_s_servo_busy) {
+        PR_WARN("Servo is busy");
+        return;
+    }
     tal_workq_schedule(WORKQ_SYSTEM, __servo_control_wk_cb, NULL);
 }
 
@@ -204,6 +202,10 @@ OPERATE_RET audio_dp_obj_proc(dp_obj_recv_t *dpobj)
                     _s_servo_action = SERVO_CENTER;
                     snprintf(emotion_str, sizeof(emotion_str), "%s", "NEUTRAL");
                     break;
+            }
+            if (_s_servo_busy) {
+                PR_WARN("Servo is busy");
+                return;
             }
             tal_workq_schedule(WORKQ_SYSTEM, __servo_control_wk_cb, NULL);
 #if defined(ENABLE_CHAT_DISPLAY) && (ENABLE_CHAT_DISPLAY == 1)
