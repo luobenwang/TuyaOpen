@@ -17,8 +17,8 @@
 
 #define PAJ7620_VAL(val, maskbit)		( val << maskbit )
 
-#define GES_RIGHT_FLAG                  PAJ7620_VAL(1,0)
-#define GES_LEFT_FLAG                   PAJ7620_VAL(1,1)
+#define GES_LEFT_FLAG                   PAJ7620_VAL(1,0)
+#define GES_RIGHT_FLAG                  PAJ7620_VAL(1,1)
 #define GES_UP_FLAG                     PAJ7620_VAL(1,2)
 #define GES_DOWN_FLAG                   PAJ7620_VAL(1,3)
 #define GES_FORWARD_FLAG                PAJ7620_VAL(1,4)
@@ -102,7 +102,7 @@ STATIC VOID __gesture_thread_process(VOID *arg)
         if (s_gesture_cb && gesture != GESTURE_NONE) {
             s_gesture_cb(gesture);
         }
-        tal_system_sleep(200);
+        tal_system_sleep(100);
     }
 }
 

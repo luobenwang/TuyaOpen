@@ -123,13 +123,17 @@ static void __gesture_detect_cb(GESTURE_TYPE_E gesture)
         _s_servo_action = SERVO_DOWN;
         break;
     case GESTURE_CLOCKWISE:
-        _s_servo_action = SERVO_CLOCKWISE;
+        _s_servo_action = SERVO_LEFT; // TODO: GESTURE_CLOCKWISE adjust SERVO_LEFT
         break;
     case GESTURE_ANTICLOCKWISE:
-        _s_servo_action = SERVO_ANTICLOCKWISE;
+        _s_servo_action = SERVO_RIGHT;// TODO: GESTURE_ANTICLOCKWISE adjust SERVO_RIGHT
         break;
     case GESTURE_WAVE:
         _s_servo_action = SERVO_NOD;
+        break;
+    case GESTURE_BACKWARD:
+    case GESTURE_FORWARD:
+        _s_servo_action = SERVO_CENTER;
         break;
     default:
         PR_WARN("Unsupported servo action for gesture: %d", gesture);
@@ -182,6 +186,18 @@ OPERATE_RET audio_dp_obj_proc(dp_obj_recv_t *dpobj)
                     break;
                 case 4: // return
                     _s_servo_action = SERVO_CENTER;
+                    snprintf(emotion_str, sizeof(emotion_str), "%s", "BLINK");
+                    break;
+                case 5: // nod
+                    _s_servo_action = SERVO_NOD;
+                    snprintf(emotion_str, sizeof(emotion_str), "%s", "BLINK");
+                    break;
+                case 6: // clockwise
+                    _s_servo_action = SERVO_CLOCKWISE;
+                    snprintf(emotion_str, sizeof(emotion_str), "%s", "BLINK");
+                    break;
+                case 7: // anticlockwise
+                    _s_servo_action = SERVO_ANTICLOCKWISE;
                     snprintf(emotion_str, sizeof(emotion_str), "%s", "BLINK");
                     break;
                 default:
