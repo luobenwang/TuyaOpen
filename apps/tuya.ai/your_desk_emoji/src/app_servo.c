@@ -11,7 +11,7 @@
 #define SERVO_MAX_DUTY               1250    // 180°, duty = 2.5ms/20ms * cycle = 1250
 #define SERVO_PWM_CYCLE              10000   // tkl_pwm cycle = 10000
 #define SERVO_STEP_COUNT             100     // Number of steps for smooth movement
-#define SERVO_MOVE_TIME_MS           2000    // Total move time in ms
+#define SERVO_MOVE_TIME_MS           1000    // Total move time in ms
 
 // 舵机动作角度常量
 #define SERVO_ANGLE_UP           0
@@ -81,7 +81,6 @@ STATIC VOID app_servo_move_to(TUYA_PWM_NUM_E ch_id, UINT_T *p_angle, INT_T targe
 // 垂直回正（90°）
 STATIC VOID app_servo_center(VOID)
 {
-    PR_DEBUG("Moving vertical and horizontal servo to %d and %d degrees", SERVO_ANGLE_CENTER_VERT, SERVO_ANGLE_CENTER_HORI);
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
     app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI);
 }
