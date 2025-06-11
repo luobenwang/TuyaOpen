@@ -1,30 +1,30 @@
 config ENABLE_LIBLVGL
     bool "configure lvgl"
-    select ENABLE_DISPLAY_DRIVER
+    select ENABLE_DISPLAY_DRIVER if (!ENABLE_PLATFORM_LVGL)
     default n
 
 if (ENABLE_LIBLVGL)
-    config ENABLE_LVGL_DEMO
-        bool "enable lvgl demo"
-        default n
-
     config LVGL_ENABLE_TOUCH
         bool "enable lvgl touch"
-        select ENABLE_TOUCH_DRIVER
         default n
 
-    config LVGL_ENABLE_ENCODER
-        bool "enable lvgl encoder"
-        select ENABLE_ENCODER_DRIVER
-        default n
+    if (!ENABLE_PLATFORM_LVGL)
+        config ENABLE_LVGL_DEMO
+            bool "enable lvgl demo"
+            default n
 
-    config LVGL_COLOR_DEPTH
-        int "color depth"
-        range 16 32
-        default 16
+        config LVGL_ENABLE_ENCODER
+            bool "enable lvgl encoder"
+            select ENABLE_ENCODER_DRIVER
+            default n
 
-    config LVGL_COLOR_16_SWAP
-        bool "swap color bytes"
-        default n
+        config LVGL_COLOR_DEPTH
+            int "color depth"
+            range 16 32
+            default 16
 
+        config LVGL_COLOR_16_SWAP
+            bool "swap color bytes"
+            default n
+    endif
 endif

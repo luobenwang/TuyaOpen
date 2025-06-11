@@ -204,7 +204,7 @@ OPERATE_RET codec_8311_init(TUYA_I2S_NUM_E i2s_num, const TDD_AUDIO_8311_CODEC_T
     pa_pin_ = i2s_config->gpio_output_pa;
     input_sample_rate_ = i2s_config->mic_sample_rate;
     output_sample_rate_ = i2s_config->spk_sample_rate;
-    output_volume_ = i2s_config->defaule_volume;
+    output_volume_ = i2s_config->default_volume;
 
     // ESP_LOGI(TAG, ">>>>>>>>mclk=%d, bclk=%d, ws=%d, dout=%d, din=%d",
     //          i2s_config->i2s_mck_io, i2s_config->i2s_bck_io, i2s_config->i2s_ws_io,
@@ -362,7 +362,7 @@ static OPERATE_RET __tdd_audio_esp_i2s_8311_open(TDD_AUDIO_HANDLE_T handle, TDL_
 
     const THREAD_CFG_T thread_cfg = {
         .thrdname = "esp32_i2s_8311_read",
-        .stackDepth = 8 * 1024,
+        .stackDepth = 3 * 1024,
         .priority = THREAD_PRIO_1,
     };
     PR_DEBUG("I2S 8311 read task args: %p", hdl);

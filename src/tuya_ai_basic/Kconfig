@@ -15,8 +15,8 @@ menu "AI Protocol Config"
 
     config AI_SESSION_MAX_NUM
         int "AI_SESSION_MAX_NUM: ai session max num"
-        range 3 15
-        default 6
+        range 1 5
+        default 2
 
     config AI_MAX_SESSION_ID_NUM
         int "AI_MAX_SESSION_ID_NUM: ai max session id num"
@@ -44,7 +44,7 @@ menu "AI Protocol Config"
 
     config AI_WRITE_SOCKET_BUF_SIZE
         int "AI_WRITE_SOCKET_BUF_SIZE: ai server write socket size"
-        default 0
+        default 8192
 
     config AI_HEAP_IN_PSRAM
         bool "AI_HEAP_IN_PSRAM: use psram for heap"

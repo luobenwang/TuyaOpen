@@ -1,0 +1,75 @@
+menu "configure app (your_otto_robot) "
+
+config ENABLE_CHAT_BOT
+    bool
+    default y
+    select ENABLE_AUDIO_SERVICE
+    select ENABLE_VOICE_PROTOCOL_STREAM_GW
+    select ENABLE_VOICE_STREAM_GW_MID_PROTOBUF
+    select ENABLE_VOICE_STREAM_GW_MID_WEBSOCKET_CLIENT
+    select ENABLE_SPEAKER_UPLOAD_SERVICE_OPUS_ENCODE
+    select ENABLE_SPEAKER_UPLOAD_SERVICE_SPEEX_ENCODE
+
+choice 
+    prompt "choose chat mode"
+    default ENABLE_CHAT_MODE_KEY_TRIG_VAD_FREE
+
+    config ENABLE_CHAT_MODE_KEY_PRESS_HOLD_SINGEL
+    bool "press and hold button to start a single conversation."   
+
+    config ENABLE_CHAT_MODE_KEY_TRIG_VAD_FREE
+    bool "press the button once to start or stop the free conversation."
+
+    config ENABLE_CHAT_MODE_ASR_WAKEUP_SINGEL
+    bool "say the wake-up word to initiate a single conversation, similar to a smart speaker."  
+
+    config ENABLE_CHAT_MODE_ASR_WAKEUP_FREE
+    bool "saying the wake-up word, you can have a free conversation."  
+endchoice
+
+if(ENABLE_CHAT_MODE_ASR_WAKEUP_SINGEL || ENABLE_CHAT_MODE_ASR_WAKEUP_FREE)
+    choice    
+        prompt "choose wakeup keyword"
+        default ENABLE_WAKEUP_KEYWORD_NIHAO_TUYA
+
+        config ENABLE_WAKEUP_KEYWORD_NIHAO_TUYA
+        bool "the wake-up word is configured as NI HAO TUYA."   
+    
+        config ENABLE_WAKEUP_KEYWORD_NIHAO_XIAOZHI
+        bool "the wake-up word is configured as NI HAO XIAO ZHI."   
+
+        config ENABLE_WAKEUP_KEYWORD_XIAOZHI_TONGXUE
+        bool "the wake-up word is configured as XIAO ZHI TONG XUE."  
+    
+        config ENABLE_WAKEUP_KEYWORD_XIAOZHI_GUANJIA
+        bool "the wake-up word is configured as XIAO ZHI GUAN JIA."  
+    endchoice
+endif
+
+config ENABLE_AEC
+    bool "support AEC"
+    default n
+
+config SPEAKER_EN_PIN
+    int "the pin for enabling the voice module"
+    range 0 64
+    default 28
+
+config CHAT_BUTTON_PIN
+    int "the pin of the dialogue button"
+    range 0 64
+    default 12
+
+config CHAT_INDICATE_LED_PIN
+    int "the pin of the led, indicate whether it is in the process of a dialogue."
+    range 0 64
+    default 1
+
+config ENABLE_CHAT_DISPLAY
+    bool "enable the display module"
+    default n
+
+    if (ENABLE_CHAT_DISPLAY)
+        rsource "./src/display/Kconfig"
+    endif
+endmenu

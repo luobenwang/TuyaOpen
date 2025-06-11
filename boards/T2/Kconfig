@@ -19,11 +19,11 @@ rsource "./TKL_Kconfig"
 rsource "./OS_SERVICE_Kconfig"
 
 choice
-    prompt "Choice a module"
+    prompt "Choice a board"
 
-    config MODULE_CHOICE_T2_U
+    config BOARD_CHOICE_T2_U
         bool "T2-U"
-        if (MODULE_CHOICE_T2_U)
+        if (BOARD_CHOICE_T2_U)
             rsource "./T2-U/Kconfig"
         endif
 

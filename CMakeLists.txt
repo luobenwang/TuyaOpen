@@ -165,6 +165,7 @@ target_link_libraries(${EXAMPLE_LIB} ${COMPONENTS_ALL_LIB})
 ########################################
 # KEY:::"VALUE"***
 set(BUILD_PARAM_LIST "
+OPEN_ROOT:::\"${TOP_SOURCE_DIR}\"***
 OPEN_HEADER_DIR:::\"${PLATFORM_NEED_HDIR}\"***
 OPEN_LIBS_DIR:::\"${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}\"***
 PLATFORM_NEED_LIBS:::\"${PLATFORM_NEED_LIBS}\"***

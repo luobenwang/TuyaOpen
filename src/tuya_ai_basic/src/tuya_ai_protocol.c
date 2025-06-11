@@ -54,13 +54,12 @@
 #endif
 
 /**
-*
-* packet: AI_PACKET_HEAD_T+(iv)+len+payload+sign
-* len:payload+sign
-* payload: AI_PAYLOAD_HEAD_T+(attr_len+AI_ATTRIBUTE_T)+data
-*
-https://registry.code.tuya-inc.top/TuyaBEMiddleWare/steam/-/issues/1
-**/
+ *
+ * packet: AI_PACKET_HEAD_T+(iv)+len+payload+sign
+ * len:payload+sign
+ * payload: AI_PAYLOAD_HEAD_T+(attr_len+AI_ATTRIBUTE_T)+data
+ *
+ **/
 
 typedef struct {
     AI_FRAG_FLAG frag_flag;
@@ -450,7 +449,7 @@ static OPERATE_RET __ai_packet_sign(char *buf, uint8_t *signature)
 uint32_t __ai_get_send_attr_len(AI_SEND_PACKET_T *info)
 {
     uint32_t len = 0, idx = 0;
-    if ((info->count != 0) && (info->attrs)) {
+    if (info->count != 0) {
         len += sizeof(len);
         for (idx = 0; idx < info->count; idx++) {
             len += OFFSOF(AI_ATTRIBUTE_T, value) + info->attrs[idx]->length;
