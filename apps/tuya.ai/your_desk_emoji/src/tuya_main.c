@@ -40,6 +40,8 @@
 #include "app_display.h"
 #endif
 
+#include "board_com_api.h"
+
 #include "app_chat_bot.h"
 #include "ai_audio.h"
 #include "reset_netcfg.h"
@@ -256,18 +258,11 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
             PR_INFO("Device Reset!");
             tal_system_reset();
         }
-// 软重启，未配网，播报配网提示
-#if defined(ENABLE_CHAT_DISPLAY) && (ENABLE_CHAT_DISPLAY == 1)
-        app_display_send_msg(TY_DISPLAY_TP_STATUS, (uint8_t *)ENTERING_WIFI_CONFIG_MODE,
-                             strlen(ENTERING_WIFI_CONFIG_MODE));
-#endif
+
         ai_audio_player_play_alert(AI_AUDIO_ALERT_NETWORK_CFG);
         break;
 
     case TUYA_EVENT_BIND_TOKEN_ON:
-#if defined(ENABLE_CHAT_DISPLAY) && (ENABLE_CHAT_DISPLAY == 1)
-        app_display_send_msg(TY_DISPLAY_TP_STATUS, (uint8_t *)CONNECT_SERVER, strlen(CONNECT_SERVER));
-#endif
         break;
 
     /* MQTT with tuya cloud is connected, device online */
@@ -279,8 +274,8 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
         if (first) {
             first = 0;
 #if defined(ENABLE_CHAT_DISPLAY) && (ENABLE_CHAT_DISPLAY == 1)
-            app_display_send_msg(TY_DISPLAY_TP_STATUS, (uint8_t *)CONNECTED_TO, strlen(CONNECTED_TO));
-            app_system_info_loop_start();
+            UI_WIFI_STATUS_E wifi_status = UI_WIFI_STATUS_GOOD;
+            app_display_send_msg(TY_DISPLAY_TP_NETWORK, (uint8_t *)&wifi_status, sizeof(UI_WIFI_STATUS_E));
 #endif
             ai_audio_player_play_alert(AI_AUDIO_ALERT_NETWORK_CONNECTED);
             ai_audio_status_upload();
@@ -369,6 +364,17 @@ void user_main(void)
     //! open iot development kit runtim init
     cJSON_InitHooks(&(cJSON_Hooks){.malloc_fn = tal_malloc, .free_fn = tal_free});
     tal_log_init(TAL_LOG_LEVEL_DEBUG, 1024, (TAL_LOG_OUTPUT_CB)tkl_log_output);
+
+    PR_NOTICE("Application information:");
+    PR_NOTICE("Project name:        %s", PROJECT_NAME);
+    PR_NOTICE("App version:         %s", PROJECT_VERSION);
+    PR_NOTICE("Compile time:        %s", __DATE__);
+    PR_NOTICE("TuyaOpen version:    %s", OPEN_VERSION);
+    PR_NOTICE("TuyaOpen commit-id:  %s", OPEN_COMMIT);
+    PR_NOTICE("Platform chip:       %s", PLATFORM_CHIP);
+    PR_NOTICE("Platform board:      %s", PLATFORM_BOARD);
+    PR_NOTICE("Platform commit-id:  %s", PLATFORM_COMMIT);
+
     tal_kv_init(&(tal_kv_cfg_t){
         .seed = "vmlkasdh93dlvlcy",
         .key = "dflfuap134ddlduq",
@@ -389,6 +395,10 @@ void user_main(void)
                 Visit https://platform.tuya.com/purchase/index?type=6 to get the open-sdk uuid and authkey.");
     }
 
+    ret = app_chat_bot_init();
+    if (ret != OPRT_OK) {
+        PR_ERR("tuya_audio_recorde_init failed");
+    }
     /* Initialize Tuya device configuration */
     ret = tuya_iot_init(&ai_client, &(const tuya_iot_config_t){
                                         .software_ver = PROJECT_VERSION,
@@ -420,7 +430,11 @@ void user_main(void)
 #endif
 
     PR_DEBUG("tuya_iot_init success");
-    
+
+    ret = board_register_hardware();
+    if (ret != OPRT_OK) {
+        PR_ERR("board_register_hardware failed");
+    }
 
     ret = app_chat_bot_init();
     if (ret != OPRT_OK) {

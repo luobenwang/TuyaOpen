@@ -23,10 +23,7 @@ set(APP_INC
             ${APP_PATH}/include/ai_audio/media
 )
 
-# ESP32 cannot use app header files
-if (NOT CONFIG_PLATFORM_CHOICE STREQUAL "ESP32")
-    list(APPEND APP_INC "${APP_PATH}/assets")
-endif()
+list(APPEND APP_INC "${APP_PATH}/assets")
 
 list(APPEND APP_INC "${APP_PATH}/src/minimp3")
 ########################################
@@ -44,13 +41,15 @@ target_include_directories(${EXAMPLE_LIB}
         ${APP_INC}
     )
 
+target_compile_options(${EXAMPLE_LIB}
+    PRIVATE
+        "-DLV_LVGL_H_INCLUDE_SIMPLE"
+    )
+
 ########################################
 # Add subdirectory
 ########################################
 
-if (NOT CONFIG_PLATFORM_CHOICE STREQUAL "ESP32")
-    # esp32 use idf lvgl
-    if (CONFIG_ENABLE_CHAT_DISPLAY STREQUAL "y")
-            add_subdirectory(${APP_PATH}/src/display)
-    endif()
+if (CONFIG_ENABLE_CHAT_DISPLAY STREQUAL "y")
+        add_subdirectory(${APP_PATH}/src/display)
 endif()
