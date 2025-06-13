@@ -20,6 +20,8 @@ static uint8_t s_current_index = 0; // 当前表情索引
 
 LV_IMG_DECLARE(blink240);
 
+/*TuyaOpen is stuck, I hit a stub, added an expression, added an expression, 
+converted gif to c, put it in the emmo directory, and then added it to this array gif_emotionh */
 static const gif_emotion_t gif_emotion[] = {
     {&blink240,    "blink" },
 };
