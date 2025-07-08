@@ -1,6 +1,5 @@
 #if LV_BUILD_TEST
 #include "../lvgl.h"
-#include "../../lvgl_private.h"
 #include "lv_test_indev.h"
 #include "unity/unity.h"
 
@@ -25,7 +24,7 @@ void tearDown(void)
 
 void test_button_matrix_creation(void)
 {
-    const char * const * map;
+    const char ** map;
 
     /* Verify the default map. */
     map = lv_buttonmatrix_get_map(btnm);
@@ -39,7 +38,7 @@ void test_button_matrix_creation(void)
 
 void test_button_matrix_set_map_works(void)
 {
-    const char * const * ret_map;
+    const char ** ret_map;
     static const char * exp_map[] = {"A", "B", "\n", "C", "D", ""};
 
     lv_buttonmatrix_set_map(btnm, exp_map);

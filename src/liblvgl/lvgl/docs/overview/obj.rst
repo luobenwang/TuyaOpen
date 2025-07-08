@@ -154,7 +154,7 @@ the object and all of its children.
 
    void lv_obj_delete(lv_obj_t * obj);
 
-:cpp:func:`lv_obj_delete` will delete the object immediately. If for any reason you
+:cpp:func:`lv_obj_del` will delete the object immediately. If for any reason you
 can't delete the object immediately you can use
 :cpp:expr:`lv_obj_delete_async(obj)` which will perform the deletion on the next
 call of :cpp:func:`lv_timer_handler`. This is useful e.g. if you want to
@@ -166,29 +166,6 @@ using :cpp:expr:`lv_obj_clean(obj)`.
 
 You can use :cpp:expr:`lv_obj_delete_delayed(obj, 1000)` to delete an object after
 some time. The delay is expressed in milliseconds.
-
-Sometimes you're not sure whether an object was deleted and you need some way to
-check if it's still "alive". Anytime before the object is deleted, you can use
-cpp:expr:`lv_obj_null_on_delete(&obj)` to cause your object pointer to be set to ``NULL``
-when the object is deleted.
-
-Make sure the pointer variable itself stays valid until the object is deleted. Here
-is an example:
-
-.. code:: c
-
-   void some_timer_callback(lv_timer_t * t)
-   {
-      static lv_obj_t * my_label;
-      if(my_label == NULL) {
-         my_label = lv_label_create(lv_screen_active());
-         lv_obj_delete_delayed(my_label, 1000);
-         lv_obj_null_on_delete(&my_label);
-      }
-      else {
-         lv_obj_set_x(my_label, lv_obj_get_x(my_label) + 1);
-      }
-   }
 
 .. _objects_screens:
 

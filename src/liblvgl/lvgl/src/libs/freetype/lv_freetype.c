@@ -6,8 +6,7 @@
 /*********************
  *      INCLUDES
  *********************/
-#include "../../misc/lv_fs_private.h"
-#include "lv_freetype_private.h"
+#include "lv_freetype.h"
 
 #if LV_USE_FREETYPE
 
@@ -89,7 +88,7 @@ lv_result_t lv_freetype_init(uint32_t max_glyph_cnt)
         return LV_RESULT_INVALID;
     }
 
-    lv_ll_init(&ctx->face_id_ll, sizeof(face_id_node_t));
+    _lv_ll_init(&ctx->face_id_ll, sizeof(face_id_node_t));
 
     lv_cache_ops_t ops = {
         .compare_cb = (lv_cache_compare_cb_t)cache_node_cache_compare_cb,
@@ -97,7 +96,6 @@ lv_result_t lv_freetype_init(uint32_t max_glyph_cnt)
         .free_cb = (lv_cache_free_cb_t)cache_node_cache_free_cb,
     };
     ctx->cache_node_cache = lv_cache_create(&lv_cache_class_lru_rb_count, sizeof(lv_freetype_cache_node_t), INT32_MAX, ops);
-    lv_cache_set_name(ctx->cache_node_cache, "FREETYPE_CACHE_NODE");
 
     return LV_RESULT_OK;
 }
@@ -182,6 +180,7 @@ void lv_freetype_font_delete(lv_font_t * font)
     LV_ASSERT_NULL(font);
     lv_freetype_context_t * ctx = lv_freetype_get_context();
     lv_freetype_font_dsc_t * dsc = (lv_freetype_font_dsc_t *)(font->dsc);
+    LV_ASSERT_NULL(dsc);
     LV_ASSERT_FREETYPE_FONT_DSC(dsc);
 
     lv_cache_release(ctx->cache_node_cache, dsc->cache_node_entry, NULL);
@@ -290,7 +289,7 @@ static FTC_FaceID lv_freetype_req_face_id(lv_freetype_context_t * ctx, const cha
     face_id_node_t * node;
 
     /* search cache */
-    LV_LL_READ(ll_p, node) {
+    _LV_LL_READ(ll_p, node) {
         if(strcmp(node->pathname, pathname) == 0) {
             node->ref_cnt++;
             LV_LOG_INFO("reuse face_id: %s, ref_cnt = %d", node->pathname, node->ref_cnt);
@@ -299,7 +298,7 @@ static FTC_FaceID lv_freetype_req_face_id(lv_freetype_context_t * ctx, const cha
     }
 
     /* insert new cache */
-    node = lv_ll_ins_tail(ll_p);
+    node = _lv_ll_ins_tail(ll_p);
     LV_ASSERT_MALLOC(node);
 
 #if LV_USE_FS_MEMFS
@@ -328,13 +327,13 @@ static void lv_freetype_drop_face_id(lv_freetype_context_t * ctx, FTC_FaceID fac
 {
     lv_ll_t * ll_p = &ctx->face_id_ll;
     face_id_node_t * node;
-    LV_LL_READ(ll_p, node) {
+    _LV_LL_READ(ll_p, node) {
         if(face_id == node->pathname) {
             LV_LOG_INFO("found face_id: %s, ref_cnt = %d", node->pathname, node->ref_cnt);
             node->ref_cnt--;
             if(node->ref_cnt == 0) {
                 LV_LOG_INFO("drop face_id: %s", node->pathname);
-                lv_ll_remove(ll_p, node);
+                _lv_ll_remove(ll_p, node);
                 lv_free(node->pathname);
                 lv_free(node);
             }
@@ -369,14 +368,12 @@ static bool cache_node_cache_create_cb(lv_freetype_cache_node_t * node, void * u
     }
 
     node->face = face;
-    lv_mutex_init(&node->face_lock);
 
     return true;
 }
 static void cache_node_cache_free_cb(lv_freetype_cache_node_t * node, void * user_data)
 {
     FT_Done_Face(node->face);
-    lv_mutex_delete(&node->face_lock);
 
     if(node->glyph_cache) {
         lv_cache_destroy(node->glyph_cache, user_data);

@@ -11,4 +11,3 @@ Renderers and GPUs
     pxp
     stm32_dma2d
     vglite
-    vg_lite

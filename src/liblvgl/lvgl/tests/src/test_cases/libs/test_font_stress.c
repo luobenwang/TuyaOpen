@@ -1,6 +1,5 @@
 #if LV_BUILD_TEST
 #include "../lvgl.h"
-#include "../../lvgl_private.h"
 
 #include "unity/unity.h"
 
@@ -8,11 +7,11 @@
 
 #include "rnd_unicodes/lv_rnd_unicodes.h"
 
-#ifndef NON_AMD64_BUILD
+#if __WORDSIZE == 64
 #define TEST_FREETYPE_ASSERT_EQUAL_SCREENSHOT(INDEX) \
     lv_snprintf(buf, sizeof(buf), "libs/font_stress/snapshot_%0d.lp64.png", (INDEX));\
     TEST_ASSERT_EQUAL_SCREENSHOT(buf)
-#else
+#elif __WORDSIZE == 32
 #define TEST_FREETYPE_ASSERT_EQUAL_SCREENSHOT(INDEX) \
     lv_snprintf(buf, sizeof(buf), "libs/font_stress/snapshot_%0d.lp32.png", (INDEX));\
     TEST_ASSERT_EQUAL_SCREENSHOT(buf)

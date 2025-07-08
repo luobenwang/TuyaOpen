@@ -171,14 +171,13 @@ Unsubscribe from a subject
 
 .. code:: c
 
-	//`observer` is the return value of `lv_subject_add_observer*`
-    lv_observer_remove(observer);
+    lv_observer_remove(observer)
 
-To unsubscribe a widget from a given or all subject use:
+To unsubscribe from a subject with all widgets you can use:
 
 .. code:: c
 
-	lv_obj_remove_from_subject(obj, subject); //`subject` can be NULL to unsubcribe from all
+    lv_subject_remove_obj(subject, obj)
 
 .. _observer_subject_groups:
 
@@ -273,11 +272,14 @@ Set an object state if an integer subject's value is not equal to a reference va
 
     observer = lv_obj_bind_state_if_not_eq(obj, &subject, LV_STATE_*, ref_value);
 
-Set an integer subject to 1 when an object is checked and set it 0 when unchecked.
+Button
+------
+
+Set an integer subject to 1 when a button is checked and set it 0 when unchecked.
 
 .. code:: c
 
-    observer = lv_obj_bind_checked(obj, &subject);
+    observer = lv_button_bind_checked(obj, &subject);
 
 Label
 -----

@@ -1,85 +1,29 @@
-config ENABLE_DISPLAY_DRIVER
-    depends on ENABLE_LIBLVGL && !ENABLE_PLATFORM_LVGL
-    bool "enable display driver"
+config ENABLE_DISPLAY
+    bool "enable display"
     default n
 
-if (ENABLE_DISPLAY_DRIVER)
-    config DISPLAY_LCD_WIDTH
-        int "tft lcd width"
-        range 0 1000
-        default 320
-    config DISPLAY_LCD_HEIGHT
-        int "tft lcd height"
-        range 0 1000
-        default 480
-
-    config ENABLE_LCD_POWER_CTRL
-        bool "it requires controlling the power supply pin of the lcd"
-        default n
-
-        if(ENABLE_LCD_POWER_CTRL) 
-            config DISPLAY_LCD_POWER_PIN
-            int "tft lcd power pin"
-            range 0 64
-            default 7
-
-            config DISPLAY_LCD_POWER_POLARITY_LEVEL
-            int "tft lcd power active level 0:low 1:high"
-            range 0 1
-            default 1
-        endif
-
-    choice 
-        prompt "choose lcd blackbright mode"
-        default ENABLE_LCD_BL_MODE_GPIO
-
-        config ENABLE_LCD_BL_MODE_GPIO
-            bool "gpio pin control the backlight"
-
-        config ENABLE_LCD_BL_MODE_PWM
-            bool "pwm control the backlight"
-
-        config ENABLE_LCD_BL_MODE_NONE
-            bool "controlling the backlight is not supported"
-    endchoice
-
-    if (ENABLE_LCD_BL_MODE_GPIO)
-        config DISPLAY_LCD_BL_PIN
-        int "tft lcd bl pin"
-        range 0 64
-        default 9
-
-    endif
-
-    if (ENABLE_LCD_BL_MODE_PWM)
-        config DISPLAY_LCD_BL_PWM_ID
-            int "tft lcd backlight pwm id"
-            range 0 4
-            default 0
-
-        config DISPLAY_LCD_BL_PWM_FREQ
-            int "tft lcd backlight pwm freq"
-            range 1000 100000
-            default 10000
-    endif
-
-    config DISPLAY_LCD_BL_POLARITY_LEVEL
-    depends on ENABLE_LCD_BL_MODE_GPIO || ENABLE_LCD_BL_MODE_PWM
-    int "tft lcd backlight active level 0:low 1:high"
-    range 0 1
+if (ENABLE_DISPLAY)
+    config DISPLAY_NUM
+        int "the num of display"
+        range 1 4
     default 1
 
-    choice 
-        prompt "choose tft lcd interface type"
-        default ENABLE_DISPLAY_LCD_SPI
+    config DISPLAY_NAME
+        string "the name of display 1"
+        default "display"
 
-        config ENABLE_DISPLAY_LCD_RGB
-            bool "lcd rgb interface"
+    config DISPLAY_NAME_2
+        string "the name of display 2"
+        default "display2"
+        depends on (DISPLAY_NUM > 1)
 
-        config ENABLE_DISPLAY_LCD_SPI
-            bool "lcd spi interface"
-    endchoice
+    config DISPLAY_NAME_3
+        string "the name of display 3"
+        default "display3"
+        depends on (DISPLAY_NUM > 2)
+
+    config DISPLAY_NAME_4
+        string "the name of display 4"
+        default "display4"
+        depends on (DISPLAY_NUM > 3)
 endif
-
-rsource "tft_rgb/Kconfig"
-rsource "tft_spi/Kconfig"

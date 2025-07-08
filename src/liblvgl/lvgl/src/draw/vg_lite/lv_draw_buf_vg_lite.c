@@ -11,7 +11,6 @@
 
 #if LV_USE_DRAW_VG_LITE
 
-#include "../lv_draw_buf_private.h"
 #include "lv_vg_lite_utils.h"
 
 /*********************

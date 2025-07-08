@@ -1,10 +1,10 @@
 /**
- * @file lv_draw_vg_lite.h
+ * @file lv_vg_lite_draw.h
  *
  */
 
-#ifndef LV_DRAW_VG_LITE_H
-#define LV_DRAW_VG_LITE_H
+#ifndef LV_VG_LITE_DRAW_H
+#define LV_VG_LITE_DRAW_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,12 +20,6 @@ extern "C" {
 
 #include "../lv_draw.h"
 #include "../../draw/lv_draw_vector.h"
-#include "../../draw/lv_draw_arc.h"
-#include "../../draw/lv_draw_rect.h"
-#include "../../draw/lv_draw_image.h"
-#include "../../draw/lv_draw_label.h"
-#include "../../draw/lv_draw_line.h"
-#include "../../draw/lv_draw_triangle.h"
 
 /*********************
  *      DEFINES
@@ -87,4 +81,4 @@ void lv_draw_vg_lite_vector(lv_draw_unit_t * draw_unit, const lv_draw_vector_tas
 } /*extern "C"*/
 #endif
 
-#endif /*LV_DRAW_VG_LITE_H*/
+#endif /*LV_VG_LITE_DRAW_H*/

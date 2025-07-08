@@ -2,7 +2,6 @@
 * @file lv_rnd_unicodes.c
 *
 */
-#if LV_BUILD_TEST
 
 /*********************
  *      INCLUDES
@@ -64,5 +63,3 @@ int lv_random_utf8_chars(uint8_t * buf, int buf_len, const uint32_t * ranges, ui
 /**********************
  *   STATIC FUNCTIONS
  **********************/
-
-#endif /*LV_BUILD_TEST*/

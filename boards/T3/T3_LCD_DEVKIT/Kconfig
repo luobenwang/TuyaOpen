@@ -1,0 +1,14 @@
+config CHIP_CHOICE
+    string
+    default "T3"
+
+config BOARD_CHOICE
+    string
+    default "T3_LCD_DEVKIT"
+
+config BOARD_CONFIG
+    bool
+    default y
+    select ENABLE_DISPLAY
+    select ENABLE_TOUCH
+    select LVGL_COLOR_16_SWAP if(ENABLE_LIBLVGL)

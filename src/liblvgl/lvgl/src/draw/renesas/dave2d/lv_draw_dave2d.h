@@ -1,8 +1,3 @@
-/**
- * @file lv_draw_dave2d.h
- *
- */
-
 #ifndef LV_DRAW_DAVE2D_H
 #define LV_DRAW_DAVE2D_H
 

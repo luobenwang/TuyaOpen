@@ -22,8 +22,7 @@ extern "C" {
 
 #include "../../../lv_conf_internal.h"
 
-#if LV_USE_PXP
-#if LV_USE_DRAW_PXP || LV_USE_ROTATE_PXP
+#if LV_USE_DRAW_PXP
 #include "fsl_cache.h"
 #include "fsl_pxp.h"
 
@@ -94,8 +93,7 @@ void lv_pxp_wait(void);
  *      MACROS
  **********************/
 
-#endif /*LV_USE_DRAW_PXP || LV_USE_ROTATE_PXP*/
-#endif /*LV_USE_PXP*/
+#endif /*LV_USE_DRAW_PXP*/
 
 #ifdef __cplusplus
 } /*extern "C"*/

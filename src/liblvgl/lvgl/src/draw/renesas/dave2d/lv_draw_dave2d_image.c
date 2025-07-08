@@ -40,10 +40,10 @@ void lv_draw_dave2d_image(lv_draw_dave2d_unit_t * draw_unit, const lv_draw_image
                           const lv_area_t * coords)
 {
     if(!draw_dsc->tile) {
-        lv_draw_image_normal_helper((lv_draw_unit_t *)draw_unit, draw_dsc, coords, img_draw_core);
+        _lv_draw_image_normal_helper((lv_draw_unit_t *)draw_unit, draw_dsc, coords, img_draw_core);
     }
     else {
-        lv_draw_image_tiled_helper((lv_draw_unit_t *)draw_unit, draw_dsc, coords, img_draw_core);
+        _lv_draw_image_tiled_helper((lv_draw_unit_t *)draw_unit, draw_dsc, coords, img_draw_core);
     }
 }
 
@@ -85,7 +85,9 @@ static void img_draw_core(lv_draw_unit_t * u_base, const lv_draw_image_dsc_t * d
 #if LV_USE_OS
     lv_result_t  status;
     status = lv_mutex_lock(u->pd2Mutex);
-    LV_ASSERT(LV_RESULT_OK == status);
+    if(LV_RESULT_OK != status) {
+        __BKPT(0);
+    }
 #endif
 
     buffer_area = u->base_unit.target_layer->buf_area;
@@ -223,9 +225,11 @@ static void img_draw_core(lv_draw_unit_t * u_base, const lv_draw_image_dsc_t * d
     }
     else if(LV_BLEND_MODE_SUBTRACTIVE == draw_dsc->blend_mode) { /**< Subtract the foreground from the background*/
         /* TODO */
+        __NOP();
     }
     else { //LV_BLEND_MODE_MULTIPLY,   /**< Multiply the foreground and background*/
         /* TODO */
+        __NOP();
     }
 
     lv_point_t p[4] = { //Points in clockwise order
@@ -317,7 +321,9 @@ static void img_draw_core(lv_draw_unit_t * u_base, const lv_draw_image_dsc_t * d
 
 #if LV_USE_OS
     status = lv_mutex_unlock(u->pd2Mutex);
-    LV_ASSERT(LV_RESULT_OK == status);
+    if(LV_RESULT_OK != status) {
+        __BKPT(0);
+    }
 #endif
 
 }

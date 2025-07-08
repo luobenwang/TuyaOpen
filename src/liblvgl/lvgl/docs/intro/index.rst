@@ -140,13 +140,7 @@ Starting from v8, every minor release is supported for 1 year.
 +---------+--------------+--------------+--------+
 |v8.3     | 6 July, 2022 | 1 Jan, 2025  | Yes    |
 +---------+--------------+--------------+--------+
-|v8.4     | Mar 19, 2024 | Mar 20, 2025 | Yes    |
-+---------+--------------------------------------+
-|v9.0     | Jan 22, 2024 | Jan 22, 2025 | Yes    |
-+---------+--------------------------------------+
-|v9.1     | Mar 20, 2024 | Mar 20, 2025 | Yes    |
-+---------+--------------------------------------+
-|v9.2     | Aug 26, 2024 | Aug 26, 2025 | Yes    |
+|v9.0     |In progress                           |
 +---------+--------------------------------------+
 
 
@@ -199,6 +193,7 @@ LVGL doesn't start, randomly crashes or nothing is drawn on the display. What ca
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Try increasing :c:macro:`LV_MEM_SIZE`.
+* Be sure :cpp:type:`lv_display_t`, :cpp:type:`lv_indev_t` and :cpp:type:`lv_fs_drv_t` are global or `static`.
 * Be sure your display works without LVGL. E.g. paint it to red on start up.
 * Enable :ref:`logging`
 * Enable asserts in ``lv_conf.h`` (`LV_USE_ASSERT_...`)

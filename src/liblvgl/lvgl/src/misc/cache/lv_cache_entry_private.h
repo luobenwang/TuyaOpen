@@ -1,10 +1,10 @@
 /**
- * @file lv_cache_entry_private.h
- *
+* @file lv_cache_entry_private.h
+*
  */
 
-#ifndef LV_CACHE_ENTRY_PRIVATE_H
-#define LV_CACHE_ENTRY_PRIVATE_H
+#ifndef LV_CACHE_ENTRY_PRIVATE
+#define LV_CACHE_ENTRY_PRIVATE
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,8 +14,9 @@ extern "C" {
  *      INCLUDES
  *********************/
 #include "../lv_types.h"
+#include <stdbool.h>
+#include <stdlib.h>
 #include "../../osal/lv_os.h"
-#include "../lv_profiler.h"
 /*********************
  *      DEFINES
  *********************/
@@ -47,4 +48,4 @@ void   lv_cache_entry_release_data(lv_cache_entry_t * entry, void * user_data);
 } /*extern "C"*/
 #endif
 
-#endif /* LV_CACHE_ENTRY_PRIVATE_H */
+#endif /*LV_CACHE_ENTRY_PRIVATE*/

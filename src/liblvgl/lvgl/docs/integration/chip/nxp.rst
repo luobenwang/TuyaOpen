@@ -36,9 +36,7 @@ PXP accelerator
 Basic configuration:
 ^^^^^^^^^^^^^^^^^^^^
 
-- Select NXP PXP engine in "lv_conf.h": Set :c:macro:`LV_USE_PXP` to `1`.
-- In order to use PXP as a draw unit, select in "lv_conf.h": Set :c:macro:`LV_USE_DRAW_PXP` to `1`.
-- In order to use PXP to rotate the screen, select in "lv_conf.h": Set :c:macro:`LV_USE_ROTATE_PXP` to `1`.
+- Select NXP PXP engine in "lv_conf.h": Set :c:macro:`LV_USE_DRAW_PXP` to `1`.
 - Enable PXP asserts in "lv_conf.h": Set :c:macro: `LV_USE_PXP_ASSERT` to `1`.
   There are few PXP assertions that can stop the program execution in case the
   c:macro: `LV_ASSERT_HANDLER` is set to `while(1);` (Halt by default). Else,
@@ -50,16 +48,16 @@ Basic initialization:
 ^^^^^^^^^^^^^^^^^^^^^
 
 PXP draw initialization is done automatically in :cpp:func:`lv_init()` once the
-PXP is enabled as a draw unit or to rotate the screen, no user code is required:
+PXP is enabled, no user code is required:
 
 .. code:: c
 
-  #if LV_USE_DRAW_PXP || LV_USE_ROTATE_PXP
+  #if LV_USE_DRAW_PXP
     lv_draw_pxp_init();
   #endif
 
 During PXP initialization, a new draw unit `lv_draw_pxp_unit_t` will be created
-with the additional callbacks, if :c:macro:`LV_USE_DRAW_PXP` is set to `1`:
+with the additional callbacks:
 
 .. code:: c
 
@@ -73,11 +71,11 @@ handle the supported draw tasks.
 
 .. code:: c
 
-  #if LV_USE_PXP_DRAW_THREAD
+  #if LV_USE_OS
     lv_thread_init(&draw_pxp_unit->thread, LV_THREAD_PRIO_HIGH, _pxp_render_thread_cb, 2 * 1024, draw_pxp_unit);
   #endif
 
-If `LV_USE_PXP_DRAW_THREAD` is not defined, then no additional draw thread will be created
+If `LV_USE_OS` is not defined, then no additional draw thread will be created
 and the PXP drawing task will get executed on the same LVGL main thread.
 
 `_pxp_evaluate()` will get called after each task is being created and will
@@ -220,7 +218,7 @@ and height, and command buffer size are in the SDK file "vglite_support.h".
 
 .. code:: c
 
-  #if LV_USE_DRAW_VGLITE
+  #if LV_USE_GPU_NXP_VG_LITE
     #include "vg_lite.h"
     #include "vglite_support.h"
   #endif
@@ -267,11 +265,11 @@ handle the supported draw tasks.
 
 .. code:: c
 
-  #if LV_USE_VGLITE_DRAW_THREAD
+  #if LV_USE_OS
     lv_thread_init(&draw_vglite_unit->thread, LV_THREAD_PRIO_HIGH, _vglite_render_thread_cb, 2 * 1024, draw_vglite_unit);
   #endif
 
-If `LV_USE_VGLITE_DRAW_THREAD` is not defined, then no additional draw thread will be created
+If `LV_USE_OS` is not defined, then no additional draw thread will be created
 and the VGLite drawing task will get executed on the same LVGL main thread.
 
 `_vglite_evaluate()` will get called after each task is being created and will
@@ -353,7 +351,7 @@ Supported draw tasks are available in "src/draw/nxp/pxp/lv_draw_vglite.c":
             break;
     }
 
-All the below operation can be done in addition with optional opacity.
+All the below opration can be done in addition with optional opacity.
 - Fill area with color (w/ radius or gradient).
 - Blit source image (any format from `_vglite_src_cf_supported()`) over
   destination (any format from `_vglite_dest_cf_supported()`).

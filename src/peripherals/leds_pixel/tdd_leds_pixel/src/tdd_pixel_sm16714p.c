@@ -55,7 +55,7 @@ static PIXEL_DRIVER_CONFIG_T driver_info;
 ****************************function define***************************
 *********************************************************************/
 
-static VOID __tdd_sm16714p_ele_gain_transform(unsigned char *spi_data)
+static void __tdd_sm16714p_ele_gain_transform(unsigned char *spi_data)
 {
     unsigned char i = 0, j = 0, gain_data = 0;
 

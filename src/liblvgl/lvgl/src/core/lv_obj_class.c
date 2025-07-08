@@ -6,8 +6,7 @@
 /*********************
  *      INCLUDES
  *********************/
-#include "lv_obj_class_private.h"
-#include "lv_obj_private.h"
+#include "lv_obj.h"
 #include "../themes/lv_theme.h"
 #include "../display/lv_display.h"
 #include "../display/lv_display_private.h"
@@ -67,15 +66,8 @@ lv_obj_t * lv_obj_class_create_obj(const lv_obj_class_t * class_p, lv_obj_t * pa
             disp->screen_cnt = 0;
         }
 
-        lv_obj_t ** screens = lv_realloc(disp->screens, sizeof(lv_obj_t *) * (disp->screen_cnt + 1));
-        LV_ASSERT_MALLOC(screens);
-        if(screens == NULL) {
-            lv_free(obj);
-            return NULL;
-        }
-
         disp->screen_cnt++;
-        disp->screens = screens;
+        disp->screens = lv_realloc(disp->screens, sizeof(lv_obj_t *) * disp->screen_cnt);
         disp->screens[disp->screen_cnt - 1] = obj;
 
         /*Set coordinates to full screen size*/
@@ -103,8 +95,6 @@ lv_obj_t * lv_obj_class_create_obj(const lv_obj_class_t * class_p, lv_obj_t * pa
 
 void lv_obj_class_init_obj(lv_obj_t * obj)
 {
-    if(obj == NULL) return;
-
     lv_obj_mark_layout_as_dirty(obj);
     lv_obj_enable_style_refresh(false);
 
@@ -133,7 +123,7 @@ void lv_obj_class_init_obj(lv_obj_t * obj)
     }
 }
 
-void lv_obj_destruct(lv_obj_t * obj)
+void _lv_obj_destruct(lv_obj_t * obj)
 {
     if(obj->class_p->destructor_cb) obj->class_p->destructor_cb(obj->class_p, obj);
 
@@ -142,7 +132,7 @@ void lv_obj_destruct(lv_obj_t * obj)
         obj->class_p = obj->class_p->base_class;
 
         /*Call the base class's destructor too*/
-        lv_obj_destruct(obj);
+        _lv_obj_destruct(obj);
     }
 }
 

@@ -13,3 +13,25 @@ config BOARD_CONFIG
     select ENABLE_LED
     select ENABLE_BUTTON
 
+choice TUYA_T5AI_BOARD_EX_MODULE
+    prompt "choose expansion module for TUYA_T5AI_BOARD"
+    default TUYA_T5AI_BOARD_EX_MODULE_35565LCD
+
+    config TUYA_T5AI_BOARD_EX_MODULE_NONE
+        bool "no expansion module"
+
+    config TUYA_T5AI_BOARD_EX_MODULE_35565LCD
+        bool "3.5 inch 480x320 rgb565 LCD"
+        select ENABLE_DISPLAY
+        select ENABLE_TOUCH
+
+    config TUYA_T5AI_BOARD_EX_MODULE_EYES
+        bool "two circle 1.28 inch 240x240 spi LCD"
+        select ENABLE_DISPLAY
+        select LVGL_COLOR_16_SWAP if(ENABLE_LIBLVGL)
+
+    config TUYA_T5AI_BOARD_EX_MODULE_29E_INK
+        bool "2.9 inch 168x384 E-Ink screen"
+        select ENABLE_DISPLAY
+
+endchoice

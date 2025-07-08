@@ -29,27 +29,27 @@ extern "C" {
 ***********************typedef define***********************
 ***********************************************************/
 typedef struct {
-    UCHAR_T                is_start:        1;
+    uint8_t                is_start:        1;
 }PIXEL_FLAG_T;
 
 typedef struct pixel_dev_list {
     struct pixel_dev_list        *next;
 
-    CHAR_T                        name[PIXEL_DEV_NAME_MAX_LEN+1];
+    char                        name[PIXEL_DEV_NAME_MAX_LEN+1];
     MUTEX_HANDLE                  mutex;
 
     PIXEL_FLAG_T                  flag;
 
-	UINT_T                        pixel_num;  
+	uint32_t                        pixel_num;  
     USHORT_T                      pixel_resolution;
     USHORT_T                     *pixel_buffer;                //像素缓存
-    UINT_T                        pixel_buffer_len;            //像素缓存大小
+    uint32_t                        pixel_buffer_len;            //像素缓存大小
 
     SEM_HANDLE                    send_sem;
 
-    UCHAR_T                       color_num;                  //三路/四路/五路
+    uint8_t                       color_num;                  //三路/四路/五路
     PIXEL_COLOR_TP_E              pixel_color;
-    UINT_T                        color_maximum;
+    uint32_t                        color_maximum;
     DRIVER_HANDLE_T               drv_handle;
     BOOL_T                        white_color_control;         // Independent White Light and Color Light Control
     PIXEL_DRIVER_INTFS_T         *intfs;

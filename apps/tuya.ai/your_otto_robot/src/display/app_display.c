@@ -67,7 +67,7 @@ extern const lv_font_t *font_emoji_64_init(void);
 ***********************variable define**********************
 ***********************************************************/
 #if defined(BOARD_CHOICE_BREAD_COMPACT_WIFI) || defined(BOARD_CHOICE_XINGZHI_CUBE_0_96_OLED_WIFI)
-static UI_EMOJI_LIST_T sg_awesome_emo_list[EMO_ICON_MAX_NUM] = {
+static UI_EMOJI_LIST_T sg_awesome_emo_list[] = {
     {"NEUTRAL", FONT_AWESOME_EMOJI_NEUTRAL},   {"SAD", FONT_AWESOME_EMOJI_SAD},
     {"ANGRY", FONT_AWESOME_EMOJI_ANGRY},       {"SURPRISE", FONT_AWESOME_EMOJI_SURPRISED},
     {"CONFUSED", FONT_AWESOME_EMOJI_CONFUSED}, {"THINKING", FONT_AWESOME_EMOJI_THINKING},
@@ -75,7 +75,7 @@ static UI_EMOJI_LIST_T sg_awesome_emo_list[EMO_ICON_MAX_NUM] = {
 };
 #endif
 
-static UI_EMOJI_LIST_T sg_emo_list[EMO_ICON_MAX_NUM] = {
+static UI_EMOJI_LIST_T sg_emo_list[] = {
     {"NEUTRAL", "😶"},  {"SAD", "😔"},         {"ANGRY", "😠"},    {"SURPRISE", "😯"},
     {"CONFUSED", "😏"}, {"THINKING", "🤔"}, {"HAPPY", "🙂"},
 };
@@ -94,8 +94,9 @@ static OPERATE_RET __get_ui_font(UI_FONT_T *ui_font)
         return OPRT_INVALID_PARM;
     }
 
-#if (defined(BOARD_CHOICE_TUYA_T5AI_BOARD) || defined(BOARD_CHOICE_TUYA_T5AI_EVB) ||                                   \
-     defined(BOARD_CHOICE_T5AI_MOJI_1_28) || defined(BOARD_CHOICE_DNESP32S3_BOX) || defined(BOARD_CHOICE_TUYA_T5AI_MINI))
+#if (defined(BOARD_CHOICE_TUYA_T5AI_BOARD) || defined(BOARD_CHOICE_TUYA_T5AI_EVB) || \
+     defined(BOARD_CHOICE_T5AI_MOJI_1_28) || defined(BOARD_CHOICE_TUYA_T5AI_MINI) ||\
+     defined(BOARD_CHOICE_DNESP32S3_BOX))
 #if defined(ENABLE_GUI_WECHAT)
     ui_font->text = (lv_font_t *)&font_puhui_18_2;
     ui_font->icon = (lv_font_t *)&font_awesome_16_4;

@@ -49,7 +49,7 @@ static PIXEL_PWM_CFG_T *g_pwm_cfg = NULL;
 ****************************function define***************************
 *********************************************************************/
 
-STATIC void __tdd_16703_4bit_rgb_transform_spi_data(unsigned char color_data, unsigned char *spi_data_buf)
+static void __tdd_16703_4bit_rgb_transform_spi_data(unsigned char color_data, unsigned char *spi_data_buf)
 {
     unsigned char i = 0;
 
@@ -201,8 +201,8 @@ OPERATE_RET tdd_sm16703p_opt_driver_config(DRIVER_HANDLE_T handle, unsigned char
             }
             pwm_cfg->active_level = g_pwm_cfg->active_level;
             pwm_cfg->pwm_freq = g_pwm_cfg->pwm_freq;
-            memcpy((UCHAR_T *)pwm_cfg->pwm_ch_arr, (UCHAR_T *)g_pwm_cfg->pwm_ch_arr, SIZEOF(g_pwm_cfg->pwm_ch_arr));
-            memcpy((UCHAR_T *)pwm_cfg->pwm_pin_arr, (UCHAR_T *)g_pwm_cfg->pwm_pin_arr, SIZEOF(g_pwm_cfg->pwm_pin_arr));
+            memcpy((uint8_t *)pwm_cfg->pwm_ch_arr, (uint8_t *)g_pwm_cfg->pwm_ch_arr, SIZEOF(g_pwm_cfg->pwm_ch_arr));
+            memcpy((uint8_t *)pwm_cfg->pwm_pin_arr, (uint8_t *)g_pwm_cfg->pwm_pin_arr, SIZEOF(g_pwm_cfg->pwm_pin_arr));
             break;
         }
         case DRV_CMD_SET_RGB_ORDER_CFG: {
@@ -220,7 +220,7 @@ OPERATE_RET tdd_sm16703p_opt_driver_config(DRIVER_HANDLE_T handle, unsigned char
     return OPRT_OK;
 }
 
-OPERATE_RET tdd_sm16703p_opt_driver_register(CHAR_T *driver_name, PIXEL_DRIVER_CONFIG_T *init_param, PIXEL_PWM_CFG_T *pwm_cfg)
+OPERATE_RET tdd_sm16703p_opt_driver_register(char *driver_name, PIXEL_DRIVER_CONFIG_T *init_param, PIXEL_PWM_CFG_T *pwm_cfg)
 {
     OPERATE_RET ret = OPRT_OK;
     PIXEL_DRIVER_INTFS_T intfs;
@@ -239,8 +239,8 @@ OPERATE_RET tdd_sm16703p_opt_driver_register(CHAR_T *driver_name, PIXEL_DRIVER_C
         g_pwm_cfg = (PIXEL_PWM_CFG_T *) tal_malloc(SIZEOF(PIXEL_PWM_CFG_T));
         g_pwm_cfg->active_level = pwm_cfg->active_level;
         g_pwm_cfg->pwm_freq = pwm_cfg->pwm_freq;
-        memcpy((UCHAR_T *)g_pwm_cfg->pwm_ch_arr, (UCHAR_T *)pwm_cfg->pwm_ch_arr, SIZEOF(pwm_cfg->pwm_ch_arr));
-        memcpy((UCHAR_T *)g_pwm_cfg->pwm_pin_arr, (UCHAR_T *)pwm_cfg->pwm_pin_arr, SIZEOF(pwm_cfg->pwm_pin_arr));
+        memcpy((uint8_t *)g_pwm_cfg->pwm_ch_arr, (uint8_t *)pwm_cfg->pwm_ch_arr, SIZEOF(pwm_cfg->pwm_ch_arr));
+        memcpy((uint8_t *)g_pwm_cfg->pwm_pin_arr, (uint8_t *)pwm_cfg->pwm_pin_arr, SIZEOF(pwm_cfg->pwm_pin_arr));
         if (g_pwm_cfg->pwm_ch_arr[PIXEL_PWM_CH_IDX_COLD] != PIXEL_PWM_ID_INVALID) {
             arrt.color_tp |= COLOR_C_BIT;
         }

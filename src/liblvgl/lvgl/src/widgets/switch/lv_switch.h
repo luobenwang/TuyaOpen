@@ -24,7 +24,16 @@ extern "C" {
  *********************/
 
 /** Switch knob extra area correction factor */
-#define LV_SWITCH_KNOB_EXT_AREA_CORRECTION 2
+#define _LV_SWITCH_KNOB_EXT_AREA_CORRECTION 2
+
+/**********************
+ *      TYPEDEFS
+ **********************/
+
+typedef struct {
+    lv_obj_t obj;
+    int32_t anim_state;
+} lv_switch_t;
 
 LV_ATTRIBUTE_EXTERN_DATA extern const lv_obj_class_t lv_switch_class;
 

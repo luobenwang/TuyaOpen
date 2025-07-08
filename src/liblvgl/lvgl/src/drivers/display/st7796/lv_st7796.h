@@ -1,5 +1,5 @@
-/**
- * @file lv_st7796.h
+/*
+ * lv_st7796.h
  *
  * This driver is just a wrapper around the generic MIPI compatible LCD controller driver
  *

@@ -1,5 +1,5 @@
 /**
- * @file lv_linux_drm.h
+ * @file lv_linux_drm_h
  *
  */
 

@@ -6,10 +6,10 @@
 /*********************
  *      INCLUDES
  *********************/
-#include "tuya_iot_config.h"
+#include "tal_api.h"
 #include "lv_port_indev.h"
 #ifdef LVGL_ENABLE_TOUCH
-#include "tkl_touch.h"
+#include "tdl_touch_manage.h"
 #endif
 
 /*********************
@@ -23,19 +23,25 @@
 /**********************
  *  STATIC PROTOTYPES
  **********************/
-
-static void touchpad_init(void);
+#ifdef LVGL_ENABLE_TOUCH
+static void touchpad_init(void *device);
 static void touchpad_read(lv_indev_t *indev, lv_indev_data_t *data);
+#endif
 
+#ifdef LVGL_ENABLE_ENCODER
 static void encoder_init(void);
 static void encoder_read(lv_indev_t *indev, lv_indev_data_t *data);
 static void encoder_handler(void);
-
+#endif
 /**********************
  *  STATIC VARIABLES
  **********************/
 lv_indev_t *indev_touchpad;
 lv_indev_t *indev_encoder;
+
+#ifdef LVGL_ENABLE_TOUCH
+static TDL_TOUCH_HANDLE_T sg_touch_hdl = NULL; // Handle for touch device
+#endif
 
 /**********************
  *      MACROS
@@ -45,7 +51,7 @@ lv_indev_t *indev_encoder;
  *   GLOBAL FUNCTIONS
  **********************/
 
-void lv_port_indev_init(void)
+void lv_port_indev_init(void *device)
 {
     /**
      * Here you will find example implementation of input devices supported by LittelvGL:
@@ -64,7 +70,7 @@ void lv_port_indev_init(void)
      * -----------------*/
 #ifdef LVGL_ENABLE_TOUCH
     /*Initialize your touchpad if you have*/
-    touchpad_init();
+    touchpad_init(device);
 
     /*Register a touchpad input device*/
     indev_touchpad = lv_indev_create();
@@ -96,9 +102,21 @@ void lv_port_indev_init(void)
 #ifdef LVGL_ENABLE_TOUCH
 
 /*Initialize your touchpad*/
-static void touchpad_init(void)
+static void touchpad_init(void *device)
 {
-    tkl_touch_init();
+    OPERATE_RET rt = OPRT_OK;
+
+    sg_touch_hdl = tdl_touch_find_dev(device);
+    if(NULL == sg_touch_hdl) {
+        PR_ERR("touch dev %s not found", device);
+        return;
+    }
+
+    rt = tdl_touch_dev_open(sg_touch_hdl);
+    if(rt != OPRT_OK) {
+        PR_ERR("open touch dev failed, rt: %d", rt);
+        return;
+    }
 }
 
 /*Will be called by the library to read the touchpad*/
@@ -107,15 +125,15 @@ static void touchpad_read(lv_indev_t *indev_drv, lv_indev_data_t *data)
     static int32_t last_x = 0;
     static int32_t last_y = 0;
     uint8_t point_num = 0;
-    touch_point_t point;
+    TDL_TOUCH_POS_T point;
 
-    tkl_touch_read(&point_num, &point, 1);
+    tdl_touch_dev_read(sg_touch_hdl, 1, &point, &point_num);
     /*Save the pressed coordinates and the state*/
     if (point_num > 0) {
         data->state = LV_INDEV_STATE_PRESSED;
         last_x = point.x;
         last_y = point.y;
-        PR_DEBUG("touchpad_read: x=%d, y=%d", point.x, point.y);
+        // PR_DEBUG("touchpad_read: x=%d, y=%d", point.x, point.y);
     } else {
         data->state = LV_INDEV_STATE_RELEASED;
     }

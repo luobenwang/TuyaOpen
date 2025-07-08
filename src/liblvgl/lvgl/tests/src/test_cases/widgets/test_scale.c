@@ -1,6 +1,5 @@
 #if LV_BUILD_TEST
 #include "../lvgl.h"
-#include "../../lvgl_private.h"
 
 #include "unity/unity.h"
 
@@ -32,7 +31,7 @@ void test_scale_render_example_1(void)
     lv_obj_set_style_length(scale, 10, LV_PART_INDICATOR);
     lv_scale_set_range(scale, 10, 40);
 
-    TEST_ASSERT_EQUAL_SCREENSHOT("widgets/scale_1.png");
+    TEST_ASSERT_EQUAL_SCREENSHOT("scale_1.png");
 }
 
 /* An vertical scale with section and custom styling */
@@ -117,7 +116,7 @@ void test_scale_render_example_2(void)
     lv_obj_set_style_radius(scale, 8, 0);
     lv_obj_set_style_pad_ver(scale, 20, 0);
 
-    TEST_ASSERT_EQUAL_SCREENSHOT("widgets/scale_2.png");
+    TEST_ASSERT_EQUAL_SCREENSHOT("scale_2.png");
 }
 
 /* A simple round scale */
@@ -140,7 +139,7 @@ void test_scale_render_example_3(void)
     lv_obj_set_style_length(scale, 10, LV_PART_INDICATOR);
     lv_scale_set_range(scale, 10, 40);
 
-    TEST_ASSERT_EQUAL_SCREENSHOT("widgets/scale_3.png");
+    TEST_ASSERT_EQUAL_SCREENSHOT("scale_3.png");
 }
 
 /* A round scale with section and custom styling */
@@ -219,72 +218,7 @@ void test_scale_render_example_4(void)
     lv_scale_section_set_style(section, LV_PART_ITEMS, &section_minor_tick_style);
     lv_scale_section_set_style(section, LV_PART_MAIN, &section_main_line_style);
 
-    TEST_ASSERT_EQUAL_SCREENSHOT("widgets/scale_4.png");
-}
-
-static void draw_event_cb(lv_event_t * e)
-{
-    lv_obj_t * obj = lv_event_get_target(e);
-    lv_draw_task_t * draw_task = lv_event_get_draw_task(e);
-    lv_draw_dsc_base_t * base_dsc = lv_draw_task_get_draw_dsc(draw_task);
-    lv_draw_label_dsc_t * label_draw_dsc = lv_draw_task_get_label_dsc(draw_task);
-    if(base_dsc->part == LV_PART_INDICATOR) {
-        if(label_draw_dsc) {
-            const lv_color_t color_idx[7] = {
-                lv_palette_main(LV_PALETTE_RED),
-                lv_palette_main(LV_PALETTE_ORANGE),
-                lv_palette_main(LV_PALETTE_YELLOW),
-                lv_palette_main(LV_PALETTE_GREEN),
-                lv_palette_main(LV_PALETTE_CYAN),
-                lv_palette_main(LV_PALETTE_BLUE),
-                lv_palette_main(LV_PALETTE_PURPLE),
-            };
-            uint8_t major_tick = lv_scale_get_major_tick_every(obj);
-            label_draw_dsc->color = color_idx[base_dsc->id1 / major_tick];
-
-            /*Free the previously allocated text if needed*/
-            if(label_draw_dsc->text_local) lv_free((void *)label_draw_dsc->text);
-
-            /*Malloc the text and set text_local as 1 to make LVGL automatically free the text.
-             * (Local texts are malloc'd internally by LVGL. Mimic this behavior here too)*/
-            char tmp_buffer[20] = {0}; /* Big enough buffer */
-            lv_snprintf(tmp_buffer, sizeof(tmp_buffer), "%.1f", base_dsc->id2 * 1.0f);
-            label_draw_dsc->text = lv_strdup(tmp_buffer);
-            label_draw_dsc->text_local = 1;
-
-            lv_point_t size;
-            lv_text_get_size(&size, label_draw_dsc->text, label_draw_dsc->font, 0, 0, 1000, LV_TEXT_FLAG_NONE);
-            int32_t new_w = size.x;
-            int32_t old_w = lv_area_get_width(&draw_task->area);
-
-            /* Distribute the new size equally on both sides */
-            draw_task->area.x1 -= (new_w - old_w) / 2;
-            draw_task->area.x2 += ((new_w - old_w) + 1) / 2;  /* +1 for rounding */
-
-        }
-    }
-}
-
-void test_scale_render_example_7(void)
-{
-    lv_obj_t * scale = lv_scale_create(lv_screen_active());
-    lv_obj_set_size(scale, lv_pct(80), 100);
-    lv_scale_set_mode(scale, LV_SCALE_MODE_HORIZONTAL_BOTTOM);
-    lv_obj_center(scale);
-
-    lv_scale_set_label_show(scale, true);
-
-    lv_scale_set_total_tick_count(scale, 31);
-    lv_scale_set_major_tick_every(scale, 5);
-
-    lv_obj_set_style_length(scale, 5, LV_PART_ITEMS);
-    lv_obj_set_style_length(scale, 10, LV_PART_INDICATOR);
-    lv_scale_set_range(scale, 10, 40);
-
-    lv_obj_add_event_cb(scale, draw_event_cb, LV_EVENT_DRAW_TASK_ADDED, NULL);
-    lv_obj_add_flag(scale, LV_OBJ_FLAG_SEND_DRAW_TASK_EVENTS);
-
-    TEST_ASSERT_EQUAL_SCREENSHOT("widgets/scale_5.png");
+    TEST_ASSERT_EQUAL_SCREENSHOT("scale_4.png");
 }
 
 void test_scale_set_style(void)
@@ -428,45 +362,6 @@ void test_scale_range(void)
 
     TEST_ASSERT_EQUAL(min_range, lv_scale_get_range_min_value(scale));
     TEST_ASSERT_EQUAL(max_range, lv_scale_get_range_max_value(scale));
-}
-
-void test_scale_set_line_needle_value(void)
-{
-    lv_obj_t * scale = lv_scale_create(lv_screen_active());
-    lv_scale_set_mode(scale, LV_SCALE_MODE_ROUND_INNER);
-
-    lv_obj_t * line = lv_line_create(scale);
-
-    /* test the scale allocating the array */
-    lv_scale_set_line_needle_value(scale, line, 50, 35);
-    TEST_ASSERT_EQUAL_UINT32(2, lv_line_get_point_count(line));
-    const lv_point_precise_t * allocated_points_array = lv_line_get_points(line);
-    TEST_ASSERT_NOT_NULL(allocated_points_array);
-    TEST_ASSERT_TRUE(lv_line_is_point_array_mutable(line));
-    TEST_ASSERT_EQUAL_PTR(allocated_points_array, lv_line_get_points_mutable(line));
-
-    /* test the scale using the line's pre-set mutable array */
-    lv_point_precise_t provided_points_array[2] = {{-100, -100}, {-100, -100}};
-    lv_line_set_points_mutable(line, provided_points_array, 2);
-    lv_scale_set_line_needle_value(scale, line, 20, 20);
-    TEST_ASSERT(
-        provided_points_array[0].x != -100 || provided_points_array[0].y != -100
-        || provided_points_array[1].x != -100 || provided_points_array[1].y != -100
-    );
-    TEST_ASSERT_EQUAL_PTR(provided_points_array, lv_line_get_points_mutable(line));
-
-    provided_points_array[0].x = -100;
-    provided_points_array[0].y = -100;
-    provided_points_array[1].x = -100;
-    provided_points_array[1].y = -100;
-    /* set the line array to an immutable one. The scale will switch back to its allocated one */
-    lv_line_set_points(line, provided_points_array, 2); /* immutable setter */
-    lv_scale_set_line_needle_value(scale, line, 10, 30);
-    TEST_ASSERT_EQUAL_PTR(allocated_points_array, lv_line_get_points_mutable(line));
-    TEST_ASSERT(
-        provided_points_array[0].x == -100 && provided_points_array[0].y == -100
-        && provided_points_array[1].x == -100 && provided_points_array[1].y == -100
-    );
 }
 
 #endif

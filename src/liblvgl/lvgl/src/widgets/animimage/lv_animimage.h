@@ -1,10 +1,10 @@
 /**
- * @file lv_animimage.h
+ * @file lv_animimg.h
  *
  */
 
-#ifndef LV_ANIMIMAGE_H
-#define LV_ANIMIMAGE_H
+#ifndef LV_ANIM_IMAGE_H
+#define LV_ANIM_IMAGE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,7 +14,6 @@ extern "C" {
  *      INCLUDES
  *********************/
 #include "../image/lv_image.h"
-#include "../../misc/lv_types.h"
 
 #if LV_USE_ANIMIMG != 0
 
@@ -33,10 +32,25 @@ extern "C" {
 
 LV_ATTRIBUTE_EXTERN_DATA extern const lv_obj_class_t lv_animimg_class;
 
-/** Image parts */
-typedef enum {
+/*Data of the animimage*/
+typedef struct {
+    lv_image_t img;
+    lv_anim_t anim;
+    /*picture sequence */
+    const void ** dsc;
+    int8_t  pic_count;
+} lv_animimg_t;
+
+/*Image parts*/
+enum _lv_animimg_part_t {
     LV_ANIM_IMAGE_PART_MAIN,
-} lv_animimg_part_t;
+};
+
+#ifdef DOXYGEN
+typedef _lv_animimg_part_t lv_animimg_part_t;
+#else
+typedef uint8_t lv_animimg_part_t;
+#endif
 
 /**********************
  * GLOBAL PROTOTYPES
@@ -113,17 +127,10 @@ uint32_t lv_animimg_get_duration(lv_obj_t * img);
  */
 uint32_t lv_animimg_get_repeat_count(lv_obj_t * img);
 
-/**
- * Get the image animation underlying animation.
- * @param img   pointer to an animation image object
- * @return      the animation reference
- */
-lv_anim_t * lv_animimg_get_anim(lv_obj_t * img);
-
 #endif /*LV_USE_ANIMIMG*/
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif /*LV_ANIMIMAGE_H*/
+#endif /*LV_ANIM_IMAGE_H*/

@@ -152,7 +152,6 @@ lv_result_t lv_thread_sync_init(lv_thread_sync_t * sync)
 
     InitializeCriticalSection(&sync->cs);
     InitializeConditionVariable(&sync->cv);
-    sync->v = false;
 
     return LV_RESULT_OK;
 }
@@ -196,12 +195,6 @@ lv_result_t lv_thread_sync_delete(lv_thread_sync_t * sync)
     DeleteCriticalSection(&sync->cs);
 
     return LV_RESULT_OK;
-}
-
-lv_result_t lv_thread_sync_signal_isr(lv_thread_sync_t * sync)
-{
-    LV_UNUSED(sync);
-    return LV_RESULT_INVALID;
 }
 
 /**********************

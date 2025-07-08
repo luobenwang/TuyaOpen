@@ -10,6 +10,8 @@ config BOARD_CONFIG
     bool
     default y
     select ENABLE_AUDIO_CODECS
+    select ENABLE_AUDIO_AEC
     select ENABLE_LED
     select ENABLE_BUTTON
-
+    select ENABLE_DISPLAY
+    select LVGL_COLOR_16_SWAP if(ENABLE_LIBLVGL)

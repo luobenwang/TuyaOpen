@@ -53,11 +53,13 @@ Line styles
 .. lv_example:: styles/lv_example_style_9
   :language: c
 
+
 Transition
 ----------
 
 .. lv_example:: styles/lv_example_style_10
   :language: c
+
 
 Using multiple styles
 ---------------------
@@ -65,11 +67,13 @@ Using multiple styles
 .. lv_example:: styles/lv_example_style_11
   :language: c
 
+
 Local styles
 ------------
 
 .. lv_example:: styles/lv_example_style_12
   :language: c
+
 
 Add styles to parts and states
 ------------------------------
@@ -77,11 +81,13 @@ Add styles to parts and states
 .. lv_example:: styles/lv_example_style_13
   :language: c
 
+
 Extending the current theme
 ---------------------------
 
 .. lv_example:: styles/lv_example_style_14
   :language: c
+
 
 Opacity and Transformations
 ---------------------------
@@ -89,21 +95,4 @@ Opacity and Transformations
 .. lv_example:: styles/lv_example_style_15
   :language: c
 
-Metallic knob with conic gradient
----------------------------------
-
-.. lv_example:: styles/lv_example_style_16
-  :language: c
-
-Radial gradient as background
------------------------------
-
-.. lv_example:: styles/lv_example_style_17
-  :language: c
-
-Gradients for button background
------------------------------
-
-.. lv_example:: styles/lv_example_style_18
-  :language: c
 

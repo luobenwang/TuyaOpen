@@ -4,7 +4,7 @@
 #/
 
 # MODULE_PATH
-if (CONFIG_ENABLE_TOUCH_DRIVER STREQUAL "y")
+if (CONFIG_ENABLE_TOUCH STREQUAL "y")
 
 set(MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -12,22 +12,19 @@ set(MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 get_filename_component(MODULE_NAME ${MODULE_PATH} NAME)
 
 # LIB_SRCS
-set(LIB_SRCS 
-        "${MODULE_PATH}/tkl_touch.c"
-)
+file(GLOB_RECURSE touch_srcs "${MODULE_PATH}/tdl_touch/src/*.c")
 
-if (CONFIG_ENABLE_TOUCH_GT911 STREQUAL "y")
-    list(APPEND LIB_SRCS "${MODULE_PATH}/gt911_i2c.c")
-elseif(CONFIG_ENABLE_TOUCH_GT1151 STREQUAL "y")
-    list(APPEND LIB_SRCS "${MODULE_PATH}/gt1151.c")
-elseif(CONFIG_ENABLE_TOUCH_CST816X STREQUAL "y")
-    list(APPEND LIB_SRCS "${MODULE_PATH}/cst816x.c")
-else()
-    message(FATAL_ERROR "Please select a touch driver")
+if (CONFIG_ENABLE_I2C STREQUAL "y")   
+    file(GLOB_RECURSE tdd_touch_i2c_srcs "${MODULE_PATH}/tdd_touch/src/i2c/*.c")
 endif()
 
+set(LIB_SRCS ${touch_srcs} ${tdd_touch_i2c_srcs})
+
 # LIB_PUBLIC_INC
-set(LIB_PUBLIC_INC ${MODULE_PATH})
+set(LIB_PUBLIC_INC 
+    ${MODULE_PATH}/tdl_touch/include
+    ${MODULE_PATH}/tdd_touch/include
+    )
 
 ########################################
 # Target Configure

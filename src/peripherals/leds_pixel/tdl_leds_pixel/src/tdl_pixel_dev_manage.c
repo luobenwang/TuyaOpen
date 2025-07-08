@@ -26,25 +26,25 @@
 /***********************************************************
 ***********************variable define**********************
 ***********************************************************/
-STATIC PIXEL_DEV_LIST_T g_pixel_dev_list_head = {
+static PIXEL_DEV_LIST_T g_pixel_dev_list_head = {
     .next = NULL,   
 };
 
 /***********************************************************
 ***********************function define**********************
 ***********************************************************/
-STATIC UCHAR_T __tdl_pixel_type_get(UCHAR_T pixel_color) 
+static uint8_t __tdl_pixel_type_get(uint8_t pixel_color) 
 {
-    UCHAR_T cnt = 0;
+    uint8_t cnt = 0;
 
-    for(UINT_T i=0; i < 8;i++){
+    for(uint32_t i=0; i < 8;i++){
         cnt += GET_BIT(pixel_color,i) == 0 ? 0 : 1;;
     }
     
     return cnt;
 }
 
-STATIC PIXEL_DEV_NODE_T *__tdl_pixel_dev_node_find(PIXEL_DEV_LIST_T *list, CHAR_T *dev_name)
+static PIXEL_DEV_NODE_T *__tdl_pixel_dev_node_find(PIXEL_DEV_LIST_T *list, char *dev_name)
 {
     PIXEL_DEV_NODE_T *node = NULL;
 
@@ -64,8 +64,8 @@ STATIC PIXEL_DEV_NODE_T *__tdl_pixel_dev_node_find(PIXEL_DEV_LIST_T *list, CHAR_
     return NULL;
 }
 
-STATIC int __tdl_pixel_dev_register(IN char *driver_name, IN PIXEL_DRIVER_INTFS_T *intfs, \
-                                    PIXEL_ATTR_T *arrt, VOID *param)
+static int __tdl_pixel_dev_register(IN char *driver_name, IN PIXEL_DRIVER_INTFS_T *intfs, \
+                                    PIXEL_ATTR_T *arrt, void *param)
 {
     int op_ret = 0;
     PIXEL_DEV_NODE_T *device = NULL, *last_node = NULL;
@@ -118,7 +118,7 @@ STATIC int __tdl_pixel_dev_register(IN char *driver_name, IN PIXEL_DRIVER_INTFS_
     return OPRT_OK;
 }  
 
-STATIC int __tdl_pixel_dev_open(PIXEL_DEV_NODE_T *device, PIXEL_DEV_CONFIG_T* config)
+static int __tdl_pixel_dev_open(PIXEL_DEV_NODE_T *device, PIXEL_DEV_CONFIG_T* config)
 {
     int op_ret = 0;
 
@@ -160,7 +160,7 @@ STATIC int __tdl_pixel_dev_open(PIXEL_DEV_NODE_T *device, PIXEL_DEV_CONFIG_T* co
     return OPRT_OK;
 }
 
-STATIC int __tdl_pixel_refresh(PIXEL_DEV_NODE_T *device) 
+static int __tdl_pixel_refresh(PIXEL_DEV_NODE_T *device) 
 {
     int op_ret =OPRT_OK;
 
@@ -181,7 +181,7 @@ STATIC int __tdl_pixel_refresh(PIXEL_DEV_NODE_T *device)
     return op_ret;
 }
 
-STATIC int __tdl_pixel_dev_close(PIXEL_DEV_NODE_T *device)
+static int __tdl_pixel_dev_close(PIXEL_DEV_NODE_T *device)
 {
     int op_ret = 0;
 
@@ -291,7 +291,7 @@ int tdl_pixel_dev_refresh(PIXEL_HANDLE_T handle)
 }
 
 
-STATIC OPERATE_RET __tdl_pixel_dev_num_set(PIXEL_HANDLE_T *handle, uint16_t num)
+static OPERATE_RET __tdl_pixel_dev_num_set(PIXEL_HANDLE_T *handle, uint16_t num)
 {
     PIXEL_DEV_NODE_T *device = (PIXEL_DEV_NODE_T *)(handle);
     OPERATE_RET ret = OPRT_OK;
@@ -352,21 +352,21 @@ int tdl_pixel_dev_config(PIXEL_HANDLE_T handle, PIXEL_DEV_CFG_CMD_E cmd, void *a
 
     switch(cmd) {
         case PIXEL_DEV_CMD_GET_RESOLUTION: {
-            UINT_T *max = 0;
+            uint32_t *max = 0;
             if(NULL == arg) {
                 return OPRT_INVALID_PARM;
             }
 
-            max = (UINT_T *)arg;
+            max = (uint32_t *)arg;
            *max = device->pixel_resolution;
         }
         break;
         case PIXEL_DEV_CMD_SET_PIXEL_NUM:{
-            UINT_T *pixel_num = NULL;
+            uint32_t *pixel_num = NULL;
             if(NULL == arg) {
                 return OPRT_INVALID_PARM;
             }
-            pixel_num = (UINT_T *)arg;
+            pixel_num = (uint32_t *)arg;
             tal_mutex_lock(device->mutex);
             __tdl_pixel_dev_num_set(handle, *pixel_num);
             tal_mutex_unlock(device->mutex);
@@ -375,12 +375,12 @@ int tdl_pixel_dev_config(PIXEL_HANDLE_T handle, PIXEL_DEV_CFG_CMD_E cmd, void *a
         case PIXEL_DEV_CMD_SET_TX_CB:
         break;
         case PIXEL_DEV_CMD_GET_PIXEL_NUM: {
-            UINT_T *pixel_num = NULL;
+            uint32_t *pixel_num = NULL;
             if(NULL == arg) {
                 return OPRT_INVALID_PARM;
             }
 
-            pixel_num = (UINT_T *)arg;
+            pixel_num = (uint32_t *)arg;
            *pixel_num = device->pixel_num;
         }break;
         case PIXEL_DEV_CMD_GET_DRV_COLOR_CH: {

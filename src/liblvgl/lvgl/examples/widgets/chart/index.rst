@@ -41,9 +41,3 @@ Scatter chart
 
 .. lv_example:: widgets/chart/lv_example_chart_7
   :language: c
-
-Circular line chart with gap
-----------------------------
-
-.. lv_example:: widgets/chart/lv_example_chart_8
-  :language: c

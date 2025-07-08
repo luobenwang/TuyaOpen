@@ -22,7 +22,7 @@ An example ``flush_cb`` looks like this:
 
 .. code:: c
 
-   void my_flush_cb(lv_display_t * display, const lv_area_t * area, uint8_t * px_map)
+   void my_flush_cb(lv_display_t * display, const lv_area_t * area, void * px_map)
    {
        /*The most simple case (but also the slowest) to put all pixels to the screen one-by-one
         *`put_px` is just an example, it needs to be implemented by you.*/
@@ -136,6 +136,7 @@ or anything else to optimize while the waiting for flush.
 If ``flush_wait_cb`` is not set, LVGL assume that `lv_display_flush_ready`
 is used.
 
+
 Rotation
 --------
 
@@ -151,17 +152,6 @@ reconfiguring the hardware. In lack of hardware display rotation support
 :cpp:expr:`lv_draw_sw_rotate` can be used to rotate the buffer in the
 ``flush_cb``.
 
-:cpp:expr:`lv_display_rotate_area(display, &area)` rotates the rendered area
-according to the current rotation settings of the display.
-
-Note that in :cpp:enumerator:`LV_DISPLAY_RENDER_MODE_DIRECT` the small changed areas
-are rendered directly in the frame buffer so they cannot be
-rotated later. Therefore in direct mode only the whole frame buffer can be rotated.
-The same is true for :cpp:enumerator:`LV_DISPLAY_RENDER_MODE_FULL`.
-
-In the case of :cpp:enumerator:`LV_DISPLAY_RENDER_MODE_PARTIAL` the small rendered areas
-can be rotated on their own before flushing to the frame buffer.
-
 Color format
 ------------
 
@@ -171,8 +161,7 @@ The default color format of the display is set according to :c:macro:`LV_COLOR_D
 - :c:macro:`LV_COLOR_DEPTH` ``32``: XRGB8888 (4 bytes/pixel)
 - :c:macro:`LV_COLOR_DEPTH` ``24``: RGB888 (3 bytes/pixel)
 - :c:macro:`LV_COLOR_DEPTH` ``16``: RGB565 (2 bytes/pixel)
-- :c:macro:`LV_COLOR_DEPTH` ``8``: L8 (1 bytes/pixel)
-- :c:macro:`LV_COLOR_DEPTH` ``1``: I1 (1 bit/pixel) Only support for horizontal mapped buffers. See :refr:`monochrome` for more details:
+- :c:macro:`LV_COLOR_DEPTH` ``8``: L8 (1 bytes/pixel) Not supported yet
 
 The ``color_format`` can be changed with
 :cpp:expr:`lv_display_set_color_depth(display, LV_COLOR_FORMAT_...)`.
@@ -204,40 +193,6 @@ to
 
 ``GGG BBBBB | RRRRR GGG``.
 
-.. _monochrome:
-
-Monochrome Displays
--------------------
-
-LVGL supports rendering directly in a 1-bit format for monochrome displays.
-To enable it, set ``LV_COLOR_DEPTH 1`` or use :cpp:expr:`lv_display_set_color_format(display, LV_COLOR_FORMAT_I1)`.
-
-The :cpp:expr:`LV_COLOR_FORMAT_I1` format assumes that bytes are mapped to rows (i.e., the bits of a byte are written next to each other).
-The order of bits is MSB first, which means:
-
-.. code::
-
-             MSB           LSB
-   bits       7 6 5 4 3 2 1 0
-   pixels     0 1 2 3 4 5 6 7
-             Left         Right
-
-Ensure that the LCD controller is configured accordingly.
-
-Internally, LVGL rounds the redrawn areas to byte boundaries. Therefore, updated areas will:
-
-- Start on an ``Nx8`` coordinate.
-- End on an ``Nx8 - 1`` coordinate.
-
-When setting up the buffers for rendering (:cpp:func:`lv_display_set_buffers`), make the buffer 8 bytes larger.
-This is necessary because LVGL reserves 2 x 4 bytes in the buffer, as these are assumed to be used as a palette.
-
-To skip the palette, include the following line in your ``flush_cb`` function: ``px_map += 8``.
-
-As usual, monochrome displays support partial, full, and direct rendering modes as well.
-In full and direct modes, the buffer size should be large enough for the whole screen, meaning ``(horizontal_resolution x vertical_resolution / 8) + 8`` bytes.
-As LVGL can not handle fractional width make sure to round the horizontal resolution to 8-
-(For example 90 to 96)
 
 User data
 ---------
@@ -268,7 +223,7 @@ If you have multiple displays call :cpp:expr:`lv_display_set_default(disp1)` to
 select the display to refresh before :cpp:expr:`_lv_display_refr_timer(NULL)`.
 
 
-.. note:: that :cpp:func:`lv_timer_handler` and :cpp:func:`_lv_display_refr_timer` cannot  run at the same time.
+.. note:: that :cpp:func:`lv_timer_handler` and :cpp:func:`_lv_display_refr_timer` can not  run at the same time.
 
 
 If the performance monitor is enabled, the value of :c:macro:`LV_DEF_REFR_PERIOD` needs to be set to be
@@ -279,7 +234,7 @@ Force refreshing
 ----------------
 
 Normally the invalidated areas (marked for redraw) are rendered in :cpp:func:`lv_timer_handler` in every
-:c:macro:`LV_DEF_REFR_PERIOD` milliseconds. However, by using :cpp:func:`lv_refr_now(display)` you can ask LVGL to
+:cpp:macro:`LV_DEF_REFR_PERIOD`milliseconds. However, by using :cpp:func:`lv_refr_now(display)` you can ask LVGL to
 redraw the invalid areas immediately. The refreshing will happen in :cpp:func:`lv_refr_now` which might take
 longer time.
 

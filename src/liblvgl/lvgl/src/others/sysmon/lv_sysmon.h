@@ -35,48 +35,72 @@ extern "C" {
  *      TYPEDEFS
  **********************/
 
+typedef struct {
+    lv_subject_t subject;
+    lv_timer_t * timer;
+    bool inited;
+} lv_sysmon_backend_data_t;
+
+#if LV_USE_PERF_MONITOR
+typedef struct {
+    struct {
+        bool inited;
+        uint32_t refr_start;
+        uint32_t refr_interval_sum;
+        uint32_t refr_elaps_sum;
+        uint32_t refr_cnt;
+        uint32_t render_start;
+        uint32_t render_elaps_sum; /*Contains the flush time too*/
+        uint32_t render_cnt;
+        uint32_t flush_in_render_start;
+        uint32_t flush_in_render_elaps_sum;
+        uint32_t flush_not_in_render_start;
+        uint32_t flush_not_in_render_elaps_sum;
+        uint32_t last_report_timestamp;
+        uint32_t render_in_progress : 1;
+    } measured;
+
+    struct {
+        uint32_t fps;
+        uint32_t cpu;
+        uint32_t refr_avg_time;
+        uint32_t render_avg_time;       /**< Pure rendering time without flush time*/
+        uint32_t flush_avg_time;        /**< Pure flushing time without rendering time*/
+        uint32_t cpu_avg_total;
+        uint32_t fps_avg_total;
+        uint32_t run_cnt;
+    } calculated;
+
+} lv_sysmon_perf_info_t;
+#endif
+
 /**********************
  * GLOBAL PROTOTYPES
  **********************/
 
 /**
- * Create a new system monitor label
- * @param disp      create the sys. mon. on this display's system layer
- * @return          the create label
+ * Create a system monitor object.
+ * @param parent pointer to an object, it will be the parent of the new system monitor
+ * @return       pointer to the new system monitor object
  */
-lv_obj_t * lv_sysmon_create(lv_display_t * disp);
-
-#if LV_USE_PERF_MONITOR
+lv_obj_t * lv_sysmon_create(lv_obj_t * parent);
 
 /**
- * Show system performance monitor: CPU usage and FPS count
- * @param disp      target display, NULL: use the default displays
+ * Set the refresh period of the system monitor object
+ * @param obj    pointer to a system monitor object
+ * @param period the refresh period in milliseconds
  */
-void lv_sysmon_show_performance(lv_display_t * disp);
+void lv_sysmon_set_refr_period(lv_obj_t * obj, uint32_t period);
 
 /**
- * Hide system performance monitor
- * @param disp      target display, NULL: use the default
+ * Initialize built-in system monitor, such as performance and memory monitor.
  */
-void lv_sysmon_hide_performance(lv_display_t * disp);
-
-#endif /*LV_USE_PERF_MONITOR*/
-
-#if LV_USE_MEM_MONITOR
+void _lv_sysmon_builtin_init(void);
 
 /**
- * Show system memory monitor: used memory and the memory fragmentation
- * @param disp      target display, NULL: use the default displays
+ * DeInitialize built-in system monitor, such as performance and memory monitor.
  */
-void lv_sysmon_show_memory(lv_display_t * disp);
-
-/**
- * Hide system memory monitor
- * @param disp      target display, NULL: use the default displays
- */
-void lv_sysmon_hide_memory(lv_display_t * disp);
-
-#endif /*LV_USE_MEM_MONITOR*/
+void _lv_sysmon_builtin_deinit(void);
 
 /**********************
  *      MACROS

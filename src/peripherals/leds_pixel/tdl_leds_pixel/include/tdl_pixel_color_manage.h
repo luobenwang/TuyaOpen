@@ -47,7 +47,7 @@ typedef unsigned int PIXEL_M_SHIFT_DIR_T;
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-int tdl_pixel_set_single_color(PIXEL_HANDLE_T handle, UINT_T index_start, UINT_T pixel_num, PIXEL_COLOR_T *color);
+int tdl_pixel_set_single_color(PIXEL_HANDLE_T handle, uint32_t index_start, uint32_t pixel_num, PIXEL_COLOR_T *color);
 
 /**
 * @brief        设置像素段颜色（多种）
@@ -59,7 +59,7 @@ int tdl_pixel_set_single_color(PIXEL_HANDLE_T handle, UINT_T index_start, UINT_T
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-int tdl_pixel_set_multi_color(PIXEL_HANDLE_T handle, UINT_T index_start, UINT_T pixel_num, PIXEL_COLOR_T *color_arr);
+int tdl_pixel_set_multi_color(PIXEL_HANDLE_T handle, uint32_t index_start, uint32_t pixel_num, PIXEL_COLOR_T *color_arr);
 
 /**
 * @brief       在背景色上设置像素段颜色
@@ -72,7 +72,7 @@ int tdl_pixel_set_multi_color(PIXEL_HANDLE_T handle, UINT_T index_start, UINT_T 
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-int tdl_pixel_set_single_color_with_backcolor(PIXEL_HANDLE_T handle, UINT_T index_start, UINT_T pixel_num, \
+int tdl_pixel_set_single_color_with_backcolor(PIXEL_HANDLE_T handle, uint32_t index_start, uint32_t pixel_num, \
                                                PIXEL_COLOR_T *backcolor, PIXEL_COLOR_T *color);
 
 /**
@@ -86,8 +86,8 @@ int tdl_pixel_set_single_color_with_backcolor(PIXEL_HANDLE_T handle, UINT_T inde
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-int tdl_pixel_cycle_shift_color(PIXEL_HANDLE_T handle, PIXEL_SHIFT_DIR_T dir, UINT_T index_start, \
-                               UINT_T index_end, UINT_T move_step);
+int tdl_pixel_cycle_shift_color(PIXEL_HANDLE_T handle, PIXEL_SHIFT_DIR_T dir, uint32_t index_start, \
+                               uint32_t index_end, uint32_t move_step);
 
 /**
 * @brief        镜像循环移动像素颜色
@@ -100,8 +100,8 @@ int tdl_pixel_cycle_shift_color(PIXEL_HANDLE_T handle, PIXEL_SHIFT_DIR_T dir, UI
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-int tdl_pixel_mirror_cycle_shift_color(PIXEL_HANDLE_T handle, PIXEL_M_SHIFT_DIR_T dir, UINT_T index_start, \
-                                      UINT_T index_end, UINT_T move_step);
+int tdl_pixel_mirror_cycle_shift_color(PIXEL_HANDLE_T handle, PIXEL_M_SHIFT_DIR_T dir, uint32_t index_start, \
+                                      uint32_t index_end, uint32_t move_step);
 
 /**
 * @brief        获得像素颜色
@@ -112,7 +112,7 @@ int tdl_pixel_mirror_cycle_shift_color(PIXEL_HANDLE_T handle, PIXEL_M_SHIFT_DIR_
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-int tdl_pixel_get_color(PIXEL_HANDLE_T handle, UINT_T index,  PIXEL_COLOR_T *color);
+int tdl_pixel_get_color(PIXEL_HANDLE_T handle, uint32_t index,  PIXEL_COLOR_T *color);
 
 /**
 * @brief        复制像素颜色
@@ -124,7 +124,7 @@ int tdl_pixel_get_color(PIXEL_HANDLE_T handle, UINT_T index,  PIXEL_COLOR_T *col
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-int tdl_pixel_copy_color(PIXEL_HANDLE_T handle, UINT_T dst_idx, UINT_T src_idx, UINT_T len);
+int tdl_pixel_copy_color(PIXEL_HANDLE_T handle, uint32_t dst_idx, uint32_t src_idx, uint32_t len);
 
 
 /**

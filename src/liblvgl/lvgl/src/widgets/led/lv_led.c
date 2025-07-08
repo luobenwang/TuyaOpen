@@ -6,10 +6,7 @@
 /*********************
  *      INCLUDES
  *********************/
-#include "lv_led_private.h"
-#include "../../core/lv_obj_private.h"
-#include "../../core/lv_obj_class_private.h"
-
+#include "lv_led.h"
 #if LV_USE_LED
 
 #include "../../misc/lv_assert.h"

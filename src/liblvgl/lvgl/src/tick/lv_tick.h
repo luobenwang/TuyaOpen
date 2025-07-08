@@ -1,10 +1,10 @@
 /**
- * @file lv_tick.h
+ * @file lv_hal_tick.h
  * Provide access to the system tick with 1 millisecond resolution
  */
 
-#ifndef LV_TICK_H
-#define LV_TICK_H
+#ifndef LV_HAL_TICK_H
+#define LV_HAL_TICK_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,7 +15,8 @@ extern "C" {
  *********************/
 #include "../lv_conf_internal.h"
 
-#include "../misc/lv_types.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 /*********************
  *      DEFINES
@@ -30,6 +31,13 @@ extern "C" {
 typedef uint32_t (*lv_tick_get_cb_t)(void);
 
 typedef void (*lv_delay_cb_t)(uint32_t ms);
+
+typedef struct {
+    uint32_t sys_time;
+    volatile uint8_t sys_irq_flag;
+    lv_tick_get_cb_t tick_get_cb;
+    lv_delay_cb_t delay_cb;
+} lv_tick_state_t;
 
 /**********************
  * GLOBAL PROTOTYPES
@@ -69,8 +77,8 @@ void lv_delay_ms(uint32_t ms);
 void lv_tick_set_cb(lv_tick_get_cb_t cb);
 
 /**
- * Set a custom callback for 'lv_delay_ms'
- * @param cb        call this callback in 'lv_delay_ms'
+ * Set a custom callback for 'lv_dalay_ms'
+ * @param cb        call this callback in 'lv_dalay_ms'
  */
 void lv_delay_set_cb(lv_delay_cb_t cb);
 
@@ -82,4 +90,4 @@ void lv_delay_set_cb(lv_delay_cb_t cb);
 } /*extern "C"*/
 #endif
 
-#endif /*LV_TICK_H*/
+#endif /*LV_HAL_TICK_H*/

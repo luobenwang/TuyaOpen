@@ -1,5 +1,5 @@
-/**
- * @file lv_lcd_generic_mipi.h
+/*
+ * lv_lcd_generic_mipi.h
  *
  * Generic driver for controllers adhering to the MIPI DBI/DCS specification
  *

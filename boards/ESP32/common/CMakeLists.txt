@@ -15,7 +15,7 @@ file(GLOB_RECURSE TOUCH_SRCS "${COMMON_PATH}/touch/*.c")
 set(BOARD_SRC "")
 set(BOARD_INC "${COMMON_PATH}")
 
-if (CONFIG_ENABLE_DISPLAY)
+if (CONFIG_ENABLE_ESP_DISPLAY)
     list(APPEND BOARD_SRC
         "${COMMON_PATH}/display/board_lvgl.c"
         "${LCD_SRCS}"

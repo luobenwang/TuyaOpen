@@ -1,11 +1,12 @@
 config ENABLE_LIBLVGL
     bool "configure lvgl"
-    select ENABLE_DISPLAY_DRIVER if (!ENABLE_PLATFORM_LVGL)
+    select ENABLE_DISPLAY if (!ENABLE_PLATFORM_LVGL)
     default n
 
 if (ENABLE_LIBLVGL)
     config LVGL_ENABLE_TOUCH
         bool "enable lvgl touch"
+        select ENABLE_TOUCH if (!ENABLE_PLATFORM_LVGL)
         default n
 
     if (!ENABLE_PLATFORM_LVGL)
@@ -15,16 +16,25 @@ if (ENABLE_LIBLVGL)
 
         config LVGL_ENABLE_ENCODER
             bool "enable lvgl encoder"
-            select ENABLE_ENCODER_DRIVER
+            select ENABLE_ENCODER
             default n
-
-        config LVGL_COLOR_DEPTH
-            int "color depth"
-            range 16 32
-            default 16
 
         config LVGL_COLOR_16_SWAP
             bool "swap color bytes"
             default n
+
+        choice
+            prompt "the proportion of the draw buffer size"
+
+            config LV_DRAW_BUF_PROPORTION_10
+                bool "10% of the display size"
+            config LV_DRAW_BUF_PROPORTION_5
+                bool "5% of the display size"
+        endchoice
+
+        config LV_DRAW_BUF_PARTS
+            int
+            default 10 if LV_DRAW_BUF_PROPORTION_10
+            default 20 if LV_DRAW_BUF_PROPORTION_5
     endif
 endif

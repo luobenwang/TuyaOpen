@@ -55,7 +55,7 @@ tuya_iot_client_t ai_client;
 #endif
 
 #define DPID_VOLUME 3
-#define DPID_MOVE 5
+#define DPID_MOVE   5
 
 static uint8_t _need_reset = 0;
 
@@ -270,6 +270,17 @@ void user_main(void)
     //! open iot development kit runtim init
     cJSON_InitHooks(&(cJSON_Hooks){.malloc_fn = tal_malloc, .free_fn = tal_free});
     tal_log_init(TAL_LOG_LEVEL_DEBUG, 1024, (TAL_LOG_OUTPUT_CB)tkl_log_output);
+
+    PR_NOTICE("Application information:");
+    PR_NOTICE("Project name:        %s", PROJECT_NAME);
+    PR_NOTICE("App version:         %s", PROJECT_VERSION);
+    PR_NOTICE("Compile time:        %s", __DATE__);
+    PR_NOTICE("TuyaOpen version:    %s", OPEN_VERSION);
+    PR_NOTICE("TuyaOpen commit-id:  %s", OPEN_COMMIT);
+    PR_NOTICE("Platform chip:       %s", PLATFORM_CHIP);
+    PR_NOTICE("Platform board:      %s", PLATFORM_BOARD);
+    PR_NOTICE("Platform commit-id:  %s", PLATFORM_COMMIT);
+
     tal_kv_init(&(tal_kv_cfg_t){
         .seed = "vmlkasdh93dlvlcy",
         .key = "dflfuap134ddlduq",
@@ -293,7 +304,7 @@ void user_main(void)
     /* Initialize Tuya device configuration */
     ret = tuya_iot_init(&ai_client, &(const tuya_iot_config_t){
                                         .software_ver = PROJECT_VERSION,
-                                        .productkey = TUYA_PRODUCT_KEY,
+                                        .productkey = TUYA_PRODUCT_ID,
                                         .uuid = license.uuid,
                                         .authkey = license.authkey,
                                         // .firmware_key      = TUYA_DEVICE_FIRMWAREKEY,

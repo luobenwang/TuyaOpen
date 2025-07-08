@@ -15,7 +15,9 @@ extern "C" {
  *********************/
 #include "../lv_conf_internal.h"
 
-#include "lv_string.h"
+#include <stdint.h>
+#include <stddef.h>
+#include <string.h>
 
 #include "../misc/lv_types.h"
 
@@ -33,14 +35,14 @@ typedef void * lv_mem_pool_t;
  * Heap information structure.
  */
 typedef struct {
-    size_t total_size;  /**< Total heap size */
+    size_t total_size; /**< Total heap size*/
     size_t free_cnt;
-    size_t free_size;   /**< Size of available memory */
+    size_t free_size; /**< Size of available memory*/
     size_t free_biggest_size;
     size_t used_cnt;
-    size_t max_used;    /**< Max size of Heap memory used */
-    uint8_t used_pct;   /**< Percentage used */
-    uint8_t frag_pct;   /**< Amount of fragmentation */
+    size_t max_used; /**< Max size of Heap memory used*/
+    uint8_t used_pct; /**< Percentage used*/
+    uint8_t frag_pct; /**< Amount of fragmentation*/
 } lv_mem_monitor_t;
 
 /**********************
@@ -110,8 +112,8 @@ void lv_free_core(void * p);
 void * lv_realloc_core(void * p, size_t new_size);
 
 /**
- * Used internally by lv_mem_monitor() to gather LVGL heap state information.
- * @param mon_p      pointer to lv_mem_monitor_t object to be populated.
+ * Used internally to execute a plain malloc operation
+ * @param size      size in bytes to malloc
  */
 void lv_mem_monitor_core(lv_mem_monitor_t * mon_p);
 

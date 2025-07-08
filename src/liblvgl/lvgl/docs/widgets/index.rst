@@ -26,7 +26,6 @@ Widgets
     led
     line
     list
-    lottie
     menu
     msgbox
     roller

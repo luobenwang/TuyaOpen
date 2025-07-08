@@ -6,9 +6,7 @@
 /*********************
  *      INCLUDES
  *********************/
-#include "../../misc/lv_area_private.h"
-#include "../lv_draw_mask_private.h"
-#include "../lv_draw_private.h"
+#include "../lv_draw.h"
 #if LV_USE_DRAW_SW
 #if LV_DRAW_SW_COMPLEX
 
@@ -17,7 +15,7 @@
 #include "../../stdlib/lv_mem.h"
 #include "../../stdlib/lv_string.h"
 #include "lv_draw_sw.h"
-#include "lv_draw_sw_mask_private.h"
+#include "lv_draw_sw_mask.h"
 
 /*********************
  *      DEFINES
@@ -48,7 +46,7 @@ void lv_draw_sw_mask_rect(lv_draw_unit_t * draw_unit, const lv_draw_mask_rect_ds
     LV_UNUSED(coords);
 
     lv_area_t draw_area;
-    if(!lv_area_intersect(&draw_area, &dsc->area, draw_unit->clip_area)) {
+    if(!_lv_area_intersect(&draw_area, &dsc->area, draw_unit->clip_area)) {
         return;
     }
 

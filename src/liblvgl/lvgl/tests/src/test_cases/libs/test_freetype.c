@@ -1,14 +1,13 @@
 #if LV_BUILD_TEST
 #include "../lvgl.h"
-#include "../../libs/freetype/lv_freetype_private.h"
 
 #include "unity/unity.h"
 
 #if LV_USE_FREETYPE
 
-#ifndef NON_AMD64_BUILD
+#if __WORDSIZE == 64
     #define TEST_FREETYPE_ASSERT_EQUAL_SCREENSHOT(NAME) TEST_ASSERT_EQUAL_SCREENSHOT("libs/freetype_" NAME ".lp64.png")
-#else
+#elif __WORDSIZE == 32
     #define TEST_FREETYPE_ASSERT_EQUAL_SCREENSHOT(NAME) TEST_ASSERT_EQUAL_SCREENSHOT("libs/freetype_" NAME ".lp32.png")
 #endif
 
@@ -480,11 +479,11 @@ void test_freetype_outline_rendering_test(void)
     lv_font_get_glyph_dsc(font_italic, &g, 0x9F98, '\0');
 
     const lv_ll_t * outline_data;
-    outline_data = (lv_ll_t *) lv_font_get_glyph_bitmap(&g, NULL);
+    outline_data = (lv_ll_t *)lv_font_get_glyph_bitmap(&g, 0x9F98, NULL);
 
     uint32_t i = 0;
     lv_freetype_outline_event_param_t * param;
-    LV_LL_READ(outline_data, param) {
+    _LV_LL_READ(outline_data, param) {
 #if OPTION_GENERATE_OUTLINE_DATA
         /*FOR Generate outline data*/
 #if OPTION_GENERATE_VECTOR_OPS_STRING
@@ -518,14 +517,14 @@ static void freetype_outline_event_cb(lv_event_t * e)
     switch(code) {
         case LV_EVENT_CREATE:
             param->outline = lv_malloc_zeroed(sizeof(lv_ll_t));
-            lv_ll_init(param->outline, sizeof(lv_freetype_outline_event_param_t));
+            _lv_ll_init(param->outline, sizeof(lv_freetype_outline_event_param_t));
             break;
         case LV_EVENT_DELETE:
-            lv_ll_clear(param->outline);
+            _lv_ll_clear(param->outline);
             lv_free(param->outline);
             break;
         case LV_EVENT_INSERT: {
-                void * entry = lv_ll_ins_tail(param->outline);
+                void * entry = _lv_ll_ins_tail(param->outline);
                 lv_memcpy(entry, param, sizeof(lv_freetype_outline_event_param_t));
                 break;
             }

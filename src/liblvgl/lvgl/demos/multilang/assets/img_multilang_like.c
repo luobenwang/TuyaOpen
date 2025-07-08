@@ -12,7 +12,7 @@
     #include "lvgl/lvgl.h"
 #endif
 
-#if defined(LV_USE_DEMO_MULTILANG) || defined(LV_USE_DEMO_TRANSFORM)
+#if LV_USE_DEMO_MULTILANG
 
 #ifndef LV_ATTRIBUTE_MEM_ALIGN
     #define LV_ATTRIBUTE_MEM_ALIGN

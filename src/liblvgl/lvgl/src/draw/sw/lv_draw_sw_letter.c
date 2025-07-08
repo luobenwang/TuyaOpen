@@ -6,8 +6,6 @@
 /*********************
  *      INCLUDES
  *********************/
-#include "blend/lv_draw_sw_blend_private.h"
-#include "../lv_draw_label_private.h"
 #include "lv_draw_sw.h"
 #if LV_USE_DRAW_SW
 
@@ -17,7 +15,7 @@
 #include "../../misc/lv_area.h"
 #include "../../misc/lv_style.h"
 #include "../../font/lv_font.h"
-#include "../../core/lv_refr_private.h"
+#include "../../core/lv_refr.h"
 #include "../../stdlib/lv_string.h"
 
 /*********************

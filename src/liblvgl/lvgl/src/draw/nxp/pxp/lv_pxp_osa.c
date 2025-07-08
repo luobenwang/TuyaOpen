@@ -15,20 +15,14 @@
 
 #include "lv_pxp_osa.h"
 
-#if LV_USE_PXP
-#if LV_USE_DRAW_PXP || LV_USE_ROTATE_PXP
+#if LV_USE_DRAW_PXP
 #include "lv_pxp_utils.h"
 #include "../../../misc/lv_log.h"
-#include "../../../osal/lv_os.h"
 #include "fsl_pxp.h"
 
 #if defined(SDK_OS_FREE_RTOS)
     #include "FreeRTOS.h"
-#endif
-
-#if defined(__ZEPHYR__)
-    #include <zephyr/kernel.h>
-    #include <zephyr/irq.h>
+    #include "semphr.h"
 #endif
 
 /*********************
@@ -63,19 +57,12 @@ static void _pxp_run(void);
  */
 static void _pxp_wait(void);
 
-#if defined(__ZEPHYR__)
-    /**
-    * Interrupt handler for Zephyr IRQ
-    */
-    static void _pxp_zephyr_irq_handler(void *);
-#endif
-
 /**********************
  *  STATIC VARIABLES
  **********************/
 
-#if LV_USE_OS
-    static lv_thread_sync_t pxp_sync;
+#if defined(SDK_OS_FREE_RTOS)
+    static SemaphoreHandle_t xPXPIdleSemaphore;
 #endif
 static volatile bool ucPXPIdle;
 
@@ -96,10 +83,20 @@ static pxp_cfg_t _pxp_default_cfg = {
 
 void PXP_IRQHandler(void)
 {
+#if defined(SDK_OS_FREE_RTOS)
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+#endif
+
     if(kPXP_CompleteFlag & PXP_GetStatusFlags(PXP_ID)) {
         PXP_ClearStatusFlags(PXP_ID, kPXP_CompleteFlag);
-#if LV_USE_OS
-        lv_thread_sync_signal_isr(&pxp_sync);
+#if defined(SDK_OS_FREE_RTOS)
+        xSemaphoreGiveFromISR(xPXPIdleSemaphore, &xHigherPriorityTaskWoken);
+
+        /* If xHigherPriorityTaskWoken is now set to pdTRUE then a context switch
+        should be performed to ensure the interrupt returns directly to the highest
+        priority task.  The macro used for this purpose is dependent on the port in
+        use and may be called portEND_SWITCHING_ISR(). */
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 #else
         ucPXPIdle = true;
 #endif
@@ -115,45 +112,24 @@ pxp_cfg_t * pxp_get_default_cfg(void)
  *   STATIC FUNCTIONS
  **********************/
 
-#if defined(__ZEPHYR__)
-static void _pxp_zephyr_irq_handler(void *)
-{
-    PXP_IRQHandler();
-}
-#endif
-
 static void _pxp_interrupt_init(void)
 {
-#if LV_USE_OS
-    if(lv_thread_sync_init(&pxp_sync) != LV_RESULT_OK) {
-        PXP_ASSERT_MSG(false, "Failed to init thread_sync.");
-    }
-#endif
+#if defined(SDK_OS_FREE_RTOS)
+    xPXPIdleSemaphore = xSemaphoreCreateBinary();
+    PXP_ASSERT_MSG(xPXPIdleSemaphore, "xSemaphoreCreateBinary failed!");
 
-#if defined(__ZEPHYR__)
-    IRQ_CONNECT(DT_IRQN(DT_NODELABEL(pxp)), CONFIG_LV_Z_PXP_INTERRUPT_PRIORITY, _pxp_zephyr_irq_handler, NULL, 0);
-    irq_enable(DT_IRQN(DT_NODELABEL(pxp)));
-#elif defined(SDK_OS_FREE_RTOS)
     NVIC_SetPriority(PXP_IRQ_ID, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 1);
 #endif
-
-#if !defined(__ZEPHYR__)
-    NVIC_EnableIRQ(PXP_IRQ_ID);
-#endif
-
     ucPXPIdle = true;
+
+    NVIC_EnableIRQ(PXP_IRQ_ID);
 }
 
 static void _pxp_interrupt_deinit(void)
 {
-#if defined(__ZEPHYR__)
-    irq_disable(DT_IRQN(DT_NODELABEL(pxp)));
-#else
     NVIC_DisableIRQ(PXP_IRQ_ID);
-#endif
-
-#if LV_USE_OS
-    lv_thread_sync_delete(&pxp_sync);
+#if defined(SDK_OS_FREE_RTOS)
+    vSemaphoreDelete(xPXPIdleSemaphore);
 #endif
 }
 
@@ -173,10 +149,12 @@ static void _pxp_run(void)
  */
 static void _pxp_wait(void)
 {
+#if defined(SDK_OS_FREE_RTOS)
+    /* Return if PXP was never started, otherwise the semaphore will lock forever. */
     if(ucPXPIdle == true)
         return;
-#if LV_USE_OS
-    if(lv_thread_sync_wait(&pxp_sync) == LV_RESULT_OK)
+
+    if(xSemaphoreTake(xPXPIdleSemaphore, portMAX_DELAY) == pdTRUE)
         ucPXPIdle = true;
 #else
     while(ucPXPIdle == false) {
@@ -184,5 +162,4 @@ static void _pxp_wait(void)
 #endif
 }
 
-#endif /*LV_USE_DRAW_PXP || LV_USE_ROTATE_PXP*/
-#endif /*LV_USE_PXP*/
+#endif /*LV_USE_DRAW_PXP*/

@@ -6,8 +6,6 @@
 /*********************
  *      INCLUDES
  *********************/
-#include "../../misc/lv_anim_private.h"
-#include "../../core/lv_obj_class_private.h"
 #include "../../lvgl.h"
 #if LV_USE_SPINNER
 

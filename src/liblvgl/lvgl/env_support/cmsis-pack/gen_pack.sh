@@ -54,7 +54,6 @@ PACK_BASE_FILES="
   ../../LICENCE.txt
   ../../README.md
   ../../lvgl.h
-  ../../lv_version.h
   lv_conf_cmsis.h
   lv_cmsis_pack.txt
 "

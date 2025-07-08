@@ -20,34 +20,10 @@ rsource "./OS_SERVICE_Kconfig"
 choice
     prompt "Choice a board"
 
-    config BOARD_CHOICE_T3_2S
-        bool "T3-2S"
-        if (BOARD_CHOICE_T3_2S)
-            rsource "./T3-2S/Kconfig"
-        endif
-
-    config BOARD_CHOICE_T3_3S
-        bool "T3-3S"
-        if (BOARD_CHOICE_T3_3S)
-            rsource "./T3-3S/Kconfig"
-        endif
-
-    config BOARD_CHOICE_T3_E2
-        bool "T3-E2"
-        if (BOARD_CHOICE_T3_E2)
-            rsource "./T3-E2/Kconfig"
-        endif
-
-    config BOARD_CHOICE_T3_M
-        bool "T3-M"
-        if (BOARD_CHOICE_T3_M)
-            rsource "./T3-M/Kconfig"
-        endif
-
-    config BOARD_CHOICE_T3_U
-        bool "T3-U"
-        if (BOARD_CHOICE_T3_U)
-            rsource "./T3-U/Kconfig"
+    config BOARD_CHOICE_T3_LCD_DEVKIT
+        bool "T3_LCD_DEVKIT"
+        if (BOARD_CHOICE_T3_LCD_DEVKIT)
+            rsource "./T3_LCD_DEVKIT/Kconfig"
         endif
 
 endchoice

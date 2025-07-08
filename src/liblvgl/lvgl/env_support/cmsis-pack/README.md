@@ -40,38 +40,70 @@ remove the misleading guide above this code segment.
 4. Remove macro definitions for
 
    - LV_USE_DEMO_WIDGETS
+   
    - LV_USE_DEMO_BENCHMARK
+   
    - LV_USE_IME_PINYIN
+   
    - LV_USE_OS
+   
    - LV_USE_FILE_EXPLORER
+   
    - LV_USE_DEMO_WIDGETS
+   
    - LV_USE_DEMO_KEYPAD_AND_ENCODER
+   
    - LV_USE_DEMO_BENCHMARK
+   
    - LV_USE_DEMO_RENDER
+   
    - LV_USE_DEMO_STRESS
+   
    - LV_USE_DEMO_MUSIC
+   
    - LV_USE_DEMO_FLEX_LAYOUT
+   
    - LV_USE_DEMO_MULTILANG
+   
    - LV_USE_DEMO_TRANSFORM
+   
    - LV_USE_DEMO_SCROLL
+   
    - LV_USE_DEMO_VECTOR_GRAPHIC
+   
    - LV_USE_DRAW_VGLITE
+   
    - LV_USE_DRAW_VG_LITE
-   - LV_USE_PXP
+   
+   - LV_USE_DRAW_PXP
+   
    - LV_USE_DRAW_SDL
-   - LV_USE_DRAW_ARM2D_SYNC
+   
+   - LV_USE_DRAW_ARM2D
+   
    - LV_USE_SNAPSHOT
+   
    - LV_USE_MONKEY
+   
    - LV_USE_GRIDNAV
+   
    - LV_USE_FRAGMENT
+   
    - LV_USE_IMGFONT
+   
    - LV_USE_LINUX_DRM
+   
    - LV_USE_TFT_ESPI
+   
    - LV_USE_ST7735
+   
    - LV_USE_ST7789
+   
    - LV_USE_ST7796
+   
    - LV_USE_ILI9341
-   - LV_USE_RENESAS_GLCDC   
+   
+     
    
 5. Update `LV_LOG_PRINTF` to `1` and `LV_LOG_LEVEL` to `LV_LOG_LEVEL_USER`
 
@@ -94,8 +126,6 @@ Make sure `LV_MEM_SIZE` is no less than `(128*1024U)`.
     - \#define LV_USE_FS_WIN32 0
     - \#define LV_USE_FS_FATFS 0
     - #define LV_USE_FS_LITTLEFS 0
-    - #define LV_USE_FS_ARDUINO_ESP_LITTLEFS 0
-    - #define LV_USE_FS_ARDUINO_SD 0
     - #define LV_USE_FS_MEMFS 0
     - \#define LV_USE_LODEPNG 0
     - #define LV_USE_LIBPNG 0
@@ -171,7 +201,7 @@ with:
         /*turn-on helium acceleration when Arm-2D and the Helium-powered device are detected */
         #if defined(__ARM_FEATURE_MVE) && __ARM_FEATURE_MVE
             #define LV_USE_DRAW_SW_ASM  LV_DRAW_SW_ASM_HELIUM
-            #define LV_USE_DRAW_ARM2D_SYNC   1
+            #define LV_USE_DRAW_ARM2D   1
         #endif
     #endif
 
@@ -184,14 +214,6 @@ with:
 
 ```c
 #define LV_PROFILER_INCLUDE "src/misc/lv_profiler_builtin.h"
-```
-
-
-
-14. Add the following macro definition to **COLOR SETTINGS** section:
-
-```c
-#define LV_COLOR_16_SWAP 0
 ```
 
 

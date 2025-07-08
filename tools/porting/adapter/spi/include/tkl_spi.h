@@ -44,7 +44,7 @@ OPERATE_RET tkl_spi_deinit(TUYA_SPI_NUM_E port);
  *
  * @return  OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_spi_send(TUYA_SPI_NUM_E port, void *data, uint16_t size);
+OPERATE_RET tkl_spi_send(TUYA_SPI_NUM_E port, void *data, uint32_t size);
 
 /**
  * spi_recv
@@ -55,7 +55,7 @@ OPERATE_RET tkl_spi_send(TUYA_SPI_NUM_E port, void *data, uint16_t size);
  *
  * @return  OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_spi_recv(TUYA_SPI_NUM_E port, void *data, uint16_t size);
+OPERATE_RET tkl_spi_recv(TUYA_SPI_NUM_E port, void *data, uint32_t size);
 
 /**
  * @brief spi transfer
@@ -148,6 +148,16 @@ int32_t tkl_spi_get_data_count(TUYA_SPI_NUM_E port);
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
 OPERATE_RET tkl_spi_ioctl(TUYA_SPI_NUM_E port, uint32_t cmd, void *args);
+
+/**
+ * @brief spi get max supported dma data length.
+ * 
+ * @param[in] NULL
+ *
+ * @return >=0,number of supported dma data length. <0,err. 
+ * during  tkl_spi_send, tkl_spi_recv and tkl_spi_transfer operation.
+ */
+uint32_t  tkl_spi_get_max_dma_data_length(void);
 
 #ifdef __cplusplus
 }

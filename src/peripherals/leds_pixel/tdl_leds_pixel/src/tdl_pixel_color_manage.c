@@ -28,9 +28,9 @@
 /***********************************************************
 ***********************function define**********************
 ***********************************************************/
-STATIC VOID_T __tdl_pixel_only_set_cw(PIXEL_HANDLE_T handle, USHORT_T *buff, PIXEL_COLOR_TP_E tp, UCHAR_T color_num, UINT_T index, PIXEL_COLOR_T *color)
+static void_T __tdl_pixel_only_set_cw(PIXEL_HANDLE_T handle, USHORT_T *buff, PIXEL_COLOR_TP_E tp, uint8_t color_num,  index, PIXEL_COLOR_T *color)
 {
-    UINT_T pos = 0;
+    uint32_t pos = 0;
     PIXEL_DEV_NODE_T *device = (PIXEL_DEV_NODE_T *)handle;
 
     if(NULL == buff) {
@@ -64,9 +64,9 @@ STATIC VOID_T __tdl_pixel_only_set_cw(PIXEL_HANDLE_T handle, USHORT_T *buff, PIX
 }
 
 
-STATIC VOID_T __tdl_pixel_set_color(PIXEL_HANDLE_T handle, USHORT_T *buff, PIXEL_COLOR_TP_E tp, UCHAR_T color_num, UINT_T index, PIXEL_COLOR_T *color)
+static void_T __tdl_pixel_set_color(PIXEL_HANDLE_T handle, USHORT_T *buff, PIXEL_COLOR_TP_E tp, uint8_t color_num, uint32_t index, PIXEL_COLOR_T *color)
 {
-    UINT_T pos = 0;
+    uint32_t pos = 0;
     PIXEL_DEV_NODE_T *device = (PIXEL_DEV_NODE_T *)handle;
 
     if(NULL == buff) {
@@ -114,9 +114,9 @@ STATIC VOID_T __tdl_pixel_set_color(PIXEL_HANDLE_T handle, USHORT_T *buff, PIXEL
     return;
 }
 
-STATIC VOID_T __tdl_pixel_get_color(PIXEL_HANDLE_T handle, USHORT_T *buff, PIXEL_COLOR_TP_E tp, UCHAR_T color_num, UINT_T index, PIXEL_COLOR_T *color)
+static void_T __tdl_pixel_get_color(PIXEL_HANDLE_T handle, USHORT_T *buff, PIXEL_COLOR_TP_E tp, uint8_t color_num, uint32_t index, PIXEL_COLOR_T *color)
 {
-    UINT_T pos = 0;
+    uint32_t pos = 0;
     PIXEL_DEV_NODE_T *device = (PIXEL_DEV_NODE_T *)handle;
 
     if(NULL == buff) {
@@ -158,10 +158,10 @@ STATIC VOID_T __tdl_pixel_get_color(PIXEL_HANDLE_T handle, USHORT_T *buff, PIXEL
     return;
 }
 
-STATIC OPERATE_RET __tdl_pixel_right_shift(USHORT_T *buff, UCHAR_T color_num, INT_T start, \
-                                           INT_T end, INT_T step)
+static OPERATE_RET __tdl_pixel_right_shift(USHORT_T *buff, uint8_t color_num, int32_t start, \
+                                           int32_t end, int32_t step)
 {
-    INT_T i, temp_len = 0, rang_size=0;   
+    int32_t i, temp_len = 0, rang_size=0;   
     USHORT_T *temp = NULL;
     
     if(NULL == buff || end < start || step > end-start) {
@@ -192,10 +192,10 @@ STATIC OPERATE_RET __tdl_pixel_right_shift(USHORT_T *buff, UCHAR_T color_num, IN
     return OPRT_OK;
 }
 
-STATIC OPERATE_RET __tdl_pixel_left_shift(USHORT_T *buff, UCHAR_T color_num, INT_T start, \
-                                          INT_T end, INT_T step)
+static OPERATE_RET __tdl_pixel_left_shift(USHORT_T *buff, uint8_t color_num, int32_t start, \
+                                          int32_t end, int32_t step)
 {
-    INT_T i, temp_len = 0, rang_size=0;   
+    int32_t i, temp_len = 0, rang_size=0;   
     USHORT_T *temp = NULL;
 
     if(NULL == buff || end < start || step > end-start) {
@@ -235,9 +235,9 @@ STATIC OPERATE_RET __tdl_pixel_left_shift(USHORT_T *buff, UCHAR_T color_num, INT
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-int tdl_pixel_set_single_color(PIXEL_HANDLE_T handle, UINT_T index_start, UINT_T pixel_num, PIXEL_COLOR_T *color)
+int tdl_pixel_set_single_color(PIXEL_HANDLE_T handle, uint32_t index_start, uint32_t pixel_num, PIXEL_COLOR_T *color)
 {
-    INT_T i = 0;
+    int32_t i = 0;
     PIXEL_DEV_NODE_T *device = (PIXEL_DEV_NODE_T *)handle;
 
     if(NULL == handle || NULL == color) {
@@ -271,9 +271,9 @@ int tdl_pixel_set_single_color(PIXEL_HANDLE_T handle, UINT_T index_start, UINT_T
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-int tdl_pixel_set_multi_color(PIXEL_HANDLE_T handle, UINT_T index_start, UINT_T pixel_num, PIXEL_COLOR_T *color_arr)
+int tdl_pixel_set_multi_color(PIXEL_HANDLE_T handle, uint32_t index_start, uint32_t pixel_num, PIXEL_COLOR_T *color_arr)
 {
-    INT_T i = 0;
+    int32_t i = 0;
     PIXEL_DEV_NODE_T *device = (PIXEL_DEV_NODE_T *)handle;
 
     if(NULL == handle || NULL == color_arr) {
@@ -308,10 +308,10 @@ int tdl_pixel_set_multi_color(PIXEL_HANDLE_T handle, UINT_T index_start, UINT_T 
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-int tdl_pixel_set_single_color_with_backcolor(PIXEL_HANDLE_T handle, UINT_T index_start, UINT_T pixel_num, \
+int tdl_pixel_set_single_color_with_backcolor(PIXEL_HANDLE_T handle, uint32_t index_start, uint32_t pixel_num, \
                                                PIXEL_COLOR_T *backcolor, PIXEL_COLOR_T *color)
 {
-    INT_T i = 0;
+    int32_t i = 0;
     PIXEL_DEV_NODE_T *device = (PIXEL_DEV_NODE_T *)handle;
 
     if(NULL == handle || NULL == color || NULL == backcolor) {
@@ -351,8 +351,8 @@ int tdl_pixel_set_single_color_with_backcolor(PIXEL_HANDLE_T handle, UINT_T inde
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-int tdl_pixel_cycle_shift_color(PIXEL_HANDLE_T handle, PIXEL_SHIFT_DIR_T dir, UINT_T index_start, \
-                                UINT_T index_end, UINT_T move_step)
+int tdl_pixel_cycle_shift_color(PIXEL_HANDLE_T handle, PIXEL_SHIFT_DIR_T dir, uint32_t index_start, \
+                                uint32_t index_end, uint32_t move_step)
 {
     PIXEL_DEV_NODE_T *device = (PIXEL_DEV_NODE_T *)handle;
     OPERATE_RET op_ret = OPRT_OK;
@@ -393,10 +393,10 @@ int tdl_pixel_cycle_shift_color(PIXEL_HANDLE_T handle, PIXEL_SHIFT_DIR_T dir, UI
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-int tdl_pixel_mirror_cycle_shift_color(PIXEL_HANDLE_T handle, PIXEL_M_SHIFT_DIR_T dir, UINT_T index_start, \
-                                      UINT_T index_end, UINT_T move_step)
+int tdl_pixel_mirror_cycle_shift_color(PIXEL_HANDLE_T handle, PIXEL_M_SHIFT_DIR_T dir, uint32_t index_start, \
+                                      uint32_t index_end, uint32_t move_step)
 {
-    INT_T half_len = 0;
+    int32_t half_len = 0;
     PIXEL_DEV_NODE_T *device = (PIXEL_DEV_NODE_T *)handle;
     OPERATE_RET op_ret = OPRT_OK;
 
@@ -459,7 +459,7 @@ END:
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-int tdl_pixel_get_color(PIXEL_HANDLE_T handle, UINT_T index,  PIXEL_COLOR_T *color)
+int tdl_pixel_get_color(PIXEL_HANDLE_T handle, uint32_t index,  PIXEL_COLOR_T *color)
 {
     PIXEL_DEV_NODE_T *device = (PIXEL_DEV_NODE_T *)handle;
 
@@ -490,7 +490,7 @@ int tdl_pixel_get_color(PIXEL_HANDLE_T handle, UINT_T index,  PIXEL_COLOR_T *col
 */
 int tdl_pixel_set_single_color_all(PIXEL_HANDLE_T handle,  PIXEL_COLOR_T *color)
 {
-    INT_T i = 0;
+    int32_t i = 0;
     PIXEL_DEV_NODE_T *device = (PIXEL_DEV_NODE_T *)handle;
 
     if(NULL == handle || NULL == color) {
@@ -520,7 +520,7 @@ int tdl_pixel_set_single_color_all(PIXEL_HANDLE_T handle,  PIXEL_COLOR_T *color)
 */
 int tdl_pixel_set_single_white_all(PIXEL_HANDLE_T handle,  PIXEL_COLOR_T *color)
 {
-    INT_T i = 0;
+    int32_t i = 0;
     PIXEL_DEV_NODE_T *device = (PIXEL_DEV_NODE_T *)handle;
 
     if(NULL == handle || NULL == color) {
@@ -550,9 +550,9 @@ int tdl_pixel_set_single_white_all(PIXEL_HANDLE_T handle,  PIXEL_COLOR_T *color)
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-int tdl_pixel_copy_color(PIXEL_HANDLE_T handle, UINT_T dst_idx, UINT_T src_idx, UINT_T len)
+int tdl_pixel_copy_color(PIXEL_HANDLE_T handle, uint32_t dst_idx, uint32_t src_idx, uint32_t len)
 {
-    INT_T copy_len = 0;
+    int32_t copy_len = 0;
 
     PIXEL_DEV_NODE_T *device = (PIXEL_DEV_NODE_T *)handle;
 

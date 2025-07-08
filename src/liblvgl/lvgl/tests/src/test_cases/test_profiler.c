@@ -1,9 +1,7 @@
 #if LV_BUILD_TEST
 #include "../lvgl.h"
-#include "../../lvgl_private.h"
 
 #include "unity/unity.h"
-#include <string.h>
 
 #define OUTPUT_LINE_MAX 8
 #define OUTPUT_BUF_MAX 128
@@ -44,7 +42,7 @@ void tearDown(void)
 
 void test_profiler_normal(void)
 {
-    /* enable profiler */
+    /* enable profier */
     lv_profiler_builtin_set_enable(true);
 
     /* reset */
@@ -72,7 +70,7 @@ void test_profiler_normal(void)
 
 void test_profiler_disable(void)
 {
-    /* disable profiler */
+    /* disable profier */
     lv_profiler_builtin_set_enable(false);
 
     /* reset */

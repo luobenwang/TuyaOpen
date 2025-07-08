@@ -48,7 +48,7 @@ config ENABLE_VIDEO
     bool
     default n
 
-config ENABLE_DISPLAY
+config ENABLE_ESP_DISPLAY
     bool
     default n
 

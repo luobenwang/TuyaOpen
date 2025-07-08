@@ -92,23 +92,6 @@ static void __ui_light_theme_init(APP_THEME_COLORS_T *theme)
     theme->low_battery = lv_color_black();
 }
 
-static void __ui_dark_theme_init(APP_THEME_COLORS_T *theme)
-{
-    if (theme == NULL) {
-        return;
-    }
-
-    theme->background = lv_color_hex(0x121212);
-    theme->text = lv_color_white();
-    theme->chat_background = lv_color_hex(0x1E1E1E);
-    theme->user_bubble = lv_color_hex(0x1A6C37);
-    theme->assistant_bubble = lv_color_hex(0x333333);
-    theme->system_bubble = lv_color_hex(0x2A2A2A);
-    theme->system_text = lv_color_hex(0xAAAAAA);
-    theme->border = lv_color_hex(0x333333);
-    theme->low_battery = lv_color_hex(0x333333);
-}
-
 int __ui_font_init(UI_FONT_T *ui_font)
 {
     if (ui_font == NULL) {
@@ -172,7 +155,7 @@ int ui_init(UI_FONT_T *ui_font)
     // Emotion
     sg_ui.ui.emotion_label = lv_label_create(sg_ui.ui.content);
     lv_obj_set_style_text_font(sg_ui.ui.emotion_label, sg_ui.font.emoji, 0);
-    // lv_label_set_text(sg_ui.ui.emotion_label, FONT_AWESOME_AI_CHIP);
+    lv_label_set_text(sg_ui.ui.emotion_label, sg_ui.font.emoji_list[0].emo_icon);
 
     // Chat message
     sg_ui.ui.chat_message_label = lv_label_create(sg_ui.ui.content);

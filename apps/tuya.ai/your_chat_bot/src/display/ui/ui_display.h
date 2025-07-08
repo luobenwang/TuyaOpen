@@ -20,6 +20,8 @@
 
 #include "lvgl.h"
 
+#include "app_display.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -23,16 +23,15 @@ if (CONFIG_ENABLE_PLATFORM_LVGL STREQUAL "y")
 else ()
 # LIB_SRCS
 file(GLOB_RECURSE  LIB_SRCS
-    "${MODULE_PATH}/lvgl/src/*.c")
+    "${MODULE_PATH}/lvgl/src/*.c" "${MODULE_PATH}/port/*.c")
 
 set(LVGL_DEMO_SRCS "")
 if (CONFIG_ENABLE_LVGL_DEMO STREQUAL "y")
-    file(GLOB_RECURSE  LVGL_DEMO_SRCS "${MODULE_PATH}/lvgl/demos/*.c")
+    file(GLOB_RECURSE  LVGL_DEMO_SRCS "${MODULE_PATH}/lvgl/demos/*.c" "${MODULE_PATH}/lvgl/examples/*.c" )
 endif()
 
 list(APPEND LIB_SRCS
-    ${LVGL_DEMO_SRCS}
-    "${MODULE_PATH}/port/lv_port_disp.c")
+    ${LVGL_DEMO_SRCS})
 
 if (CONFIG_LVGL_ENABLE_TOUCH STREQUAL "y" OR CONFIG_LVGL_ENABLE_ENCODER STREQUAL "y")
     list(APPEND LIB_SRCS ${MODULE_PATH}/port/lv_port_indev.c)
@@ -53,7 +52,7 @@ list(APPEND LIB_SRCS
             "${MODULE_PATH}/port/lv_port_mem.c"
     )
 
-set(LIB_OPTIONS "-w")
+set(LIB_OPTIONS "-O3")
 
 ########################################
 # Target Configure

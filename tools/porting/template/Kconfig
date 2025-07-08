@@ -87,30 +87,46 @@ menu "configure platfomr <your-platform-name>"
     config ENABLE_I2C
         bool "ENABLE_I2C --- support i2c"
         default n
+        
+    config ENABLE_TIMER
+        bool "ENABLE_TIMER --- support hw timer"
+        default n     
 
     config ENABLE_SPI
         bool "ENABLE_SPI --- support spi"
-        default n                                
-
-    config ENABLE_TIMER
-        bool "ENABLE_TIMER --- support hw timer"
-        default n                                
+        default n    
+        
+    config ENABLE_QSPI
+        bool "ENABLE_QSPI --- support qspi"
+        default n                                      
                         
-    config ENABLE_DISPLAY
-        bool "ENABLE_DISPLAY --- support GUI display"
-        default n                                
+    config ENABLE_RGB
+        bool "ENABLE_RGB --- support LCD rgb interface"
+        default n   
+        
+    config ENABLE_MCU8080
+        bool "ENABLE_MCU8080 --- support LCD mcu8080 interface"
+        default n  
 
     config ENABLE_MEDIA
         bool "ENABLE_MEDIA --- support media"
-        default n                                
+        default n   
+        
+    config ENABLE_VAD
+        bool "ENABLE_VAD --- support voice activity detection"
+        default n  
 
-    config ENABLE_PM
-        bool "ENABLE_PM --- support power manager"
-        default n                                
+    config ENABLE_ASR
+        bool "ENABLE_ASR --- support automatic speech recognition"
+        default n
 
     config ENABLE_STORAGE
         bool "ENABLE_STORAGE --- support storage such as SDCard"
         default n                               
+
+    config ENABLE_EXT_RAM
+        bool "ENABLE_EXT_RAM --- support external ram ex: PSRAM"
+        default n   
 
     config ENABLE_DAC
         bool "ENABLE_DAC --- support dac"

@@ -108,10 +108,10 @@ typedef struct {
     uint32_t enable; // 0, 不显示遮挡; 1, 区域遮挡
     uint32_t id;     // 遮挡编号
     uint32_t color;  // 遮挡的颜色，ARGB8888类型
-    FLOAT_T x;       // 矩形区域左上点水平方向上的坐标, [0~100]
-    FLOAT_T y;       // 矩形区域左上点垂直方向上的坐标, [0~100]
-    FLOAT_T width;   // 矩形区域的宽度, [0~100]
-    FLOAT_T height;  // 矩形区域的高度, [0~100]
+    float x;       // 矩形区域左上点水平方向上的坐标, [0~100]
+    float y;       // 矩形区域左上点垂直方向上的坐标, [0~100]
+    float width;   // 矩形区域的宽度, [0~100]
+    float height;  // 矩形区域的高度, [0~100]
 } TKL_VENC_MASK_T;
 
 typedef struct {

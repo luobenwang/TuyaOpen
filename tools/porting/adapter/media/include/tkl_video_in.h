@@ -74,10 +74,10 @@ typedef struct {
 } TKL_VI_CONFIG_T;
 
 typedef struct {
-    FLOAT_T x;      // 矩形框x坐标 | [0.0 - 1.0]
-    FLOAT_T y;      // 矩形框y坐标 | [0.0 - 1.0]
-    FLOAT_T width;  // 矩形框宽度　| [0.0 - 1.0]
-    FLOAT_T height; // 矩形框高度　| [0.0 - 1.0]
+    float x;      // 矩形框x坐标 | [0.0 - 1.0]
+    float y;      // 矩形框y坐标 | [0.0 - 1.0]
+    float width;  // 矩形框宽度　| [0.0 - 1.0]
+    float height; // 矩形框高度　| [0.0 - 1.0]
 } TKL_VI_RECT_T;
 
 typedef struct {
@@ -87,7 +87,7 @@ typedef struct {
 
 typedef struct {
     TKL_VI_RECT_T draw_rect;      // coordinate region
-    FLOAT_T score;                // score       | [0.0 - 1.0]
+    float score;                // score       | [0.0 - 1.0]
     TKL_MEDIA_DETECT_TYPE_E type; // 目标类型，人形，宠物，火焰等
     uint32_t id;                  // 目标编号
 } TKL_VI_DETECT_TARGET_T;

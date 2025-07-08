@@ -1,10 +1,11 @@
 #include "../../lv_examples.h"
 #if LV_USE_MENU && LV_USE_MSGBOX && LV_BUILD_EXAMPLES
 
-typedef enum {
+enum {
     LV_MENU_ITEM_BUILDER_VARIANT_1,
     LV_MENU_ITEM_BUILDER_VARIANT_2
-} lv_menu_builder_variant_t;
+};
+typedef uint8_t lv_menu_builder_variant_t;
 
 static void back_event_handler(lv_event_t * e);
 static void switch_handler(lv_event_t * e);

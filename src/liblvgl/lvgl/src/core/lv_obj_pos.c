@@ -6,14 +6,10 @@
 /*********************
  *      INCLUDES
  *********************/
-#include "../misc/lv_area_private.h"
-#include "../layouts/lv_layout_private.h"
-#include "lv_obj_event_private.h"
-#include "lv_obj_draw_private.h"
-#include "lv_obj_private.h"
+#include "lv_obj.h"
 #include "../display/lv_display.h"
 #include "../display/lv_display_private.h"
-#include "lv_refr_private.h"
+#include "lv_refr.h"
 #include "../core/lv_global.h"
 
 /*********************
@@ -58,12 +54,12 @@ void lv_obj_set_x(lv_obj_t * obj, int32_t x)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
-    lv_style_res_t res_x;
+    lv_result_t res_x;
     lv_style_value_t v_x;
 
     res_x = lv_obj_get_local_style_prop(obj, LV_STYLE_X, &v_x, 0);
 
-    if((res_x == LV_STYLE_RES_FOUND && v_x.num != x) || res_x == LV_STYLE_RES_NOT_FOUND) {
+    if((res_x == LV_RESULT_OK && v_x.num != x) || res_x == LV_RESULT_INVALID) {
         lv_obj_set_style_x(obj, x, 0);
     }
 }
@@ -72,12 +68,12 @@ void lv_obj_set_y(lv_obj_t * obj, int32_t y)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
-    lv_style_res_t res_y;
+    lv_result_t res_y;
     lv_style_value_t v_y;
 
     res_y = lv_obj_get_local_style_prop(obj, LV_STYLE_Y, &v_y, 0);
 
-    if((res_y == LV_STYLE_RES_FOUND && v_y.num != y) || res_y == LV_STYLE_RES_NOT_FOUND) {
+    if((res_y == LV_RESULT_OK && v_y.num != y) || res_y == LV_RESULT_INVALID) {
         lv_obj_set_style_y(obj, y, 0);
     }
 }
@@ -174,7 +170,7 @@ bool lv_obj_refr_size(lv_obj_t * obj)
 
     /*If the object is already out of the parent and its position is changes
      *surely the scrollbars also changes so invalidate them*/
-    bool on1 = lv_area_is_in(&ori, &parent_fit_area, 0);
+    bool on1 = _lv_area_is_in(&ori, &parent_fit_area, 0);
     if(!on1) lv_obj_scrollbar_invalidate(parent);
 
     /*Set the length and height
@@ -200,7 +196,7 @@ bool lv_obj_refr_size(lv_obj_t * obj)
 
     /*If the object was out of the parent invalidate the new scrollbar area too.
      *If it wasn't out of the parent but out now, also invalidate the scrollbars*/
-    bool on2 = lv_area_is_in(&obj->coords, &parent_fit_area, 0);
+    bool on2 = _lv_area_is_in(&obj->coords, &parent_fit_area, 0);
     if(on1 || (!on1 && on2)) lv_obj_scrollbar_invalidate(parent);
 
     lv_obj_refresh_ext_draw_size(obj);
@@ -219,12 +215,12 @@ void lv_obj_set_size(lv_obj_t * obj, int32_t w, int32_t h)
 void lv_obj_set_width(lv_obj_t * obj, int32_t w)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
-    lv_style_res_t res_w;
+    lv_result_t res_w;
     lv_style_value_t v_w;
 
     res_w = lv_obj_get_local_style_prop(obj, LV_STYLE_WIDTH, &v_w, 0);
 
-    if((res_w == LV_STYLE_RES_FOUND && v_w.num != w) || res_w == LV_STYLE_RES_NOT_FOUND) {
+    if((res_w == LV_RESULT_OK && v_w.num != w) || res_w == LV_RESULT_INVALID) {
         lv_obj_set_style_width(obj, w, 0);
     }
 }
@@ -232,12 +228,12 @@ void lv_obj_set_width(lv_obj_t * obj, int32_t w)
 void lv_obj_set_height(lv_obj_t * obj, int32_t h)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
-    lv_style_res_t res_h;
+    lv_result_t res_h;
     lv_style_value_t v_h;
 
     res_h = lv_obj_get_local_style_prop(obj, LV_STYLE_HEIGHT, &v_h, 0);
 
-    if((res_h == LV_STYLE_RES_FOUND && v_h.num != h) || res_h == LV_STYLE_RES_NOT_FOUND) {
+    if((res_h == LV_RESULT_OK && v_h.num != h) || res_h == LV_RESULT_INVALID) {
         lv_obj_set_style_height(obj, h, 0);
     }
 }
@@ -453,9 +449,6 @@ void lv_obj_align_to(lv_obj_t * obj, const lv_obj_t * base, lv_align_t align, in
         case LV_ALIGN_OUT_RIGHT_BOTTOM:
             x = lv_obj_get_width(base);
             y = lv_obj_get_height(base) - lv_obj_get_height(obj);
-            break;
-
-        case LV_ALIGN_DEFAULT:
             break;
     }
 
@@ -728,7 +721,7 @@ void lv_obj_move_to(lv_obj_t * obj, int32_t x, int32_t y)
 
         /*If the object is already out of the parent and its position is changes
          *surely the scrollbars also changes so invalidate them*/
-        on1 = lv_area_is_in(&ori, &parent_fit_area, 0);
+        on1 = _lv_area_is_in(&ori, &parent_fit_area, 0);
         if(!on1) lv_obj_scrollbar_invalidate(parent);
     }
 
@@ -748,7 +741,7 @@ void lv_obj_move_to(lv_obj_t * obj, int32_t x, int32_t y)
     /*If the object was out of the parent invalidate the new scrollbar area too.
      *If it wasn't out of the parent but out now, also invalidate the scrollbars*/
     if(parent) {
-        bool on2 = lv_area_is_in(&obj->coords, &parent_fit_area, 0);
+        bool on2 = _lv_area_is_in(&obj->coords, &parent_fit_area, 0);
         if(on1 || (!on1 && on2)) lv_obj_scrollbar_invalidate(parent);
     }
 }
@@ -778,7 +771,7 @@ void lv_obj_transform_point_array(const lv_obj_t * obj, lv_point_t points[], siz
                                   lv_obj_point_transform_flag_t flags)
 {
     if(obj) {
-        lv_layer_type_t layer_type = lv_obj_get_layer_type(obj);
+        lv_layer_type_t layer_type = _lv_obj_get_layer_type(obj);
         bool do_tranf = layer_type == LV_LAYER_TYPE_TRANSFORM;
         bool recursive = flags & LV_OBJ_POINT_TRANSFORM_FLAG_RECURSIVE;
         bool inverse = flags & LV_OBJ_POINT_TRANSFORM_FLAG_INVERSE;
@@ -821,21 +814,13 @@ void lv_obj_invalidate_area(const lv_obj_t * obj, const lv_area_t * area)
     lv_area_copy(&area_tmp, area);
 
     if(!lv_obj_area_is_visible(obj, &area_tmp)) return;
-#if LV_DRAW_TRANSFORM_USE_MATRIX
-    /**
-     * When using the global matrix, the vertex coordinates of clip_area lose precision after transformation,
-     * which can be solved by expanding the redrawing area.
-     */
-    lv_area_increase(&area_tmp, 5, 5);
-#else
     if(obj->spec_attr && obj->spec_attr->layer_type == LV_LAYER_TYPE_TRANSFORM) {
         /*Make the area slightly larger to avoid rounding errors.
          *5 is an empirical value*/
         lv_area_increase(&area_tmp, 5, 5);
     }
-#endif
 
-    lv_inv_area(lv_obj_get_display(obj),  &area_tmp);
+    _lv_inv_area(lv_obj_get_display(obj),  &area_tmp);
 }
 
 void lv_obj_invalidate(const lv_obj_t * obj)
@@ -844,7 +829,7 @@ void lv_obj_invalidate(const lv_obj_t * obj)
 
     /*Truncate the area to the object*/
     lv_area_t obj_coords;
-    int32_t ext_size = lv_obj_get_ext_draw_size(obj);
+    int32_t ext_size = _lv_obj_get_ext_draw_size(obj);
     lv_area_copy(&obj_coords, &obj->coords);
     obj_coords.x1 -= ext_size;
     obj_coords.y1 -= ext_size;
@@ -871,12 +856,12 @@ bool lv_obj_area_is_visible(const lv_obj_t * obj, lv_area_t * area)
 
     /*Truncate the area to the object*/
     lv_area_t obj_coords;
-    int32_t ext_size = lv_obj_get_ext_draw_size(obj);
+    int32_t ext_size = _lv_obj_get_ext_draw_size(obj);
     lv_area_copy(&obj_coords, &obj->coords);
     lv_area_increase(&obj_coords, ext_size, ext_size);
 
     /*The area is not on the object*/
-    if(!lv_area_intersect(area, area, &obj_coords)) return false;
+    if(!_lv_area_intersect(area, area, &obj_coords)) return false;
 
     lv_obj_get_transformed_area(obj, area, LV_OBJ_POINT_TRANSFORM_FLAG_RECURSIVE);
 
@@ -889,12 +874,12 @@ bool lv_obj_area_is_visible(const lv_obj_t * obj, lv_area_t * area)
         /*Truncate to the parent and if no common parts break*/
         lv_area_t parent_coords = parent->coords;
         if(lv_obj_has_flag(parent, LV_OBJ_FLAG_OVERFLOW_VISIBLE)) {
-            int32_t parent_ext_size = lv_obj_get_ext_draw_size(parent);
+            int32_t parent_ext_size = _lv_obj_get_ext_draw_size(parent);
             lv_area_increase(&parent_coords, parent_ext_size, parent_ext_size);
         }
 
         lv_obj_get_transformed_area(parent, &parent_coords, LV_OBJ_POINT_TRANSFORM_FLAG_RECURSIVE);
-        if(!lv_area_intersect(area, area, &parent_coords)) return false;
+        if(!_lv_area_intersect(area, area, &parent_coords)) return false;
 
         parent = lv_obj_get_parent(parent);
     }
@@ -907,7 +892,7 @@ bool lv_obj_is_visible(const lv_obj_t * obj)
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
     lv_area_t obj_coords;
-    int32_t ext_size = lv_obj_get_ext_draw_size(obj);
+    int32_t ext_size = _lv_obj_get_ext_draw_size(obj);
     lv_area_copy(&obj_coords, &obj->coords);
     obj_coords.x1 -= ext_size;
     obj_coords.y1 -= ext_size;
@@ -939,7 +924,7 @@ bool lv_obj_hit_test(lv_obj_t * obj, const lv_point_t * point)
 
     lv_area_t a;
     lv_obj_get_click_area(obj, &a);
-    bool res = lv_area_is_point_on(&a, point, 0);
+    bool res = _lv_area_is_point_on(&a, point, 0);
     if(res == false) return false;
 
     if(lv_obj_has_flag(obj, LV_OBJ_FLAG_ADV_HITTEST)) {
@@ -965,11 +950,6 @@ int32_t lv_clamp_height(int32_t height, int32_t min_height, int32_t max_height, 
     if(LV_COORD_IS_PCT(min_height)) min_height = (ref_height * LV_COORD_GET_PCT(min_height)) / 100;
     if(LV_COORD_IS_PCT(max_height)) max_height = (ref_height * LV_COORD_GET_PCT(max_height)) / 100;
     return LV_CLAMP(min_height, height, max_height);
-}
-
-void lv_obj_center(lv_obj_t * obj)
-{
-    lv_obj_align(obj, LV_ALIGN_CENTER, 0, 0);
 }
 
 /**********************
@@ -1046,7 +1026,7 @@ static int32_t calc_content_width(lv_obj_t * obj)
                     default:
                         /* Consider other cases only if x=0 and use the width of the object.
                          * With x!=0 circular dependency could occur. */
-                        if(lv_obj_get_style_x(child, 0) == 0) {
+                        if(lv_obj_get_style_y(child, 0) == 0) {
                             child_res_tmp = lv_area_get_width(&child->coords) + space_left;
                             child_res_tmp += lv_obj_get_style_margin_right(child, LV_PART_MAIN);
                         }
@@ -1138,7 +1118,7 @@ static void layout_update_core(lv_obj_t * obj)
         lv_obj_refr_pos(obj);
 
         if(child_cnt > 0) {
-            lv_layout_apply(obj);
+            _lv_layout_apply(obj);
         }
     }
 

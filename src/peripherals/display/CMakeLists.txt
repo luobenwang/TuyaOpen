@@ -3,44 +3,40 @@
 # @brief 
 #/
 
+if (CONFIG_ENABLE_DISPLAY STREQUAL "y")
 # MODULE_PATH
-if (CONFIG_ENABLE_DISPLAY_DRIVER STREQUAL "y")
-
 set(MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
 # MODULE_NAME
 get_filename_component(MODULE_NAME ${MODULE_PATH} NAME)
 
 # LIB_SRCS
-if (CONFIG_ENABLE_DISPLAY_LCD_RGB STREQUAL "y")
+file(GLOB_RECURSE disp_srcs "${MODULE_PATH}/tdl_display/src/*.c")
 
-    list(APPEND LIB_SRCS ${MODULE_PATH}/tft_rgb/disp_sw_spi_driver.c)
-
-if (CONFIG_ENABLE_LCD_RGB_ILI9488 STREQUAL "y")
-    list(APPEND LIB_SRCS ${MODULE_PATH}/tft_rgb/disp_rgb_ili9488.c)
-else()
-    message(FATAL_ERROR "Please select a display chip")
+if (CONFIG_ENABLE_SPI STREQUAL "y")   
+    file(GLOB_RECURSE tdd_disp_spi_srcs "${MODULE_PATH}/tdd_display/src/spi/*.c")
 endif()
 
+if (CONFIG_ENABLE_QSPI STREQUAL "y")
+    file(GLOB_RECURSE tdd_disp_qspi_srcs "${MODULE_PATH}/tdd_display/src/qspi/*.c")
+endif()
+
+if (CONFIG_ENABLE_RGB STREQUAL "y")   
+    file(GLOB_RECURSE tdd_disp_rgb_srcs "${MODULE_PATH}/tdd_display/src/rgb/*.c")
+endif()
+
+if (CONFIG_ENABLE_MCU8080 STREQUAL "y")   
+    file(GLOB_RECURSE tdd_disp_8080_srcs "${MODULE_PATH}/tdd_display/src/mcu8080/*.c")
 endif()
 
 
-if (CONFIG_ENABLE_DISPLAY_LCD_SPI STREQUAL "y")
-
-if (CONFIG_ENABLE_LCD_SPI_ST7789 STREQUAL "y")
-    list(APPEND LIB_SRCS ${MODULE_PATH}/tft_spi/disp_spi_st7789.c)
-elseif(CONFIG_ENABLE_LCD_SPI_GC9A01 STREQUAL "y")
-    list(APPEND LIB_SRCS ${MODULE_PATH}/tft_spi/disp_spi_gc9a01.c)
-elseif(CONFIG_ENABLE_LCD_SPI_ILI9341 STREQUAL "y")
-    list(APPEND LIB_SRCS ${MODULE_PATH}/tft_spi/disp_spi_ili9341.c)
-else()
-    message(FATAL_ERROR "Please select a display chip")
-endif()
-
-endif()
+set(LIB_SRCS ${disp_srcs} ${tdd_disp_spi_srcs} ${tdd_disp_qspi_srcs} ${tdd_disp_rgb_srcs} ${tdd_disp_8080_srcs})
 
 # LIB_PUBLIC_INC
-set(LIB_PUBLIC_INC ${MODULE_PATH}/include)
+set(LIB_PUBLIC_INC 
+    ${MODULE_PATH}/tdl_display/include
+    ${MODULE_PATH}/tdd_display/include
+    )
 
 ########################################
 # Target Configure
@@ -53,6 +49,9 @@ target_sources(${MODULE_NAME}
     )
 
 target_include_directories(${MODULE_NAME}
+    PRIVATE
+        ${LIB_PRIVATE_INC}
+
     PUBLIC
         ${LIB_PUBLIC_INC}
     )

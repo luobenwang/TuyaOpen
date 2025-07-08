@@ -153,7 +153,7 @@ OPERATE_RET tdd_sm16703p_driver_close(DRIVER_HANDLE_T *handle)
  * @param[in]: *driver_name -> 设备名
  * @return: success -> OPRT_OK
  */
-OPERATE_RET tdd_sm16703p_driver_register(CHAR_T *driver_name, PIXEL_DRIVER_CONFIG_T *init_param)
+OPERATE_RET tdd_sm16703p_driver_register(char *driver_name, PIXEL_DRIVER_CONFIG_T *init_param)
 {
     OPERATE_RET ret = OPRT_OK;
     PIXEL_DRIVER_INTFS_T intfs;

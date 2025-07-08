@@ -29,14 +29,14 @@
 OPERATE_RET tdd_pixel_pwm_open(PIXEL_PWM_CFG_T *p_drv)
 {
     OPERATE_RET rt = OPRT_OK;
-    UINT_T i = 0;    
+    uint32_t i = 0;    
     TUYA_PWM_BASE_CFG_T pwm_cfg = {0};
 
     if(NULL == p_drv) {
         return OPRT_INVALID_PARM;
     }
 
-    memset((UCHAR_T *)&pwm_cfg, 0x00, SIZEOF(pwm_cfg));
+    memset((uint8_t *)&pwm_cfg, 0x00, SIZEOF(pwm_cfg));
 
     pwm_cfg.frequency = p_drv->pwm_freq;
     
@@ -62,7 +62,7 @@ OPERATE_RET tdd_pixel_pwm_open(PIXEL_PWM_CFG_T *p_drv)
 OPERATE_RET tdd_pixel_pwm_close(PIXEL_PWM_CFG_T *p_drv)
 {
     OPERATE_RET rt = OPRT_OK;
-    UINT_T i = 0;
+    uint32_t i = 0;
 
     if(NULL == p_drv) {
         return OPRT_INVALID_PARM;

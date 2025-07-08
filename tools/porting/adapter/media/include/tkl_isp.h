@@ -80,19 +80,19 @@ typedef struct {
     uint32_t dayToNight;      // day to night threshold
     uint32_t nightToDay;      // night to day threshold
     uint32_t dnSwitchOffset;  // day and night switch offset
-    FLOAT_T offsetR[2];       // offsetR，R[0] default 0.01
-    FLOAT_T offsetG[2];       // offsetG，G[0] default 0.01
-    FLOAT_T offsetB[2];       // offsetB，B[0] default 0.01
-    FLOAT_T coffR[6];         // coefficient - R
-    FLOAT_T coffG[6];         // coefficient - G
-    FLOAT_T coffB[6];         // coefficient - B
+    float offsetR[2];       // offsetR，R[0] default 0.01
+    float offsetG[2];       // offsetG，G[0] default 0.01
+    float offsetB[2];       // offsetB，B[0] default 0.01
+    float coffR[6];         // coefficient - R
+    float coffG[6];         // coefficient - G
+    float coffB[6];         // coefficient - B
 } TKL_ISP_DN_SWITCH_CONFIG_T; // ADN config
 
 /*ISP数据格式*/
 typedef struct {
-    FLOAT_T coffR[6];     // coefficient - R
-    FLOAT_T coffG[6];     // coefficient - G
-    FLOAT_T coffB[6];     // coefficient - B
+    float coffR[6];     // coefficient - R
+    float coffG[6];     // coefficient - G
+    float coffB[6];     // coefficient - B
     uint16_t GlobalR;     // global R mean
     uint16_t GlobalG;     // global G mean
     uint16_t GlobalB;     // global B mean
@@ -106,15 +106,15 @@ typedef struct {
     int32_t ISPDGain;     // ISP gain
     int32_t ISO;          // sensor total gain, again*dgain*ispdgain
     int32_t OverExpFlag;  // over exposure flag
-    FLOAT_T RGBComponent; // sum of RGB
-    FLOAT_T Illumination; // temporary illumination
-    FLOAT_T Exposure;     // total exposure value
+    float RGBComponent; // sum of RGB
+    float Illumination; // temporary illumination
+    float Exposure;     // total exposure value
 } TKL_ISP_DN_SWITCH_CALC_DATA_T;
 
 typedef struct {
-    FLOAT_T R_Return;
-    FLOAT_T G_Return;
-    FLOAT_T B_Return;
+    float R_Return;
+    float G_Return;
+    float B_Return;
 } TKL_ISP_DN_RETURN_T;
 
 typedef struct {

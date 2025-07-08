@@ -69,15 +69,23 @@ config ENABLE_SPI
     bool
     default y
 
+config ENABLE_QSPI
+    bool
+    default y
+
+config ENABLE_MCU8080
+    bool
+    default y   
+
 config ENABLE_TIMER
     bool
     default y
 
-config ENABLE_DISPLAY
+config ENABLE_MEDIA
     bool
     default y
 
-config ENABLE_MEDIA
+config ENABLE_RGB
     bool
     default y
 

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file lv_color.h
  *
  */
@@ -17,6 +17,8 @@ extern "C" {
 #include "lv_assert.h"
 #include "lv_math.h"
 #include "lv_types.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 /*********************
  *      DEFINES
@@ -24,20 +26,20 @@ extern "C" {
 LV_EXPORT_CONST_INT(LV_COLOR_DEPTH);
 
 #if LV_COLOR_DEPTH == 8
-#define LV_COLOR_NATIVE_WITH_ALPHA_SIZE 2
+#define _LV_COLOR_NATIVE_WITH_ALPHA_SIZE 2
 #elif LV_COLOR_DEPTH == 16
-#define LV_COLOR_NATIVE_WITH_ALPHA_SIZE 3
+#define _LV_COLOR_NATIVE_WITH_ALPHA_SIZE 3
 #elif LV_COLOR_DEPTH == 24
-#define LV_COLOR_NATIVE_WITH_ALPHA_SIZE 4
+#define _LV_COLOR_NATIVE_WITH_ALPHA_SIZE 4
 #elif LV_COLOR_DEPTH == 32
-#define LV_COLOR_NATIVE_WITH_ALPHA_SIZE 4
+#define _LV_COLOR_NATIVE_WITH_ALPHA_SIZE 4
 #endif
 
 /**
  * Opacity percentages.
  */
 
-enum {
+enum _lv_opa_t {
     LV_OPA_TRANSP = 0,
     LV_OPA_0      = 0,
     LV_OPA_10     = 25,
@@ -53,15 +55,15 @@ enum {
     LV_OPA_COVER  = 255,
 };
 
-#define LV_OPA_MIN 2    /**< Opacities below this will be transparent */
-#define LV_OPA_MAX 253  /**< Opacities above this will fully cover */
+#ifdef DOXYGEN
+typedef _lv_opa_t lv_opa_t;
+#else
+typedef uint8_t lv_opa_t;
+#endif /*DOXYGEN*/
 
-/**
- * Get the pixel size of a color format in bits, bpp
- * @param cf        a color format (`LV_COLOR_FORMAT_...`)
- * @return          the pixel size in bits
- * @sa              lv_color_format_get_bpp
- */
+#define LV_OPA_MIN 2    /*Opacities below this will be transparent*/
+#define LV_OPA_MAX 253  /*Opacities above this will fully cover*/
+
 #define LV_COLOR_FORMAT_GET_BPP(cf) (       \
                                             (cf) == LV_COLOR_FORMAT_I1 ? 1 :        \
                                             (cf) == LV_COLOR_FORMAT_A1 ? 1 :        \
@@ -72,7 +74,6 @@ enum {
                                             (cf) == LV_COLOR_FORMAT_L8 ? 8 :        \
                                             (cf) == LV_COLOR_FORMAT_A8 ? 8 :        \
                                             (cf) == LV_COLOR_FORMAT_I8 ? 8 :        \
-                                            (cf) == LV_COLOR_FORMAT_AL88 ? 16 :     \
                                             (cf) == LV_COLOR_FORMAT_RGB565 ? 16 :   \
                                             (cf) == LV_COLOR_FORMAT_RGB565A8 ? 16 : \
                                             (cf) == LV_COLOR_FORMAT_ARGB8565 ? 24 : \
@@ -81,14 +82,6 @@ enum {
                                             (cf) == LV_COLOR_FORMAT_XRGB8888 ? 32 : \
                                             0                                       \
                                     )
-
-/**
- * Get the pixel size of a color format in bytes
- * @param cf        a color format (`LV_COLOR_FORMAT_...`)
- * @return          the pixel size in bytes
- * @sa              lv_color_format_get_size
- */
-#define LV_COLOR_FORMAT_GET_SIZE(cf) ((LV_COLOR_FORMAT_GET_BPP(cf) + 7) >> 3)
 
 /**********************
  *      TYPEDEFS
@@ -119,12 +112,7 @@ typedef struct {
     uint8_t v;
 } lv_color_hsv_t;
 
-typedef struct {
-    uint8_t lumi;
-    uint8_t alpha;
-} lv_color16a_t;
-
-typedef enum {
+enum _lv_color_format_t {
     LV_COLOR_FORMAT_UNKNOWN           = 0,
 
     LV_COLOR_FORMAT_RAW               = 0x01,
@@ -141,8 +129,7 @@ typedef enum {
     /*2 byte (+alpha) formats*/
     LV_COLOR_FORMAT_RGB565            = 0x12,
     LV_COLOR_FORMAT_ARGB8565          = 0x13,   /**< Not supported by sw renderer yet. */
-    LV_COLOR_FORMAT_RGB565A8          = 0x14,   /**< Color array followed by Alpha array*/
-    LV_COLOR_FORMAT_AL88              = 0x15,   /**< L8 with alpha >*/
+    LV_COLOR_FORMAT_RGB565A8          = 0x14    /**< Color array followed by Alpha array*/,
 
     /*3 byte (+alpha) formats*/
     LV_COLOR_FORMAT_RGB888            = 0x0F,
@@ -171,12 +158,8 @@ typedef enum {
     LV_COLOR_FORMAT_YUV_END           = LV_COLOR_FORMAT_UYVY,
 
     /*Color formats in which LVGL can render*/
-#if LV_COLOR_DEPTH == 1
-    LV_COLOR_FORMAT_NATIVE            = LV_COLOR_FORMAT_I1,
-    LV_COLOR_FORMAT_NATIVE_WITH_ALPHA = LV_COLOR_FORMAT_I1,
-#elif LV_COLOR_DEPTH == 8
+#if LV_COLOR_DEPTH == 8
     LV_COLOR_FORMAT_NATIVE            = LV_COLOR_FORMAT_L8,
-    LV_COLOR_FORMAT_NATIVE_WITH_ALPHA = LV_COLOR_FORMAT_AL88,
 #elif LV_COLOR_DEPTH == 16
     LV_COLOR_FORMAT_NATIVE            = LV_COLOR_FORMAT_RGB565,
     LV_COLOR_FORMAT_NATIVE_WITH_ALPHA = LV_COLOR_FORMAT_RGB565A8,
@@ -186,11 +169,14 @@ typedef enum {
 #elif LV_COLOR_DEPTH == 32
     LV_COLOR_FORMAT_NATIVE            = LV_COLOR_FORMAT_XRGB8888,
     LV_COLOR_FORMAT_NATIVE_WITH_ALPHA = LV_COLOR_FORMAT_ARGB8888,
-#else
-#error "LV_COLOR_DEPTH should be 1, 8, 16, 24 or 32"
 #endif
+};
 
-} lv_color_format_t;
+#ifdef DOXYGEN
+typedef _lv_color_format_t lv_color_format_t;
+#else
+typedef uint8_t lv_color_format_t;
+#endif /*DOXYGEN*/
 
 #define LV_COLOR_FORMAT_IS_ALPHA_ONLY(cf) ((cf) >= LV_COLOR_FORMAT_A1 && (cf) <= LV_COLOR_FORMAT_A8)
 #define LV_COLOR_FORMAT_IS_INDEXED(cf) ((cf) >= LV_COLOR_FORMAT_I1 && (cf) <= LV_COLOR_FORMAT_I8)
@@ -215,19 +201,20 @@ typedef enum {
 
 /**
  * Get the pixel size of a color format in bits, bpp
- * @param cf        a color format (`LV_COLOR_FORMAT_...`)
+ * @param src_cf    a color format (`LV_COLOR_FORMAT_...`)
  * @return          the pixel size in bits
- * @sa              LV_COLOR_FORMAT_GET_BPP
  */
 uint8_t lv_color_format_get_bpp(lv_color_format_t cf);
 
 /**
  * Get the pixel size of a color format in bytes
- * @param cf        a color format (`LV_COLOR_FORMAT_...`)
+ * @param src_cf    a color format (`LV_COLOR_FORMAT_...`)
  * @return          the pixel size in bytes
- * @sa              LV_COLOR_FORMAT_GET_SIZE
  */
-uint8_t lv_color_format_get_size(lv_color_format_t cf);
+static inline uint8_t lv_color_format_get_size(lv_color_format_t cf)
+{
+    return (lv_color_format_get_bpp(cf) + 7) >> 3;
+}
 
 /**
  * Check if a color format has alpha channel or not
@@ -249,7 +236,11 @@ lv_color32_t lv_color_to_32(lv_color_t color, lv_opa_t opa);
  * @param c     an RGB888 color
  * @return      `c` as an integer
  */
-uint32_t lv_color_to_int(lv_color_t c);
+static inline uint32_t lv_color_to_int(lv_color_t c)
+{
+    uint8_t * tmp = (uint8_t *) &c;
+    return tmp[0] + (tmp[1] << 8) + (tmp[2] << 16);
+}
 
 /**
  * Check if two RGB888 color are equal
@@ -257,7 +248,10 @@ uint32_t lv_color_to_int(lv_color_t c);
  * @param c2    the second color
  * @return      true: equal
  */
-bool lv_color_eq(lv_color_t c1, lv_color_t c2);
+static inline bool lv_color_eq(lv_color_t c1, lv_color_t c2)
+{
+    return lv_color_to_int(c1) == lv_color_to_int(c2);
+}
 
 /**
  * Check if two ARGB8888 color are equal
@@ -265,14 +259,24 @@ bool lv_color_eq(lv_color_t c1, lv_color_t c2);
  * @param c2    the second color
  * @return      true: equal
  */
-bool lv_color32_eq(lv_color32_t c1, lv_color32_t c2);
+static inline bool lv_color32_eq(lv_color32_t c1, lv_color32_t c2)
+{
+    return *((uint32_t *)&c1) == *((uint32_t *)&c2);
+}
 
 /**
  * Create a color from 0x000000..0xffffff input
  * @param c     the hex input
  * @return      the color
  */
-lv_color_t lv_color_hex(uint32_t c);
+static inline lv_color_t lv_color_hex(uint32_t c)
+{
+    lv_color_t ret;
+    ret.red = (c >> 16) & 0xff;
+    ret.green = (c >> 8) & 0xff;
+    ret.blue = (c >> 0) & 0xff;
+    return ret;
+}
 
 /**
  * Create an RGB888 color
@@ -281,7 +285,14 @@ lv_color_t lv_color_hex(uint32_t c);
  * @param b     the blue channel (0..255)
  * @return      the color
  */
-lv_color_t lv_color_make(uint8_t r, uint8_t g, uint8_t b);
+static inline lv_color_t lv_color_make(uint8_t r, uint8_t g, uint8_t b)
+{
+    lv_color_t ret;
+    ret.red = r;
+    ret.green = g;
+    ret.blue = b;
+    return ret;
+}
 
 /**
  * Create an ARGB8888 color
@@ -291,14 +302,26 @@ lv_color_t lv_color_make(uint8_t r, uint8_t g, uint8_t b);
  * @param a     the alpha channel (0..255)
  * @return      the color
  */
-lv_color32_t lv_color32_make(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+static inline lv_color32_t lv_color32_make(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
+    lv_color32_t ret;
+    ret.red = r;
+    ret.green = g;
+    ret.blue = b;
+    ret.alpha = a;
+    return ret;
+}
 
 /**
  * Create a color from 0x000..0xfff input
  * @param c     the hex input (e.g. 0x123 will be 0x112233)
  * @return      the color
  */
-lv_color_t lv_color_hex3(uint32_t c);
+static inline lv_color_t lv_color_hex3(uint32_t c)
+{
+    return lv_color_make((uint8_t)(((c >> 4) & 0xF0) | ((c >> 8) & 0xF)), (uint8_t)((c & 0xF0) | ((c & 0xF0) >> 4)),
+                         (uint8_t)((c & 0xF) | ((c & 0xF) << 4)));
+}
 
 /**
  * Convert am RGB888 color to RGB565 stored in `uint16_t`
@@ -323,7 +346,24 @@ uint32_t lv_color_to_u32(lv_color_t color);
  *                  mix == 255: c1
  *                  mix == 128: 0.5 x c1 + 0.5 x c2
  */
-uint16_t LV_ATTRIBUTE_FAST_MEM lv_color_16_16_mix(uint16_t c1, uint16_t c2, uint8_t mix);
+static inline uint16_t LV_ATTRIBUTE_FAST_MEM lv_color_16_16_mix(uint16_t c1, uint16_t c2, uint8_t mix)
+{
+    if(mix == 255) return c1;
+    if(mix == 0) return c2;
+
+    uint16_t ret;
+
+    /* Source: https://stackoverflow.com/a/50012418/1999969*/
+    mix = (uint32_t)((uint32_t)mix + 4) >> 3;
+
+    /*0x7E0F81F = 0b00000111111000001111100000011111*/
+    uint32_t bg = (uint32_t)(c2 | ((uint32_t)c2 << 16)) & 0x7E0F81F;
+    uint32_t fg = (uint32_t)(c1 | ((uint32_t)c1 << 16)) & 0x7E0F81F;
+    uint32_t result = ((((fg - bg) * mix) >> 5) + bg) & 0x7E0F81F;
+    ret = (uint16_t)(result >> 16) | result;
+
+    return ret;
+}
 
 /**
  * Mix white to a color
@@ -372,45 +412,33 @@ lv_color_hsv_t lv_color_to_hsv(lv_color_t color);
  * A helper for white color
  * @return      a white color
  */
-lv_color_t lv_color_white(void);
+static inline lv_color_t lv_color_white(void)
+{
+    return lv_color_make(0xff, 0xff, 0xff);
+}
 
 /**
  * A helper for black color
  * @return      a black color
  */
-lv_color_t lv_color_black(void);
+static inline lv_color_t lv_color_black(void)
+{
+    return lv_color_make(0x00, 0x00, 0x00);
+}
 
-void lv_color_premultiply(lv_color32_t * c);
+static inline void lv_color_premultiply(lv_color32_t * c)
+{
+    c->red = LV_OPA_MIX2(c->red, c->alpha);
+    c->green = LV_OPA_MIX2(c->green, c->alpha);
+    c->blue = LV_OPA_MIX2(c->blue, c->alpha);
+}
 
-void lv_color16_premultiply(lv_color16_t * c, lv_opa_t a);
-
-/**
- * Get the luminance of a color: luminance = 0.3 R + 0.59 G + 0.11 B
- * @param c a color
- * @return the brightness [0..255]
- */
-uint8_t lv_color_luminance(lv_color_t c);
-
-/**
- * Get the luminance of a color16: luminance = 0.3 R + 0.59 G + 0.11 B
- * @param c a color
- * @return the brightness [0..255]
- */
-uint8_t lv_color16_luminance(const lv_color16_t c);
-
-/**
- * Get the luminance of a color24: luminance = 0.3 R + 0.59 G + 0.11 B
- * @param c a color
- * @return the brightness [0..255]
- */
-uint8_t lv_color24_luminance(const uint8_t * c);
-
-/**
- * Get the luminance of a color32: luminance = 0.3 R + 0.59 G + 0.11 B
- * @param c a color
- * @return the brightness [0..255]
- */
-uint8_t lv_color32_luminance(lv_color32_t c);
+static inline void lv_color16_premultiply(lv_color16_t * c, lv_opa_t a)
+{
+    c->red = LV_OPA_MIX2(c->red, a);
+    c->green = LV_OPA_MIX2(c->green, a);
+    c->blue = LV_OPA_MIX2(c->blue, a);
+}
 
 /**********************
  *      MACROS

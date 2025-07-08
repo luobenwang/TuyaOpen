@@ -7,13 +7,14 @@
 /*********************
  *      INCLUDES
  *********************/
-#include "lv_keyboard_private.h"
-#include "../../core/lv_obj_class_private.h"
+#include "lv_keyboard.h"
 #if LV_USE_KEYBOARD
 
 #include "../textarea/lv_textarea.h"
 #include "../../misc/lv_assert.h"
 #include "../../stdlib/lv_string.h"
+
+#include <stdlib.h>
 
 /*********************
  *      DEFINES
@@ -37,30 +38,6 @@ static void lv_keyboard_update_ctrl_map(lv_obj_t * obj);
 /**********************
  *  STATIC VARIABLES
  **********************/
-#if LV_USE_OBJ_PROPERTY
-static const lv_property_ops_t properties[] = {
-    {
-        .id = LV_PROPERTY_KEYBOARD_TEXTAREA,
-        .setter = lv_keyboard_set_textarea,
-        .getter = lv_keyboard_get_textarea,
-    },
-    {
-        .id = LV_PROPERTY_KEYBOARD_MODE,
-        .setter = lv_keyboard_set_mode,
-        .getter = lv_keyboard_get_mode,
-    },
-    {
-        .id = LV_PROPERTY_KEYBOARD_POPOVERS,
-        .setter = lv_keyboard_set_popovers,
-        .getter = lv_keyboard_get_popovers,
-    },
-    {
-        .id = LV_PROPERTY_KEYBOARD_SELECTED_BUTTON,
-        .setter = lv_buttonmatrix_set_selected_button,
-        .getter = lv_keyboard_get_selected_button,
-    },
-};
-#endif
 
 const lv_obj_class_t lv_keyboard_class = {
     .constructor_cb = lv_keyboard_constructor,
@@ -70,18 +47,6 @@ const lv_obj_class_t lv_keyboard_class = {
     .editable = 1,
     .base_class = &lv_buttonmatrix_class,
     .name = "keyboard",
-#if LV_USE_OBJ_PROPERTY
-    .prop_index_start = LV_PROPERTY_KEYBOARD_START,
-    .prop_index_end = LV_PROPERTY_KEYBOARD_END,
-    .properties = properties,
-    .properties_count = sizeof(properties) / sizeof(properties[0]),
-
-#if LV_USE_OBJ_PROPERTY_NAME
-    .property_names = lv_keyboard_property_names,
-    .names_count = sizeof(lv_keyboard_property_names) / sizeof(lv_property_name_t),
-#endif
-
-#endif
 };
 
 static const char * const default_kb_map_lc[] = {"1#", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", LV_SYMBOL_BACKSPACE, "\n",
@@ -176,19 +141,19 @@ static const lv_buttonmatrix_ctrl_t default_kb_ctrl_num_map[] = {
     1, 1, 1, 1, 1
 };
 
-static const char * const * kb_map[10] = {
-    default_kb_map_lc,
-    default_kb_map_uc,
-    default_kb_map_spec,
-    default_kb_map_num,
-    default_kb_map_lc,
-    default_kb_map_lc,
-    default_kb_map_lc,
-    default_kb_map_lc,
+static const char * * kb_map[10] = {
+    (const char * *)default_kb_map_lc,
+    (const char * *)default_kb_map_uc,
+    (const char * *)default_kb_map_spec,
+    (const char * *)default_kb_map_num,
+    (const char * *)default_kb_map_lc,
+    (const char * *)default_kb_map_lc,
+    (const char * *)default_kb_map_lc,
+    (const char * *)default_kb_map_lc,
 #if LV_USE_ARABIC_PERSIAN_CHARS == 1
-    default_kb_map_ar,
+    (const char * *)default_kb_map_ar,
 #endif
-    NULL
+    (const char * *)NULL
 };
 static const lv_buttonmatrix_ctrl_t * kb_ctrl[10] = {
     default_kb_ctrl_lc_map,
@@ -243,7 +208,7 @@ void lv_keyboard_set_textarea(lv_obj_t * obj, lv_obj_t * ta)
 
     /*Show the cursor of the new Text area if cursor management is enabled*/
     if(keyboard->ta) {
-        lv_obj_add_state(obj, LV_STATE_FOCUSED);
+        lv_obj_add_flag(obj, LV_STATE_FOCUSED);
     }
 }
 
@@ -269,7 +234,7 @@ void lv_keyboard_set_popovers(lv_obj_t * obj, bool en)
     lv_keyboard_update_ctrl_map(obj);
 }
 
-void lv_keyboard_set_map(lv_obj_t * obj, lv_keyboard_mode_t mode, const char * const map[],
+void lv_keyboard_set_map(lv_obj_t * obj, lv_keyboard_mode_t mode, const char * map[],
                          const lv_buttonmatrix_ctrl_t ctrl_map[])
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
@@ -296,7 +261,7 @@ lv_keyboard_mode_t lv_keyboard_get_mode(const lv_obj_t * obj)
     return keyboard->mode;
 }
 
-bool lv_keyboard_get_popovers(const lv_obj_t * obj)
+bool lv_buttonmatrix_get_popovers(const lv_obj_t * obj)
 {
     lv_keyboard_t * keyboard = (lv_keyboard_t *)obj;
     return keyboard->popovers;
@@ -408,21 +373,6 @@ void lv_keyboard_def_event_cb(lv_event_t * e)
     else {
         lv_textarea_add_text(keyboard->ta, txt);
     }
-}
-
-const char * const * lv_keyboard_get_map_array(const lv_obj_t * kb)
-{
-    return lv_buttonmatrix_get_map(kb);
-}
-
-uint32_t lv_keyboard_get_selected_button(const lv_obj_t * obj)
-{
-    return lv_buttonmatrix_get_selected_button(obj);
-}
-
-const char * lv_keyboard_get_button_text(const lv_obj_t * obj, uint32_t btn_id)
-{
-    return lv_buttonmatrix_get_button_text(obj, btn_id);
 }
 
 /**********************

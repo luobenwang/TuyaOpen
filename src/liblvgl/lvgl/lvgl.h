@@ -13,7 +13,10 @@ extern "C" {
 /***************************
  * CURRENT VERSION OF LVGL
  ***************************/
-#include "lv_version.h"
+#define LVGL_VERSION_MAJOR 9
+#define LVGL_VERSION_MINOR 1
+#define LVGL_VERSION_PATCH 0
+#define LVGL_VERSION_INFO  ""
 
 /*********************
  *      INCLUDES
@@ -32,7 +35,6 @@ extern "C" {
 #include "src/misc/lv_anim_timeline.h"
 #include "src/misc/lv_profiler_builtin.h"
 #include "src/misc/lv_rb.h"
-#include "src/misc/lv_utils.h"
 
 #include "src/tick/lv_tick.h"
 
@@ -63,7 +65,6 @@ extern "C" {
 #include "src/widgets/led/lv_led.h"
 #include "src/widgets/line/lv_line.h"
 #include "src/widgets/list/lv_list.h"
-#include "src/widgets/lottie/lv_lottie.h"
 #include "src/widgets/menu/lv_menu.h"
 #include "src/widgets/msgbox/lv_msgbox.h"
 #include "src/widgets/roller/lv_roller.h"
@@ -110,7 +111,6 @@ extern "C" {
 #include "src/draw/lv_draw.h"
 #include "src/draw/lv_draw_buf.h"
 #include "src/draw/lv_draw_vector.h"
-#include "src/draw/sw/lv_draw_sw.h"
 
 #include "src/themes/lv_theme.h"
 
@@ -118,12 +118,8 @@ extern "C" {
 
 #include "src/lv_api_map_v8.h"
 #include "src/lv_api_map_v9_0.h"
-#include "src/lv_api_map_v9_1.h"
 
-#if LV_USE_PRIVATE_API
-#include "src/lvgl_private.h"
-#endif
-
+#include "src/core/lv_global.h"
 /*********************
  *      DEFINES
  *********************/

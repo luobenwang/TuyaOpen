@@ -10,11 +10,12 @@
 
 #if LV_USE_X11
 
-#include <string.h>
 #include <stdbool.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include "../../stdlib/lv_string.h"
 #include "../../widgets/image/lv_image.h"
+#include "../../core/lv_obj.h"
 
 /*********************
  *      DEFINES
@@ -33,7 +34,7 @@ typedef struct _x11_inp_data {
     lv_indev_t * mousewheel;     /**< encoder input device object */
     lv_timer_t * timer;          /**< timer object for @ref x11_event_handler */
     /* user input related information */
-    char         kb_buffer[32];   /**< keyboard buffer for X keyboard inputs */
+    char         kb_buffer[32];   /**< keyboard buffer for X keyboard inpputs */
     lv_point_t   mouse_pos;       /**< current reported mouse position */
     bool         left_mouse_btn;  /**< current state of left mouse button */
     bool         right_mouse_btn; /**< current state of right mouse button */
@@ -180,7 +181,7 @@ static void x11_inp_event_handler(lv_timer_t * t)
 }
 
 /**
- * event called by lvgl display if display has been closed (@ref lv_display_delete has been called)
+ * event callbed by lvgl display if display has been closed (@ref lv_display_delete has been called)
  * @param[in] e  event data, containing lv_display_t object
  */
 static void x11_inp_delete_evt_cb(lv_event_t * e)
@@ -273,6 +274,7 @@ static lv_indev_t * lv_x11_keyboard_create(lv_display_t * disp)
 static lv_indev_t * lv_x11_mouse_create(lv_display_t * disp, lv_image_dsc_t const * symb)
 {
     lv_indev_t * indev = lv_indev_create();
+    LV_ASSERT_OBJ(indev, MY_CLASS);
     if(NULL != indev) {
         lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
         lv_indev_set_read_cb(indev, x11_mouse_read_cb);
@@ -291,6 +293,7 @@ static lv_indev_t * lv_x11_mouse_create(lv_display_t * disp, lv_image_dsc_t cons
 static lv_indev_t * lv_x11_mousewheel_create(lv_display_t * disp)
 {
     lv_indev_t * indev = lv_indev_create();
+    LV_ASSERT_OBJ(indev, MY_CLASS);
     if(NULL != indev) {
         lv_indev_set_type(indev, LV_INDEV_TYPE_ENCODER);
         lv_indev_set_read_cb(indev, x11_mousewheel_read_cb);

@@ -28,20 +28,32 @@ extern "C" {
 /*Can't include lv_obj.h because it includes this header file*/
 
 /** Scrollbar modes: shows when should the scrollbars be visible*/
-typedef enum {
+enum _lv_scrollbar_mode_t {
     LV_SCROLLBAR_MODE_OFF,      /**< Never show scrollbars*/
     LV_SCROLLBAR_MODE_ON,       /**< Always show scrollbars*/
     LV_SCROLLBAR_MODE_ACTIVE,   /**< Show scroll bars when object is being scrolled*/
     LV_SCROLLBAR_MODE_AUTO,     /**< Show scroll bars when the content is large enough to be scrolled*/
-} lv_scrollbar_mode_t;
+};
+
+#ifdef DOXYGEN
+typedef _lv_scrollbar_mode_t lv_scrollbar_mode_t;
+#else
+typedef uint8_t lv_scrollbar_mode_t;
+#endif /*DOXYGEN*/
 
 /** Scroll span align options. Tells where to align the snappable children when scroll stops.*/
-typedef enum {
+enum _lv_scroll_snap_t {
     LV_SCROLL_SNAP_NONE,    /**< Do not align, leave where it is*/
     LV_SCROLL_SNAP_START,   /**< Align to the left/top*/
     LV_SCROLL_SNAP_END,     /**< Align to the right/bottom*/
     LV_SCROLL_SNAP_CENTER   /**< Align to the center*/
-} lv_scroll_snap_t;
+};
+
+#ifdef DOXYGEN
+typedef _lv_scroll_snap_t lv_scroll_snap_t;
+#else
+typedef uint8_t lv_scroll_snap_t;
+#endif /*DOXYGEN*/
 
 /**********************
  * GLOBAL PROTOTYPES
@@ -93,6 +105,7 @@ lv_scrollbar_mode_t lv_obj_get_scrollbar_mode(const lv_obj_t * obj);
 /**
  * Get the object in which directions can be scrolled
  * @param obj       pointer to an object
+ * @param dir       the allow scroll directions. An element or OR-ed values of `lv_dir_t`
  */
 lv_dir_t lv_obj_get_scroll_dir(const lv_obj_t * obj);
 
@@ -243,6 +256,17 @@ void lv_obj_scroll_to_view(lv_obj_t * obj, lv_anim_enable_t anim_en);
  * @param anim_en   LV_ANIM_ON: scroll with animation; LV_ANIM_OFF: scroll immediately
  */
 void lv_obj_scroll_to_view_recursive(lv_obj_t * obj, lv_anim_enable_t anim_en);
+
+/**
+ * Low level function to scroll by given x and y coordinates.
+ * `LV_EVENT_SCROLL` is sent.
+ * @param obj       pointer to an object to scroll
+ * @param x         pixels to scroll horizontally
+ * @param y         pixels to scroll vertically
+ * @return          `LV_RESULT_INVALID`: to object was deleted in `LV_EVENT_SCROLL`;
+ *                  `LV_RESULT_OK`: if the object is still valid
+ */
+lv_result_t _lv_obj_scroll_by_raw(lv_obj_t * obj, int32_t x, int32_t y);
 
 /**
  * Tell whether an object is being scrolled or not at this moment

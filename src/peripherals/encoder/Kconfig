@@ -1,9 +1,9 @@
 
-config ENABLE_ENCODER_DRIVER
+config ENABLE_ENCODER
     bool "enable encoder driver"
     default n
 
-if (ENABLE_ENCODER_DRIVER)
+if (ENABLE_ENCODER)
 
         config DECODER_INPUT_A
             int "clockwise rotation detection pin"

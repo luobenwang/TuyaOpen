@@ -1,6 +1,5 @@
 #if LV_BUILD_TEST
 #include "../lvgl.h"
-#include "../../lvgl_private.h"
 
 #include "unity/unity.h"
 
@@ -24,7 +23,7 @@ void test_spinner_spinning(void)
 {
     for(int i = 0; i < 10; ++i) {
         lv_tick_inc(50);
-        lv_timer_handler();
+        lv_task_handler();
 
         char filename[32];
         lv_snprintf(filename, sizeof(filename), "widgets/spinner_%02d.png", i);

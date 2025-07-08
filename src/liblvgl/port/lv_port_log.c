@@ -56,6 +56,6 @@ void lv_port_log_print(lv_log_level_t level, const char *buf)
     } break;
     }
 
-    tal_log_print(log_level, "lvgl", __LINE__, buf);
+    tal_log_print(log_level, "lvgl", __LINE__, (char *)buf);
 }
 #endif

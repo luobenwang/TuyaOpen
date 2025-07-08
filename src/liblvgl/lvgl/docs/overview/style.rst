@@ -41,7 +41,7 @@ The objects can be in the combination of the following states:
 - :cpp:enumerator:`LV_STATE_FOCUSED`: (0x0002) Focused via keypad or encoder or clicked via touchpad/mouse
 - :cpp:enumerator:`LV_STATE_FOCUS_KEY`: (0x0004) Focused via keypad or encoder but not via touchpad/mouse
 - :cpp:enumerator:`LV_STATE_EDITED`: (0x0008) Edit by an encoder
-- :cpp:enumerator:`LV_STATE_HOVERED`: (0x0010) Hovered by mouse
+- :cpp:enumerator:`LV_STATE_HOVERED`: (0x0010) Hovered by mouse (not supported now)
 - :cpp:enumerator:`LV_STATE_PRESSED`: (0x0020) Being pressed
 - :cpp:enumerator:`LV_STATE_SCROLLED`: (0x0040) Being scrolled
 - :cpp:enumerator:`LV_STATE_DISABLED`: (0x0080) Disabled state
@@ -205,7 +205,7 @@ Property set functions looks like this:
 
    static lv_style_t style_btn_red;
    lv_style_init(&style_btn_red);
-   lv_style_set_bg_color(&style_btn_red, lv_palette_main(LV_PALETTE_RED));
+   lv_style_set_bg_color(&style_btn_red, lv_plaette_main(LV_PALETTE_RED));
    lv_style_set_bg_opa(&style_btn_red, LV_OPA_COVER);
 
 To remove a property use:
@@ -219,8 +219,8 @@ To get a property's value from a style:
 .. code:: c
 
    lv_style_value_t v;
-   lv_result_t res = lv_style_get_prop(&style, LV_STYLE_BG_COLOR, &v);
-   if(res == LV_RESULT_OK) {  /*Found*/
+   lv_res_t res = lv_style_get_prop(&style, LV_STYLE_BG_COLOR, &v);
+   if(res == LV_RES_OK) {  /*Found*/
        do_something(v.color);
    }
 
@@ -249,7 +249,7 @@ Styles can be built as ``const`` too to save RAM:
    LV_STYLE_CONST_INIT(style1, style1_props);
 
 Later ``const`` style can be used like any other style but (obviously)
-new properties cannot be added.
+new properties can not be added.
 
 .. _styles_add_remove:
 
@@ -457,7 +457,7 @@ configured by the following properties in ``lv_conf.h``:
 - :cpp:enumerator:`LV_LAYER_SIMPLE_BUF_SIZE`: [bytes] the optimal target buffer size. LVGL will try to allocate this size of memory.
 - :cpp:enumerator:`LV_LAYER_SIMPLE_FALLBACK_BUF_SIZE`: [bytes] used if :cpp:enumerator:`LV_LAYER_SIMPLE_BUF_SIZE` couldn't be allocated.
 
-If transformation properties were also used the layer cannot be
+If transformation properties were also used the layer can not be
 rendered in chunks, but one larger memory needs to be allocated. The
 required memory depends on the angle, zoom and pivot parameters, and the
 size of the area to redraw, but it's never larger than the size of the

@@ -6,11 +6,10 @@
 /*********************
  *      INCLUDES
  *********************/
-#include "lv_draw_sw_mask_private.h"
-#include "../lv_draw_mask_private.h"
 #include "../lv_draw.h"
 
 #if LV_DRAW_SW_COMPLEX
+#include "lv_draw_sw_mask.h"
 #include "../../core/lv_global.h"
 #include "../../misc/lv_math.h"
 #include "../../misc/lv_log.h"
@@ -61,8 +60,8 @@ static lv_draw_sw_mask_res_t /* LV_ATTRIBUTE_FAST_MEM */ line_mask_steep(lv_opa_
 static void circ_init(lv_point_t * c, int32_t * tmp, int32_t radius);
 static bool circ_cont(lv_point_t * c);
 static void circ_next(lv_point_t * c, int32_t * tmp);
-static void circ_calc_aa4(lv_draw_sw_mask_radius_circle_dsc_t * c, int32_t radius);
-static lv_opa_t * get_next_line(lv_draw_sw_mask_radius_circle_dsc_t * c, int32_t y, int32_t * len,
+static void circ_calc_aa4(_lv_draw_sw_mask_radius_circle_dsc_t * c, int32_t radius);
+static lv_opa_t * get_next_line(_lv_draw_sw_mask_radius_circle_dsc_t * c, int32_t y, int32_t * len,
                                 int32_t * x_start);
 static inline lv_opa_t /* LV_ATTRIBUTE_FAST_MEM */ mask_mix(lv_opa_t mask_act, lv_opa_t mask_new);
 
@@ -93,7 +92,7 @@ lv_draw_sw_mask_res_t LV_ATTRIBUTE_FAST_MEM lv_draw_sw_mask_apply(void * masks[]
                                                                   int32_t len)
 {
     bool changed = false;
-    lv_draw_sw_mask_common_dsc_t * dsc;
+    _lv_draw_sw_mask_common_dsc_t * dsc;
 
     uint32_t i;
     for(i = 0; masks[i]; i++) {
@@ -110,7 +109,7 @@ lv_draw_sw_mask_res_t LV_ATTRIBUTE_FAST_MEM lv_draw_sw_mask_apply(void * masks[]
 void lv_draw_sw_mask_free_param(void * p)
 {
     lv_mutex_lock(&circle_cache_mutex);
-    lv_draw_sw_mask_common_dsc_t * pdsc = p;
+    _lv_draw_sw_mask_common_dsc_t * pdsc = p;
     if(pdsc->type == LV_DRAW_SW_MASK_TYPE_RADIUS) {
         lv_draw_sw_mask_radius_param_t * radius_p = (lv_draw_sw_mask_radius_param_t *) p;
         if(radius_p->circle) {
@@ -127,7 +126,7 @@ void lv_draw_sw_mask_free_param(void * p)
     lv_mutex_unlock(&circle_cache_mutex);
 }
 
-void lv_draw_sw_mask_cleanup(void)
+void _lv_draw_sw_mask_cleanup(void)
 {
     uint8_t i;
     for(i = 0; i < LV_DRAW_SW_CIRCLE_CACHE_SIZE; i++) {
@@ -327,7 +326,7 @@ void lv_draw_sw_mask_radius_init(lv_draw_sw_mask_radius_param_t * param, const l
     }
 
     /*If not cached use the free entry with lowest life*/
-    lv_draw_sw_mask_radius_circle_dsc_t * entry = NULL;
+    _lv_draw_sw_mask_radius_circle_dsc_t * entry = NULL;
     for(i = 0; i < LV_DRAW_SW_CIRCLE_CACHE_SIZE; i++) {
         if(_circle_cache[i].used_cnt == 0) {
             if(!entry) entry = &(_circle_cache[i]);
@@ -337,7 +336,7 @@ void lv_draw_sw_mask_radius_init(lv_draw_sw_mask_radius_param_t * param, const l
 
     /*There is no unused entry. Allocate one temporarily*/
     if(!entry) {
-        entry = lv_malloc_zeroed(sizeof(lv_draw_sw_mask_radius_circle_dsc_t));
+        entry = lv_malloc_zeroed(sizeof(_lv_draw_sw_mask_radius_circle_dsc_t));
         LV_ASSERT_MALLOC(entry);
         entry->life = -1;
     }
@@ -1068,7 +1067,7 @@ static void circ_next(lv_point_t * c, int32_t * tmp)
     c->y++;
 }
 
-static void circ_calc_aa4(lv_draw_sw_mask_radius_circle_dsc_t * c, int32_t radius)
+static void circ_calc_aa4(_lv_draw_sw_mask_radius_circle_dsc_t * c, int32_t radius)
 {
     if(radius == 0) return;
     c->radius = radius;
@@ -1217,7 +1216,7 @@ static void circ_calc_aa4(lv_draw_sw_mask_radius_circle_dsc_t * c, int32_t radiu
     lv_free(cir_x);
 }
 
-static lv_opa_t * get_next_line(lv_draw_sw_mask_radius_circle_dsc_t * c, int32_t y, int32_t * len,
+static lv_opa_t * get_next_line(_lv_draw_sw_mask_radius_circle_dsc_t * c, int32_t y, int32_t * len,
                                 int32_t * x_start)
 {
     *len = c->opa_start_on_y[y + 1] - c->opa_start_on_y[y];

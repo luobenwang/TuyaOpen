@@ -6,11 +6,12 @@
 /*********************
  *      INCLUDES
  *********************/
-#include "lv_font_fmt_txt_private.h"
+
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "../lvgl.h"
-#include "../misc/lv_fs_private.h"
-#include "../misc/lv_types.h"
-#include "../stdlib/lv_string.h"
+#include "../misc/lv_fs.h"
 #include "lv_binfont_loader.h"
 
 /**********************
@@ -207,7 +208,7 @@ static int read_label(lv_fs_file_t * fp, int start, const char * label)
 
     if(lv_fs_read(fp, &length, 4, NULL) != LV_FS_RES_OK
        || lv_fs_read(fp, buf, 4, NULL) != LV_FS_RES_OK
-       || lv_memcmp(label, buf, 4) != 0) {
+       || memcmp(label, buf, 4) != 0) {
         LV_LOG_WARN("Error reading '%s' label.", label);
         return -1;
     }
@@ -297,7 +298,7 @@ static int32_t load_cmaps(lv_fs_file_t * fp, lv_font_fmt_txt_dsc_t * font_dsc, u
     lv_font_fmt_txt_cmap_t * cmaps =
         lv_malloc(cmaps_subtables_count * sizeof(lv_font_fmt_txt_cmap_t));
 
-    lv_memset(cmaps, 0, cmaps_subtables_count * sizeof(lv_font_fmt_txt_cmap_t));
+    memset(cmaps, 0, cmaps_subtables_count * sizeof(lv_font_fmt_txt_cmap_t));
 
     font_dsc->cmaps = cmaps;
     font_dsc->cmap_num = cmaps_subtables_count;
@@ -322,7 +323,7 @@ static int32_t load_glyph(lv_fs_file_t * fp, lv_font_fmt_txt_dsc_t * font_dsc,
     lv_font_fmt_txt_glyph_dsc_t * glyph_dsc = (lv_font_fmt_txt_glyph_dsc_t *)
                                               lv_malloc(loca_count * sizeof(lv_font_fmt_txt_glyph_dsc_t));
 
-    lv_memset(glyph_dsc, 0, loca_count * sizeof(lv_font_fmt_txt_glyph_dsc_t));
+    memset(glyph_dsc, 0, loca_count * sizeof(lv_font_fmt_txt_glyph_dsc_t));
 
     font_dsc->glyph_dsc = glyph_dsc;
 
@@ -461,7 +462,7 @@ static bool lvgl_load_font(lv_fs_file_t * fp, lv_font_t * font)
     lv_font_fmt_txt_dsc_t * font_dsc = (lv_font_fmt_txt_dsc_t *)
                                        lv_malloc(sizeof(lv_font_fmt_txt_dsc_t));
 
-    lv_memset(font_dsc, 0, sizeof(lv_font_fmt_txt_dsc_t));
+    memset(font_dsc, 0, sizeof(lv_font_fmt_txt_dsc_t));
 
     font->dsc = font_dsc;
 
@@ -578,7 +579,7 @@ int32_t load_kern(lv_fs_file_t * fp, lv_font_fmt_txt_dsc_t * font_dsc, uint8_t f
     if(0 == kern_format_type) { /*sorted pairs*/
         lv_font_fmt_txt_kern_pair_t * kern_pair = lv_malloc(sizeof(lv_font_fmt_txt_kern_pair_t));
 
-        lv_memset(kern_pair, 0, sizeof(lv_font_fmt_txt_kern_pair_t));
+        memset(kern_pair, 0, sizeof(lv_font_fmt_txt_kern_pair_t));
 
         font_dsc->kern_dsc = kern_pair;
         font_dsc->kern_classes = 0;
@@ -616,7 +617,7 @@ int32_t load_kern(lv_fs_file_t * fp, lv_font_fmt_txt_dsc_t * font_dsc, uint8_t f
 
         lv_font_fmt_txt_kern_classes_t * kern_classes = lv_malloc(sizeof(lv_font_fmt_txt_kern_classes_t));
 
-        lv_memset(kern_classes, 0, sizeof(lv_font_fmt_txt_kern_classes_t));
+        memset(kern_classes, 0, sizeof(lv_font_fmt_txt_kern_classes_t));
 
         font_dsc->kern_dsc = kern_classes;
         font_dsc->kern_classes = 1;

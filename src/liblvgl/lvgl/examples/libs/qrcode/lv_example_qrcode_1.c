@@ -1,6 +1,5 @@
 #include "../../lv_examples.h"
 #if LV_USE_QRCODE && LV_BUILD_EXAMPLES
-#include <string.h>
 
 /**
  * Create a QR Code
