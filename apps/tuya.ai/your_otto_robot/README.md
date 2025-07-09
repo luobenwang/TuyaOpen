@@ -39,7 +39,7 @@ The following hardware materials are required to make the Otto Robot:
 | Hardware Device | Peripheral | T5 Pin | Pin Function      |
 |-----------------|------------|--------|-------------------|
 | Screen          | SCL        | P14    | SPI0 clock        |
-|                 | CS         | P15    | SPI0 chip select  |
+|                 | CS         | P13    | SPI0 chip select  |
 |                 | SDA        | P16    | SPI0 data         |
 |                 | RST        | P19    | Screen reset      |
 |                 | DC         | P17    | Data/command select |
@@ -48,8 +48,8 @@ The following hardware materials are required to make the Otto Robot:
 |                 | PWM1       | P24    | Right leg servo   |
 |                 | PWM2       | P32    | Left foot servo   |
 |                 | PWM3       | P34    | Right foot servo  |
-|                 | PWM2       | P36    | Left hand servo   |
-|                 | PWM3       | P9     | Right hand servo  |
+|                 | PWM4       | P36    | Left hand servo   |
+|                 | PWM5       | P9     | Right hand servo  |
 
 ## III. Software Design
 
