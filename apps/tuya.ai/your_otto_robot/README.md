@@ -67,6 +67,7 @@ The following hardware materials are required to make the Otto Robot:
 - **Configure T5 mini Development Board Pins**: In `apps/tuya.ai/your_otto_robot/`, use the command `tos menuconfig` and follow the instructions below to select the configuration.
 
 ### Screen Rotation 90 Degrees Modification
+
 ![img](./imgs/screen-rotate.png)
 
 ### After completing the above configuration, save and run `tos build`. Only after compiling will the `platform/T5AI/tuyaos/tuyaos_adapter/src/driver/tkl_pwm.c` file be pulled down.
