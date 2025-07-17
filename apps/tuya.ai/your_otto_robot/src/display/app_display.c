@@ -75,11 +75,12 @@ static UI_EMOJI_LIST_T sg_awesome_emo_list[] = {
 };
 #endif
 
+/*
 static UI_EMOJI_LIST_T sg_emo_list[] = {
     {"NEUTRAL", "😶"},  {"SAD", "😔"},         {"ANGRY", "😠"},    {"SURPRISE", "😯"},
     {"CONFUSED", "😏"}, {"THINKING", "🤔"}, {"HAPPY", "🙂"},
 };
-
+*/
 static TUYA_DISPLAY_T sg_display = {0};
 
 /***********************************************************

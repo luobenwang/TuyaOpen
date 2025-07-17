@@ -14,7 +14,8 @@ choice
 
     config ENABLE_GUI_EYES
         bool "Use Eyes ui"
-
+    config ENABLE_GUI_EMOJI
+        bool "Use Desk-Emoji ui"
 endchoice
 
 config ENABLE_GUI_STREAM_AI_TEXT

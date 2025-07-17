@@ -54,7 +54,7 @@ tuya_iot_client_t ai_client;
 #define PROJECT_VERSION "1.0.0"
 #endif
 
-#define DPID_VOLUME 3
+#define DPID_VOLUME 6
 #define DPID_MOVE   5
 
 static uint8_t _need_reset = 0;
