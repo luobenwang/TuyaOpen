@@ -1,195 +1,228 @@
-# 涂鸦T5AI版本 Otto机器人制作教程指南
-
+# DIY Otto Robot 指南
 ## 项目概述
-
 Otto Robot 是一个开源的人形机器人平台，支持多种功能扩展。本指南将帮助您快速搭建和配置属于自己的 Otto 机器人，并通过涂鸦智能APP实现远程控制。
 
 ## 演示视频
+扫码观看：
 
-**点击观看效果**：[Otto 演示视频](https://images.tuyacn.com/rms-static/d035a230-37cb-11f0-9f57-5d628208d2a7-1748000895955.mov?tyName=otto%E6%9C%BA%E5%99%A8%E4%BA%BA.mov)
+![](https://camo.githubusercontent.com/2b3caf7a7f468ee64fc0ff4234fe0b47a557cd6a19f637a8ef86215b18397104/68747470733a2f2f696d616765732e74757961636e2e636f6d2f66652d7374617469632f646f63732f696d672f30633532643638362d346136302d343365352d613763322d3339613937376465623230342e706e67)
 
 ## 一、材料清单
-
 以下是制作 Otto Robot 所需的硬件材料：
 
-### 1. 外壳
+1. **外壳**
+    - 型号：Otto Robot 3D打印机体外壳  
+    - 获取途径1：电商平台请人帮忙代打印~
+    - 获取途径2：网上开源项目自己使用3D打印机打印~
 
-- **型号**： Otto Robot 3D打印机体外壳  
-- **购买链接**：[闲鱼]
+- [otto 外壳（博主小鹏分享）](https://makerworld.com.cn/zh/models/1117966-ottorobot-xiao-zhi-ai#profileId-1284462)  
+  ![otto 外壳（小鹏分享）图片](https://cdn.nlark.com/yuque/0/2025/png/55332580/1755227094837-7c4555e2-dfe3-493c-a52b-306f3d32a165.png)  
 
-### 2. 舵机
+- [otto emo外壳（博主绿荫阿广分享）](https://gitee.com/maker-community/VerdureLab)   
+  ![otto emo外壳图片](https://cdn.nlark.com/yuque/0/2025/png/55332580/1755226786529-24912c2f-fdd0-49c8-86c5-5904d526a168.png)  
 
-- **型号**：SG90 180度舵机  
-- **购买渠道**：淘宝
+- [otto 小黄鸭外壳（博主绿荫阿广分享）](https://github.com/maker-community/VerdureLab/tree/main/verdure-duck)  
+  ![otto 小黄鸭外壳图片](https://cdn.nlark.com/yuque/0/2025/png/55332580/1755226645805-e9dad500-6e9b-45b9-8ac0-c9e82881a7b0.png)  
 
-### 3. 显示屏
 
-- **型号**：ST7789  
-- **购买渠道**：淘宝
++ **舵机**
+    - 型号：SG90 180度舵机（不带手臂是4个，带手臂6个）  
+    - 购买渠道：淘宝
+4. **显示屏**
+    - 型号：ST7789 / Otto 鸭子外壳 双眼用的0.96寸160*80 ST7735S屏幕  
+    - 购买渠道：淘宝
+5. **开发板**
+    - 型号：T5 otto 开发板  
+    - 购买方式：淘宝/联系涂鸦AI开发者群负责人
+    - 嘉立创上基于otto T5开源项目，自己打板:
+    - 项目1：[https://oshwhub.com/dream000/ni-hao-tu-ya-otto-ji-qi-ren](https://oshwhub.com/dream000/ni-hao-tu-ya-otto-ji-qi-ren)
+    - 项目2：[https://oshwhub.com/txp666/ottorobot](https://oshwhub.com/txp666/ottorobot)
 
-### 4. 开发板
 
-- **型号**：T5 mini 开发板  
-- **购买方式**：淘宝
 
 ## 二、硬件接线图
+| 硬件设备 | 外设 | T5引脚 | 引脚功能 |
+| --- | --- | --- | --- |
+| 屏幕 | SCL | P14 | SPI0时钟 |
+|  | CS | P13 | SPI0片选 |
+|  | SDA | P16 | SPI0数据 |
+|  | RST | P19 | 屏幕复位 |
+|  | DC | P17 | 数据/命令选择 |
+|  | BLK | P5 | 屏幕背光 |
+| 舵机 | PWM0 | P18 | 左腿舵机 |
+|  | PWM1 | P24 | 右腿舵机 |
+|  | PWM2 | P32 | 左脚舵机 |
+|  | PWM3 | P34 | 右脚舵机 |
+|  | PWM4 | P36 | 左手舵机 |
+|  | PWM5 | P9 | 右手舵机 |
 
-| 硬件设备 | 外设 | T5引脚 | 引脚功能      |
-| -------- | ---- | ------ | ------------- |
-| 屏幕     | SCL  | P14    | SPI0时钟      |
-|          | CS   | P13    | SPI0片选      |
-|          | SDA  | P16    | SPI0数据      |
-|          | RST  | P19    | 屏幕复位      |
-|          | DC   | P17    | 数据/命令选择 |
-|          | BLK  | 可不接 | 屏幕背光      |
-| 舵机     | PWM0 | P18    | 左腿舵机      |
-|          | PWM1 | P24     | 右腿舵机      |
-|          | PWM2 | P9    | 左脚舵机      |
-|          | PWM3 | P34    | 右脚舵机      |
 
-## 三、软件设计
+## 三、组装教程
+[Otto Robot 组装教程](https://www.bilibili.com/video/BV1dyjhzzExr?share_source=copy_web) （建议看博主详细教程）
 
+[T5小黄鸭装配教程](https://xhslink.com/m/AcpWKIV1SEm )（T5版本接线使用）
+
+
+
+## 四、TuyaOpen文档开发教程（重要）
+[涂鸦 TuyaOpen 官方文档](https://tuyaopen.ai/zh/docs/about-tuyaopen)
+
+## 五、代码下载修改编译
 ### 1. 代码下载
+#### 步骤1：安装 Git
+根据您的操作系统选择对应的安装方式：
 
-- **GitHub仓库**：[Otto Robot Demo](https://github.com/luobenwang/TuyaOpen/tree/feature/diy_demo/apps/tuya.ai/your_otto_robot)（开发者fork的demo，非TuyaOpen 主仓库）
-- **主仓库**：https://github.com/tuya/TuyaOpen
++ **Windows 系统**
+    1. 访问 Git 官网（[https://git-scm.com/），点击下载适合](https://git-scm.com/），点击下载适合) Windows 的版本
+    2. 运行安装程序，按向导操作
++ **Linux 系统**
 
-本次制作机器人使用第一个仓库：[Otto Robot Demo](https://github.com/luobenwang/TuyaOpen/tree/feature/diy_demo/apps/tuya.ai/your_otto_robot)
-
-### 2. 开发文档
-
-- **文档地址**：[Tuya 开发文档](https://www.tuyaopen.io/en/master/)（先仔细阅读文档哦）
-
-### 3. 配置修改
-
-- **PID修改**：在文件 `apps/tuya.ai/your_otto_robot/include/tuya_config.h` 中
-
-​    将 PID 修改为 `**pnax3fya1ctl5pst**`
-
-- **UUID获取**：访问 [Tuya Open 仓库](https://github.com/tuya/TuyaOpen/tree/master) 点击 右上角"Star" 后进群获取 UUID
-- **配置T5 mini开发板引脚：**在apps/tuya.ai/your_otto_robot/ 使用命令**：**tos menuconfig 按下图操作选择
-
-![img](https://cdn.nlark.com/yuque/0/2025/png/55332580/1747998999474-55373dc6-a9af-40ab-8fcd-16f0e26539e7.png)
-
-![img](https://cdn.nlark.com/yuque/0/2025/png/55332580/1747999040807-a83e6fd0-ae2e-4aa2-9a1d-0d867b400f06.png)
-
-- **选择st7789屏幕**：在apps/tuya.ai/your_otto_robot/ 使用命令：tos menuconfig 按下图操作选择
-
-按照下图的0-5操作后保存
-
-![img](https://cdn.nlark.com/yuque/0/2025/png/55332580/1747995263104-5007fddf-5d51-423e-bf40-3e034b331536.png)
-
-![img](https://cdn.nlark.com/yuque/0/2025/png/55332580/1747994787340-9af0f6bf-638e-4656-bded-c11809341b37.png)
-
-![img](https://cdn.nlark.com/yuque/0/2025/png/55332580/1747995102423-a50c81bc-a75f-4ad6-bcce-9fde9c43ef9a.png)
-
-![img](https://cdn.nlark.com/yuque/0/2025/png/55332580/1747995133265-bdd2800a-c8bc-415d-b9e9-1e17d64d21c7.png)
-
-### 以上配置完成后保存：再tos build哦
-编译完成后才会下拉platform/T5AI/tuyaos/tuyaos_adapter/src/driver/tkl_pwm.c文件
-记得修改tpwm_chan_t ty_to_bk_pwm(TUYA_PWM_NUM_E ch_id)接口里面的PWM的映射表：
-```
-pwm_chan_t ty_to_bk_pwm(TUYA_PWM_NUM_E ch_id)
-{
-    pwm_chan_t pwm = PWM_ID_MAX;
-    switch(ch_id) {
-        case TUYA_PWM_NUM_0:
-            pwm = PWM_ID_0;
-        break;
-        case TUYA_PWM_NUM_1:
-            pwm = PWM_ID_4;
-        break;
-        case TUYA_PWM_NUM_2:
-            pwm = PWM_ID_3;//改这行
-        break;
-        case TUYA_PWM_NUM_3:
-            pwm = PWM_ID_8;
-        break;
-        case TUYA_PWM_NUM_4:
-            pwm = PWM_ID_10;
-        break;
-        default:
-        break;
-    }
-
-    return  pwm;
-}
+```bash
+sudo apt update
+sudo apt install git
 ```
 
-记得再次编译：tos build
++ **macOS 系统**（使用 Homebrew，推荐）
+    1. 若未安装 Homebrew，先执行：
 
-### 4. 社区支持
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
 
-- **企业微信群**
+    2. 安装 Git：
 
-![img](https://cdn.nlark.com/yuque/0/2025/jpeg/55332580/1747998771203-5ac06211-d6ce-424d-99f9-b431804ebc80.jpeg?x-oss-process=image%2Fformat%2Cwebp)
+```bash
+brew install git
+```
 
-- **QQ群**：[加入涂鸦AI开发群](https://github.com/tuya/TuyaOpen/tree/master/apps/tuya.ai)（点star可以领取授权码）
+#### 步骤2：克隆代码仓库
++ GitHub TuyaOpen 主仓库：[https://github.com/tuya/TuyaOpen](https://github.com/tuya/TuyaOpen)  
++ 本次制作机器人使用仓库中的：[https://github.com/tuya/TuyaOpen/tree/master/apps/tuya.ai/your_otto_robot](https://github.com/tuya/TuyaOpen/tree/master/apps/tuya.ai/your_otto_robot)
 
-![img](https://cdn.nlark.com/yuque/0/2025/png/55332580/1747998833234-310a2deb-5b01-4ebe-8e85-0b58f3b568f0.png)
+```bash
+git clone https://github.com/tuya/TuyaOpen.git
+```
 
-## 四、固件烧录指南
+### 2. 配置环境
+官方文档：[TuyaOpen 环境准备](https://tuyaopen.ai/zh/docs/quick-start/enviroment-setup#%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87)
 
-### 1. 烧录准备（参考第二章）
+先配置好环境后，激活 `tos.py` 编译工具：
 
-1. 下载最新版本的固件 `.bin` 文件
-2. 下载烧录工具或在 Linux 环境下使用 `tos` 命令
-3. 使用 Type-C 数据线连接 T5 Mini 开发板
+```bash
+cd TuyaOpen
+```
 
-### 2. 烧录步骤
+根据操作系统选择激活方式：
 
-1. 打开烧录工具
-2. 选择正确的 COM 端口
-3. 设置芯片类型为 T5
-4. 烧录地址设置为 `0x0`
-5. 选择下载的固件文件
-6. 点击 "Start" 开始烧录
++ **Linux 系统**
 
-## 五、控制效果确认
+```bash
+. ./export.sh
+```
 
-### 1. AI运动控制
++ **macOS 系统**
 
+```bash
+. ./export.sh
+```
+
++ **Windows 系统**
+
+```bash
+.\export.ps1  # PowerShell（需先执行 `Set-ExecutionPolicy RemoteSigned -Scope LocalMachine`）
+# 或
+.\export.bat  # CMD
+```
+
+### 3. 产品ID（PID）& 授权码修改
++ **PID 修改**： 进入cd apps/tuya.ai/your_otto_robot/ 目录
+
+     执行命令：tos.py config menu
+
+![](https://cdn.nlark.com/yuque/0/2025/png/55332580/1755221489825-d4c223ea-22ea-4102-a267-27dd882b64f0.png)
+
+![](https://cdn.nlark.com/yuque/0/2025/png/55332580/1755221499157-f6250006-ef91-46b1-ab66-3444cd8ab7bd.png)
+
+修改完按S 保存，Q 退出界面
+
++ 在文件 `apps/tuya.ai/your_otto_robot/include/tuya_config.h` 中，将 PID 确认是否修改为 `<font style="color:#DF2A3F;">jxcogc0qofqaplvo</font>`（也可以使用自己创建 ）
++ **UUID 获取**：访问 Tuya Open 仓库，点击右上角 "Star" 后进群获取 UUID
+
+![](https://cdn.nlark.com/yuque/0/2025/png/55332580/1747998833234-310a2deb-5b01-4ebe-8e85-0b58f3b568f0.png)
+
++ 在 `apps/tuya.ai/your_otto_robot/include/tuya_config.h` 中把 **<font style="color:#DF2A3F;">UUID 改成您申请到的 UUID （非常重要，否则无法激活配网）</font>**
+
+![](https://cdn.nlark.com/yuque/0/2025/png/55332580/1755219992004-b4a2535c-04d1-403c-a189-9ddc77cff7a9.png)  
+_（注：如果您的 T5 模组下单时已烧录 TuyaOpen 的授权码，则无需填写 UUID 和 AUTHKEY）_
+
+### 4. 编译代码，生成固件
+参考文档：[TuyaOpen 官方文档](https://tuyaopen.ai/zh/docs/about-tuyaopen)
+
+1. 进入对应的 `your_otto_robot` 目录：
+
+```bash
+cd apps/tuya.ai/your_otto_robot/
+```
+
+2. 选择配置：
+
+```bash
+tos.py config choice 
+```
+
+选择 `1` 即可。  
+_（若出现 _`tos.py: command not found`_ 报错，说明未成功激活 _`tos.py`_ 编译工具，请检查上述激活步骤）_
+
+3. 编译命令：
+
+```bash
+tos.py build
+```
+
+## 六、固件烧录指南
+官方文档：[TuyaOpen 固件烧录](https://tuyaopen.ai/zh/docs/quick-start/firmware-burning)
+
+
+
+## 七、控制效果确认
+### 1. AI 运动控制
 1. 下载涂鸦智能APP
 2. 在APP右上角添加子设备，选择 "机器人"
 3. 进入控制界面，即可通过APP控制机器人实现：
+    - 左右移动
+    - 前后移动
+4. 使用语音控制 Otto 机器人前后左右移动（唤醒词："你好，涂鸦"等）
 
-- 左右移动
-- 前后移动
-
-4. 使用语音控制Otto机器人前后左右移动（唤醒词："你好，涂鸦"等）
-
-### 2. AI聊天
-
-1. 使用语音唤醒聊天（唤醒词："你好，涂鸦"等）
+### 2. AI 聊天
+使用语音唤醒聊天（唤醒词："你好，涂鸦"，hey,tuya“）
 
 ### 3. 功能清单
++ 支持基本行走动作
++ 支持语音指令控制
++ 屏幕显示状态信息
++ 支持视频识别（未来规划）
 
-- 支持基本行走动作
-- 支持语音指令控制
-- 屏幕显示状态信息
-- 支持视频识别（未来规划）
+## 八、资源支持
++ **技术交流**：加入涂鸦AI开发QQ群/微信群 获取技术支持
 
-## 六、资源支持
+![](https://cdn.nlark.com/yuque/0/2025/png/55332580/1747998833234-310a2deb-5b01-4ebe-8e85-0b58f3b568f0.png)
 
-- **技术交流**：加入涂鸦AI开发微信&QQ群获取技术支持
-- **社区分享**：欢迎在 GitHub 或涂鸦开发者社区分享您的项目心得
-  祝您成功打造属于自己的智能Otto机器人！
+![](https://cdn.nlark.com/yuque/0/2025/jpeg/55332580/1747998771203-5ac06211-d6ce-424d-99f9-b431804ebc80.jpeg?x-oss-process=image%2Fformat%2Cwebp)
 
-## 七、致谢
++ **社区分享**：欢迎在 GitHub 或涂鸦开发者社区分享您的项目心得
 
+祝您成功打造属于自己的智能 Otto 机器人！
+
+## 九、致谢
 本项目感谢以下开源作者的支持：
 
 1. [txp666]
-
-
 
 本项目感谢以下开源项目的支持：
 
 1. OttoDIYLib
 
-
-
-
 本项目感谢以下开源社区的支持：
 
 1. JLCEDA
+
