@@ -45,6 +45,7 @@ typedef struct {
 
 typedef struct {
     lv_obj_t *container;
+    lv_obj_t *title_label;
     lv_obj_t *status_bar;
     lv_obj_t *content;
     lv_obj_t *emotion_label;
@@ -72,11 +73,28 @@ typedef struct {
 // static void ui_btn_game_event_cb(lv_event_t *e);
 // static void ui_btn_dino_event_cb(lv_event_t *e);
 static void __ui_set_emotion_image(const char *emotion);
+static void __ui_update_title_name(const char *emotion);
 
 /***********************************************************
 ***********************variable define**********************
 ***********************************************************/
 static APP_CHATBOT_UI_T sg_ui = {0};
+
+// AI精灵名字数组，根据心情变化
+static const char* ai_spirit_names[] = {
+    "辣飞飞",    // 开心 (happy)
+    "酸溜溜",    // 生气 (angry)
+    "甜心心",    // 悲伤 (sad)
+    "咸白白",    // 思考 (think)
+    "咸白白"     // 惊讶 (shock，使用think图片)
+};
+
+// 心情对应的索引
+#define EMOTION_HAPPY_INDEX    0
+#define EMOTION_ANGRY_INDEX    1
+#define EMOTION_SAD_INDEX      2
+#define EMOTION_THINK_INDEX    3
+#define EMOTION_SHOCK_INDEX    4 // 惊讶使用think图片，所以也用"咸白白"
 
 extern void ui_cooking_show(lv_obj_t *prev_screen);
 // extern void ui_rgb_control_show(void);
@@ -194,6 +212,13 @@ int ui_init(UI_FONT_T *ui_font)
     lv_obj_set_flex_flow(sg_ui.ui.content, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(sg_ui.ui.content, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_SPACE_EVENLY);
 
+    // Title label - placed above emotion image
+    sg_ui.ui.title_label = lv_label_create(sg_ui.ui.content);
+    lv_label_set_text(sg_ui.ui.title_label, "AI味道精灵-辣飞飞");
+    lv_obj_set_style_text_color(sg_ui.ui.title_label, lv_color_hex(0xFF0000), 0); // Red color
+    lv_obj_set_style_text_align(sg_ui.ui.title_label, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_pad_bottom(sg_ui.ui.title_label, 10, 0);
+
     // Emotion - Create both label and image, initially show label
     sg_ui.ui.emotion_label = lv_label_create(sg_ui.ui.content);
     lv_obj_set_style_text_font(sg_ui.ui.emotion_label, sg_ui.font.emoji, 0);
@@ -273,6 +298,7 @@ int ui_init(UI_FONT_T *ui_font)
     lv_obj_set_style_text_font(sg_ui.ui.network_label, sg_ui.font.icon, 0);
     lv_obj_set_style_text_color(sg_ui.ui.network_label, sg_ui.theme.text, 0);
     lv_obj_align(sg_ui.ui.network_label, LV_ALIGN_RIGHT_MID, -5, 0);
+
 
     LV_LOG_WARN("----------------->ui_init");
     return 0;
@@ -368,6 +394,38 @@ static void __ui_set_emotion_image(const char *emotion)
     lv_image_set_src(sg_ui.ui.emotion_image, &img_dsc);
     lv_obj_clear_flag(sg_ui.ui.emotion_image, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(sg_ui.ui.emotion_label, LV_OBJ_FLAG_HIDDEN);
+    
+    // Update title name based on emotion
+    __ui_update_title_name(emotion);
+}
+
+static void __ui_update_title_name(const char *emotion)
+{
+    if (sg_ui.ui.title_label == NULL) {
+        return;
+    }
+
+    int name_index = EMOTION_HAPPY_INDEX; // 默认索引
+
+    // 根据情绪选择对应的名字索引
+    if (strcmp(emotion, "happy") == 0 || strcmp(emotion, "HAPPY") == 0) {
+        name_index = EMOTION_HAPPY_INDEX;
+    } else if (strcmp(emotion, "angry") == 0 || strcmp(emotion, "ANGRY") == 0) {
+        name_index = EMOTION_ANGRY_INDEX;
+    } else if (strcmp(emotion, "sad") == 0 || strcmp(emotion, "SAD") == 0) {
+        name_index = EMOTION_SAD_INDEX;
+    } else if (strcmp(emotion, "think") == 0 || strcmp(emotion, "THINKING") == 0) {
+        name_index = EMOTION_THINK_INDEX;
+    } else if (strcmp(emotion, "shock") == 0 || strcmp(emotion, "SURPRISE") == 0) {
+        name_index = EMOTION_SHOCK_INDEX;
+    }
+
+    // 构建新的标题文字
+    char title_text[64];
+    snprintf(title_text, sizeof(title_text), "AI味道精灵-%s", ai_spirit_names[name_index]);
+    
+    // 更新标题文字
+    lv_label_set_text(sg_ui.ui.title_label, title_text);
 }
 
 void ui_set_emotion(const char *emotion)
@@ -375,6 +433,9 @@ void ui_set_emotion(const char *emotion)
     if (NULL == sg_ui.ui.emotion_label) {
         return;
     }
+
+    // Update title name based on emotion
+    __ui_update_title_name(emotion);
 
     // Try to show image emotion first
     __ui_set_emotion_image(emotion);
