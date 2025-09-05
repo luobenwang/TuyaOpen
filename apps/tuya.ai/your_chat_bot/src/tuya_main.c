@@ -17,6 +17,7 @@
 #include "tuya_cloud_types.h"
 
 #include <assert.h>
+#include <string.h>
 #include "cJSON.h"
 #include "tal_api.h"
 #include "tuya_config.h"
@@ -212,6 +213,13 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
         audio_dp_obj_proc(dpobj);
 
         tuya_iot_dp_obj_report(client, dpobj->devid, dpobj->dps, dpobj->dpscnt, 0);
+
+#if defined(ENABLE_CHAT_DISPLAY) && (ENABLE_CHAT_DISPLAY == 1)
+        // 发送"dp_obj"字符串到Display System作为表情事件
+        const char *dp_obj_str = "dp_obj";
+        app_display_send_msg(TY_DISPLAY_TP_EMOTION, (uint8_t *)dp_obj_str, strlen(dp_obj_str));
+        PR_DEBUG("Sent dp_obj emotion to display system");
+#endif
 
     } break;
 

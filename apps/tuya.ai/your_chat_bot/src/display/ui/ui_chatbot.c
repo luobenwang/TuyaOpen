@@ -434,6 +434,14 @@ void ui_set_emotion(const char *emotion)
         return;
     }
 
+    // 检查是否是dp_obj事件
+    if (emotion && strcmp(emotion, "dp_obj") == 0) {
+        LV_LOG_WARN("Received dp_obj emotion event in UI!");
+        // 切换到cooking界面
+        ui_cooking_show(lv_screen_active());
+        //return; // 直接返回，不执行后续的表情处理
+    }
+
     // Update title name based on emotion
     __ui_update_title_name(emotion);
 
