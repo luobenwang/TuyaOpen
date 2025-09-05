@@ -15,6 +15,9 @@ choice
     config ENABLE_GUI_EYES
         bool "Use Eyes ui"
 
+    config ENABLE_GUI_RGB_CONTROL
+        bool "Use RGB LED control ui"
+
 endchoice
 
 config ENABLE_GUI_STREAM_AI_TEXT

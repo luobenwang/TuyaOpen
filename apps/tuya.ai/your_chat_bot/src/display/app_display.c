@@ -19,6 +19,8 @@
 
 #include "font_awesome_symbols.h"
 #include "ui_display.h"
+// #include "ui_desktop.h"
+// #include "ui_menu.h"
 
 #include "tal_log.h"
 #include "tal_queue.h"
@@ -235,6 +237,13 @@ static void __chat_bot_ui_task(void *args)
     TUYA_CALL_ERR_LOG(__get_ui_font(&sg_display.ui_font));
     // ui initialization
     TUYA_CALL_ERR_LOG(ui_init(&sg_display.ui_font));
+    // 1. 初始化桌面和菜单UI
+    // ui_desktop_init(&sg_display.ui_font);
+    // ui_menu_init(&sg_display.ui_font);
+
+    // 2. 启动桌面UI
+    // ui_desktop_show(NULL);  // Commented out desktop UI
+
 #if defined(BOARD_CHOICE_WAVESHARE_ESP32_S3_TOUCH_AMOLED_1_8)
     extern void lcd_sh8601_set_backlight(uint8_t brightness);
     lcd_sh8601_set_backlight(80); // set backlight to 80%
@@ -253,6 +262,8 @@ static void __chat_bot_ui_task(void *args)
             tkl_system_psram_free(msg_data.data);
         }
         msg_data.data = NULL;
+        // 更新桌面UI（时间和日期会自动更新）
+        // ui_desktop_demo_update();
     }
 }
 

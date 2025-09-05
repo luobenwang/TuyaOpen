@@ -12,6 +12,7 @@
 extern "C" {
 #endif
 
+#if 0
 #define LANG_CODE "zh-CN"
 
 #define VERSION "版本 "
@@ -32,6 +33,28 @@ extern "C" {
 #define VOLUME "音量 "
 #define MUTED "已静音"
 #define MAX_VOLUME "最大音量"
+#else
+#define LANG_CODE "en-US"
+
+#define VERSION "Version "
+#define INITIALIZING "Initializing..."
+#define REGISTERING_NETWORK "Waiting for network..."
+#define CONNECT_SERVER "Connecting to server..."
+#define STANDBY "Standby"
+#define CONNECT_TO "Connect to "
+#define CONNECTING "Connecting..."
+#define CONNECTED_TO "Connected to "
+#define LISTENING "Listening..."
+#define SPEAKING "Speaking..."
+#define HOLD_TALK "Hold to talk"
+#define TRIG_TALK "Press to talk"
+#define WAKEUP_TALK "Wake word"
+#define FREE_TALK "Free talk"
+#define ENTERING_WIFI_CONFIG_MODE "Entering Wi-Fi setup mode..."
+#define VOLUME "Volume "
+#define MUTED "Muted"
+#define MAX_VOLUME "Max volume"
+#endif
 
 #ifdef __cplusplus
 }
