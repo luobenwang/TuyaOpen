@@ -19,7 +19,7 @@
 app_display_send_msg(TY_DISPLAY_TP_EMOTION, (uint8_t*)"sad", strlen("sad"));
 app_display_send_msg(TY_DISPLAY_TP_EMOTION, (uint8_t*)"angry", strlen("angry"));
 app_display_send_msg(TY_DISPLAY_TP_EMOTION, (uint8_t*)"think", strlen("think"));
-app_display_send_msg(TY_DISPLAY_TP_EMOTION, (uint8_t*)"sleep", strlen("sleep"));
+app_display_send_msg(TY_DISPLAY_TP_EMOTION, (uint8_t*)"think", strlen("think"));
 ```
 
 ### 方法2: 直接调用函数测试
@@ -28,9 +28,9 @@ app_display_send_msg(TY_DISPLAY_TP_EMOTION, (uint8_t*)"sleep", strlen("sleep"));
 ui_set_emotion("sad");
 ui_set_emotion("angry");
 ui_set_emotion("think");
-ui_set_emotion("sleep");
+ui_set_emotion("think");
 ui_set_emotion("love");
-ui_set_emotion("shock");
+ui_set_emotion("think");
 ```
 
 ### 方法3: 使用预定义常量测试

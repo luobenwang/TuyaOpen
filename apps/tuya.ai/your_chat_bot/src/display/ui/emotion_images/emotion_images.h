@@ -19,14 +19,6 @@ extern const uint16_t emotion_sad_image_width;
 extern const uint16_t emotion_sad_image_height;
 extern const uint16_t emotion_sad_image_data[];
 
-extern const uint16_t emotion_shock_image_width;
-extern const uint16_t emotion_shock_image_height;
-extern const uint16_t emotion_shock_image_data[];
-
-extern const uint16_t emotion_sleep_image_width;
-extern const uint16_t emotion_sleep_image_height;
-extern const uint16_t emotion_sleep_image_data[];
-
 extern const uint16_t emotion_think_image_width;
 extern const uint16_t emotion_think_image_height;
 extern const uint16_t emotion_think_image_data[];

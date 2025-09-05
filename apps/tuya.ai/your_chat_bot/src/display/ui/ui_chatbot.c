@@ -78,13 +78,13 @@ static void __ui_set_emotion_image(const char *emotion);
 ***********************************************************/
 static APP_CHATBOT_UI_T sg_ui = {0};
 
-extern void ui_2048_show(lv_obj_t *prev_screen);
+extern void ui_cooking_show(lv_obj_t *prev_screen);
 // extern void ui_rgb_control_show(void);
 // extern void ui_dino_show(lv_obj_t *prev_screen);
 
 static void ui_btn_game_event_cb(lv_event_t *e)
 {
-    (void)e; ui_2048_show(lv_screen_active());
+    (void)e; ui_cooking_show(lv_screen_active());
 }
 
 // static void ui_btn_rgb_event_cb(lv_event_t *e)
@@ -209,7 +209,7 @@ int ui_init(UI_FONT_T *ui_font)
     lv_obj_t *btn_game = lv_btn_create(sg_ui.ui.content);
     lv_obj_set_size(btn_game, 150, 40);  // Set button size
     lv_obj_t *lbl_game = lv_label_create(btn_game);
-    lv_label_set_text(lbl_game, "Play 2048 Game");
+    lv_label_set_text(lbl_game, "开始制作美食");
     lv_obj_center(lbl_game);
     lv_obj_add_event_cb(btn_game, ui_btn_game_event_cb, LV_EVENT_CLICKED, NULL);
 #if 0
@@ -346,9 +346,9 @@ static void __ui_set_emotion_image(const char *emotion)
     //     height = emotion_love_image_height;
     // } 
     else if (strcmp(emotion, "shock") == 0 || strcmp(emotion, "SURPRISE") == 0) {
-        image_data = emotion_shock_image_data;
-        width = emotion_shock_image_width;
-        height = emotion_shock_image_height;
+        image_data = emotion_think_image_data;
+        width = emotion_think_image_width;
+        height = emotion_think_image_height;
     }
     // Default case: happy (already set above)
 

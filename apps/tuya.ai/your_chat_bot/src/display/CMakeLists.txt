@@ -22,9 +22,8 @@ set(EMOTION_IMAGES_SRCS
     ${APP_MODULE_PATH}/ui/emotion_images/emotion_angry_image.c
     ${APP_MODULE_PATH}/ui/emotion_images/emotion_sad_image.c
     ${APP_MODULE_PATH}/ui/emotion_images/emotion_think_image.c
-    ${APP_MODULE_PATH}/ui/emotion_images/emotion_sleep_image.c
     ${APP_MODULE_PATH}/ui/emotion_images/emotion_love_image.c
-    ${APP_MODULE_PATH}/ui/emotion_images/emotion_shock_image.c
+    ${APP_MODULE_PATH}/ui/emotion_images/emotion_huoguo_image.c
 )
 
 set(IMAGE_SRCS ${APP_MODULE_PATH}/image/TuyaOpen_img_320_480.c)
@@ -38,6 +37,7 @@ list(APPEND APP_MODULE_SRCS
     ${IMAG_EYES_SRCS}
     ${EMOTION_IMAGES_SRCS}
     ${APP_MODULE_PATH}/ui/ui_2048.c
+    ${APP_MODULE_PATH}/ui/ui_cooking.c
     ${APP_MODULE_PATH}/ui/ui_rgb_control.c
     ${APP_MODULE_PATH}/ui/ui_dino.c
 )
