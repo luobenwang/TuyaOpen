@@ -13,10 +13,12 @@
  */
 
 #include "tuya_cloud_types.h"
+#include <string.h>
 
 #if defined(ENABLE_GUI_CHATBOT) && (ENABLE_GUI_CHATBOT == 1)
 
 #include "ui_display.h"
+#include "emotion_images.h"
 
 #include "font_awesome_symbols.h"
 #include "lvgl.h"
@@ -45,7 +47,7 @@ typedef struct {
     lv_obj_t *container;
     lv_obj_t *status_bar;
     lv_obj_t *content;
-    lv_obj_t *emotion_label;
+    lv_obj_t *emotion_image;
     lv_obj_t *chat_message_label;
     lv_obj_t *status_label;
     lv_obj_t *network_label;
@@ -66,11 +68,21 @@ typedef struct {
 /***********************************************************
 ********************function declaration********************
 ***********************************************************/
+static lv_img_dsc_t* __get_emotion_image_desc(const char *emotion);
 
 /***********************************************************
 ***********************variable define**********************
 ***********************************************************/
 static APP_CHATBOT_UI_T sg_ui = {0};
+
+// Static image descriptors for emotions
+static lv_img_dsc_t emotion_happy_desc = {0};
+static lv_img_dsc_t emotion_angry_desc = {0};
+static lv_img_dsc_t emotion_love_desc = {0};
+static lv_img_dsc_t emotion_sad_desc = {0};
+static lv_img_dsc_t emotion_shock_desc = {0};
+static lv_img_dsc_t emotion_sleep_desc = {0};
+static lv_img_dsc_t emotion_think_desc = {0};
 
 /***********************************************************
 ***********************function define**********************
@@ -123,6 +135,31 @@ int __ui_font_init(UI_FONT_T *ui_font)
     return 0;
 }
 
+static lv_img_dsc_t* __get_emotion_image_desc(const char *emotion)
+{
+    if (emotion == NULL) {
+        return &emotion_happy_desc; // Default to happy
+    }
+
+    if (strcmp(emotion, "happy") == 0) {
+        return &emotion_happy_desc;
+    } else if (strcmp(emotion, "angry") == 0) {
+        return &emotion_angry_desc;
+    } else if (strcmp(emotion, "love") == 0) {
+        return &emotion_love_desc;
+    } else if (strcmp(emotion, "sad") == 0) {
+        return &emotion_sad_desc;
+    } else if (strcmp(emotion, "shock") == 0) {
+        return &emotion_shock_desc;
+    } else if (strcmp(emotion, "sleep") == 0) {
+        return &emotion_sleep_desc;
+    } else if (strcmp(emotion, "think") == 0) {
+        return &emotion_think_desc;
+    } else {
+        return &emotion_happy_desc; // Default to happy
+    }
+}
+
 static void __ui_notification_timeout_cb(lv_timer_t *timer)
 {
     lv_timer_del(sg_ui.notification_tm);
@@ -139,6 +176,49 @@ int ui_init(UI_FONT_T *ui_font)
 
     // Font init
     __ui_font_init(ui_font);
+
+    // Initialize emotion image descriptors
+    emotion_happy_desc.header.cf = LV_IMG_CF_TRUE_COLOR;
+    emotion_happy_desc.header.w = emotion_happy_image_width;
+    emotion_happy_desc.header.h = emotion_happy_image_height;
+    emotion_happy_desc.data_size = emotion_happy_image_width * emotion_happy_image_height * 2; // RGB565 = 2 bytes per pixel
+    emotion_happy_desc.data = (const uint8_t*)emotion_happy_image_data;
+
+    emotion_angry_desc.header.cf = LV_IMG_CF_TRUE_COLOR;
+    emotion_angry_desc.header.w = emotion_angry_image_width;
+    emotion_angry_desc.header.h = emotion_angry_image_height;
+    emotion_angry_desc.data_size = emotion_angry_image_width * emotion_angry_image_height * 2;
+    emotion_angry_desc.data = (const uint8_t*)emotion_angry_image_data;
+
+    emotion_love_desc.header.cf = LV_IMG_CF_TRUE_COLOR;
+    emotion_love_desc.header.w = emotion_love_image_width;
+    emotion_love_desc.header.h = emotion_love_image_height;
+    emotion_love_desc.data_size = emotion_love_image_width * emotion_love_image_height * 2;
+    emotion_love_desc.data = (const uint8_t*)emotion_love_image_data;
+
+    emotion_sad_desc.header.cf = LV_IMG_CF_TRUE_COLOR;
+    emotion_sad_desc.header.w = emotion_sad_image_width;
+    emotion_sad_desc.header.h = emotion_sad_image_height;
+    emotion_sad_desc.data_size = emotion_sad_image_width * emotion_sad_image_height * 2;
+    emotion_sad_desc.data = (const uint8_t*)emotion_sad_image_data;
+
+    emotion_shock_desc.header.cf = LV_IMG_CF_TRUE_COLOR;
+    emotion_shock_desc.header.w = emotion_shock_image_width;
+    emotion_shock_desc.header.h = emotion_shock_image_height;
+    emotion_shock_desc.data_size = emotion_shock_image_width * emotion_shock_image_height * 2;
+    emotion_shock_desc.data = (const uint8_t*)emotion_shock_image_data;
+
+    emotion_sleep_desc.header.cf = LV_IMG_CF_TRUE_COLOR;
+    emotion_sleep_desc.header.w = emotion_sleep_image_width;
+    emotion_sleep_desc.header.h = emotion_sleep_image_height;
+    emotion_sleep_desc.data_size = emotion_sleep_image_width * emotion_sleep_image_height * 2;
+    emotion_sleep_desc.data = (const uint8_t*)emotion_sleep_image_data;
+
+    emotion_think_desc.header.cf = LV_IMG_CF_TRUE_COLOR;
+    emotion_think_desc.header.w = emotion_think_image_width;
+    emotion_think_desc.header.h = emotion_think_image_height;
+    emotion_think_desc.data_size = emotion_think_image_width * emotion_think_image_height * 2;
+    emotion_think_desc.data = (const uint8_t*)emotion_think_image_data;
 
     lv_obj_t *screen = lv_screen_active();
     lv_obj_set_style_text_font(screen, sg_ui.font.text, 0);
@@ -170,9 +250,9 @@ int ui_init(UI_FONT_T *ui_font)
     lv_obj_set_flex_align(sg_ui.ui.content, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_SPACE_EVENLY);
 
     // Emotion
-    sg_ui.ui.emotion_label = lv_label_create(sg_ui.ui.content);
-    lv_obj_set_style_text_font(sg_ui.ui.emotion_label, sg_ui.font.emoji, 0);
-    lv_label_set_text(sg_ui.ui.emotion_label, sg_ui.font.emoji_list[0].emo_icon);
+    sg_ui.ui.emotion_image = lv_img_create(sg_ui.ui.content);
+    lv_img_set_src(sg_ui.ui.emotion_image, &emotion_happy_desc);
+    lv_obj_set_size(sg_ui.ui.emotion_image, 120, 120); // Scale down the 240x240 image to 120x120
 
     // Chat message
     sg_ui.ui.chat_message_label = lv_label_create(sg_ui.ui.content);
@@ -257,20 +337,14 @@ void ui_set_system_msg(const char *text)
 
 void ui_set_emotion(const char *emotion)
 {
-    if (NULL == sg_ui.ui.emotion_label) {
+    if (NULL == sg_ui.ui.emotion_image) {
         return;
     }
 
-    char *emo_icon = sg_ui.font.emoji_list[0].emo_icon;
-    for (int i = 0; i < EMO_ICON_MAX_NUM; i++) {
-        if (strcmp(emotion, sg_ui.font.emoji_list[i].emo_text) == 0) {
-            emo_icon = sg_ui.font.emoji_list[i].emo_icon;
-            break;
-        }
+    lv_img_dsc_t *img_desc = __get_emotion_image_desc(emotion);
+    if (img_desc != NULL) {
+        lv_img_set_src(sg_ui.ui.emotion_image, img_desc);
     }
-
-    lv_obj_set_style_text_font(sg_ui.ui.emotion_label, sg_ui.font.emoji, 0);
-    lv_label_set_text(sg_ui.ui.emotion_label, emo_icon);
 }
 
 void ui_set_status(const char *status)
