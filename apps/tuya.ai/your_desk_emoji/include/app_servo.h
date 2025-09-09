@@ -22,6 +22,7 @@ extern "C" {
 
 OPERATE_RET app_servo_init(VOID);
 VOID app_servo_move(SERVO_ACTION_E action);
+VOID app_servo_cleanup(VOID);
 
 #ifdef __cplusplus
 }
