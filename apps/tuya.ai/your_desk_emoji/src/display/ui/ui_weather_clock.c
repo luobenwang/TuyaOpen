@@ -238,10 +238,11 @@ static int __ui_weather_clock_init_160x80(UI_FONT_T *ui_font)
     }
     PR_DEBUG("Update timer created successfully");
 
-    // Initially hide the weather clock
-    sg_weather_clock.is_visible = FALSE;
-    lv_obj_add_flag(sg_weather_clock.ui.container, LV_OBJ_FLAG_HIDDEN);
-    PR_DEBUG("Weather clock initially hidden");
+    // Initially show the weather clock (startup display)
+    sg_weather_clock.is_visible = TRUE;
+    lv_obj_clear_flag(sg_weather_clock.ui.container, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_move_foreground(sg_weather_clock.ui.container);
+    PR_DEBUG("Weather clock initially visible for startup");
 
     PR_DEBUG("Minimal weather clock UI initialized successfully for 160x80 display");
     return 0;

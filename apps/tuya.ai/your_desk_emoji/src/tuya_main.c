@@ -501,31 +501,22 @@ void user_main(void)
     // Weather clock functionality enabled for testing
     PR_DEBUG("Weather clock functionality enabled for testing");
     
-    // Wait a bit for display system to be ready
-    tal_system_sleep(2000);
+    // Wait a short time for display system to be ready
+    tal_system_sleep(500);
     
-    // Show weather clock on startup
+    // Show weather clock on startup immediately
     PR_DEBUG("=== SENDING WEATHER CLOCK SHOW MESSAGE ===");
     PR_DEBUG("Message type: TY_DISPLAY_TP_WEATHER_CLOCK_SHOW");
     ret = app_display_send_msg(TY_DISPLAY_TP_WEATHER_CLOCK_SHOW, NULL, 0);
     PR_DEBUG("Weather clock show message sent, result: %d", ret);
     
-    // Test weather update after a delay
-    tal_system_sleep(3000);
-    char test_weather[] = "☀️,25°C";
-    PR_DEBUG("Sending test weather update: %s", test_weather);
+    // Send initial weather data after a short delay
+    tal_system_sleep(1000);
+    char test_weather[] = "SUN,25C";
+    PR_DEBUG("Sending initial weather update: %s", test_weather);
     app_display_send_msg(TY_DISPLAY_TP_WEATHER_CLOCK_UPDATE_WEATHER, 
                         (uint8_t *)test_weather, strlen(test_weather));
     
-    // Test different weather conditions after another delay
-    tal_system_sleep(5000);
-    char test_weather2[] = "🌧️,18°C";
-    PR_DEBUG("Sending second test weather update: %s", test_weather2);
-    app_display_send_msg(TY_DISPLAY_TP_WEATHER_CLOCK_UPDATE_WEATHER, 
-                        (uint8_t *)test_weather2, strlen(test_weather2));
-    
-    // Add a delay to ensure weather clock is stable
-    tal_system_sleep(2000);
     PR_DEBUG("Weather clock initialization completed");
 #endif
 
