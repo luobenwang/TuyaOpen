@@ -59,7 +59,7 @@ tuya_iot_client_t ai_client;
 #define DPID_VOLUME 3
 #define DPID_SERVO  5
 
-static bool _s_servo_busy = FALSE;
+bool _s_servo_busy = FALSE;
 static uint8_t _need_reset = 0;
 static SERVO_ACTION_E _s_servo_action = SERVO_CENTER;
 
@@ -92,6 +92,7 @@ void user_upgrade_notify_on(tuya_iot_client_t *client, cJSON *upgrade)
     PR_INFO("URL: %s", cJSON_GetObjectItem(upgrade, "url")->valuestring);
     PR_INFO("HTTPS URL: %s", cJSON_GetObjectItem(upgrade, "httpsUrl")->valuestring);
 }
+
 
 static void __servo_control_wk_cb(void *data)
 {
@@ -132,8 +133,11 @@ static void __gesture_detect_cb(GESTURE_TYPE_E gesture)
 {
     PR_DEBUG("Gesture detected: %d", gesture);
 
-    // Trigger corresponding emoji expression
+    // Hide weather clock and show emoji mode
 #if defined(ENABLE_CHAT_DISPLAY) && (ENABLE_CHAT_DISPLAY == 1)
+    app_display_send_msg(TY_DISPLAY_TP_WEATHER_CLOCK_HIDE, NULL, 0);
+    
+    // Trigger corresponding emoji expression
     switch (gesture) {
     case GESTURE_RIGHT:
         app_display_send_msg(TY_DISPLAY_TP_EMOTION, (uint8_t *)"right", 5);
@@ -164,7 +168,7 @@ static void __gesture_detect_cb(GESTURE_TYPE_E gesture)
         _s_servo_action = SERVO_NOD;
         break;
     case GESTURE_BACKWARD:
-        app_display_send_msg(TY_DISPLAY_TP_EMOTION_MOOD, (uint8_t *)"sleepy", 6);
+        app_display_send_msg(TY_DISPLAY_TP_EMOTION, (uint8_t *)"sleep", 5);
         _s_servo_action = SERVO_CENTER;
         break;
     // Add fun expressions for special gestures
@@ -174,6 +178,9 @@ static void __gesture_detect_cb(GESTURE_TYPE_E gesture)
     default:
         return;
     }
+    
+    // Return to weather clock is now handled by emoji rotation counter
+    // No need for separate timer - emoji UI will send return message when all emotions are rotated
 #else
     switch (gesture) {
     case GESTURE_RIGHT:
@@ -481,6 +488,46 @@ void user_main(void)
     if (ret != OPRT_OK) {
         PR_ERR("app_gesture_init failed: %d", ret);
     }
+
+#if defined(ENABLE_CHAT_DISPLAY) && (ENABLE_CHAT_DISPLAY == 1)
+    PR_DEBUG("Initializing display system...");
+    ret = app_display_init();
+    if (ret != OPRT_OK) {
+        PR_ERR("app_display_init failed: %d", ret);
+    } else {
+        PR_DEBUG("Display system initialized successfully");
+    }
+    
+    // Weather clock functionality enabled for testing
+    PR_DEBUG("Weather clock functionality enabled for testing");
+    
+    // Wait a bit for display system to be ready
+    tal_system_sleep(2000);
+    
+    // Show weather clock on startup
+    PR_DEBUG("=== SENDING WEATHER CLOCK SHOW MESSAGE ===");
+    PR_DEBUG("Message type: TY_DISPLAY_TP_WEATHER_CLOCK_SHOW");
+    ret = app_display_send_msg(TY_DISPLAY_TP_WEATHER_CLOCK_SHOW, NULL, 0);
+    PR_DEBUG("Weather clock show message sent, result: %d", ret);
+    
+    // Test weather update after a delay
+    tal_system_sleep(3000);
+    char test_weather[] = "☀️,25°C";
+    PR_DEBUG("Sending test weather update: %s", test_weather);
+    app_display_send_msg(TY_DISPLAY_TP_WEATHER_CLOCK_UPDATE_WEATHER, 
+                        (uint8_t *)test_weather, strlen(test_weather));
+    
+    // Test different weather conditions after another delay
+    tal_system_sleep(5000);
+    char test_weather2[] = "🌧️,18°C";
+    PR_DEBUG("Sending second test weather update: %s", test_weather2);
+    app_display_send_msg(TY_DISPLAY_TP_WEATHER_CLOCK_UPDATE_WEATHER, 
+                        (uint8_t *)test_weather2, strlen(test_weather2));
+    
+    // Add a delay to ensure weather clock is stable
+    tal_system_sleep(2000);
+    PR_DEBUG("Weather clock initialization completed");
+#endif
 
     for (;;) {
         /* Loop to receive packets, and handles client keepalive */

@@ -19,6 +19,7 @@
 
 #include "font_awesome_symbols.h"
 #include "ui_display.h"
+#include "ui_weather_clock.h"
 
 #include "tal_log.h"
 #include "tal_queue.h"
@@ -104,6 +105,11 @@ static OPERATE_RET __get_ui_font(UI_FONT_T *ui_font)
     ui_font->emoji = (lv_font_t *)font_emoji_32_init();
     ui_font->emoji_list = sg_emo_list;
 #elif defined(ENABLE_GUI_CHATBOT)
+    ui_font->text = (lv_font_t *)&font_puhui_18_2;
+    ui_font->icon = (lv_font_t *)&font_awesome_16_4;
+    ui_font->emoji = (lv_font_t *)font_emoji_64_init();
+    ui_font->emoji_list = sg_emo_list;
+#elif defined(ENABLE_GUI_EMOJI)
     ui_font->text = (lv_font_t *)&font_puhui_18_2;
     ui_font->icon = (lv_font_t *)&font_awesome_16_4;
     ui_font->emoji = (lv_font_t *)font_emoji_64_init();
@@ -220,6 +226,43 @@ static void __app_display_msg_handle(DISPLAY_MSG_T *msg_data)
     case TY_DISPLAY_TP_CHAT_MODE: {
         ui_set_chat_mode(msg_data->data);
     } break;
+    case TY_DISPLAY_TP_WEATHER_CLOCK_SHOW: {
+        PR_DEBUG("=== WEATHER CLOCK SHOW MESSAGE RECEIVED ===");
+        PR_DEBUG("Calling ui_weather_clock_show()...");
+        ui_emoji_hide(); // Hide emoji UI first
+        ui_weather_clock_show(); // Show weather clock
+        PR_DEBUG("ui_weather_clock_show() completed");
+    } break;
+    case TY_DISPLAY_TP_WEATHER_CLOCK_HIDE: {
+        PR_DEBUG("Weather clock hide requested - showing emoji UI");
+        ui_weather_clock_hide(); // Hide weather clock
+        ui_emoji_show(); // Show emoji UI
+    } break;
+    case TY_DISPLAY_TP_WEATHER_CLOCK_UPDATE_WEATHER: {
+        PR_DEBUG("=== WEATHER UPDATE MESSAGE RECEIVED ===");
+        PR_DEBUG("Weather data: %s", msg_data->data ? msg_data->data : "NULL");
+        if (msg_data->data != NULL) {
+            // Parse weather data (format: "icon,temperature" or "icon temperature")
+            char *weather_icon = msg_data->data;
+            char *temperature = strchr(msg_data->data, ',');
+            if (temperature != NULL) {
+                *temperature = '\0';
+                temperature++;
+                ui_weather_clock_update_weather(weather_icon, temperature);
+            } else {
+                // Try space separator
+                temperature = strchr(msg_data->data, ' ');
+                if (temperature != NULL) {
+                    *temperature = '\0';
+                    temperature++;
+                    ui_weather_clock_update_weather(weather_icon, temperature);
+                } else {
+                    // Single string, use as icon
+                    ui_weather_clock_update_weather(weather_icon, "22°C");
+                }
+            }
+        }
+    } break;
     default: {
         PR_ERR("Invalid display type: %d", msg_data->type);
     } break;
@@ -236,21 +279,39 @@ static void __chat_bot_ui_task(void *args)
     (void)args;
 
     tuya_lvgl_mutex_lock();
+    PR_DEBUG("Starting UI initialization...");
+    
     // Initialize the display font
     TUYA_CALL_ERR_LOG(__get_ui_font(&sg_display.ui_font));
+    PR_DEBUG("Font initialization completed");
+    
     // ui initialization
     TUYA_CALL_ERR_LOG(ui_init(&sg_display.ui_font));
+    PR_DEBUG("Main UI initialization completed");
+    
+    // Initialize weather clock UI (MINIMAL TEST VERSION)
+    #if 1
+    TUYA_CALL_ERR_LOG(ui_weather_clock_init(&sg_display.ui_font));
+    PR_DEBUG("Weather clock UI initialization completed");
+    #else
+    PR_DEBUG("Weather clock UI initialization skipped (safety mode - crash detected)");
+    #endif
+    
 #if defined(BOARD_CHOICE_WAVESHARE_ESP32_S3_TOUCH_AMOLED_1_8)
     extern void lcd_sh8601_set_backlight(uint8_t brightness);
     lcd_sh8601_set_backlight(80); // set backlight to 80%
     ui_set_status_bar_pad(LV_HOR_RES * 0.1);
+    PR_DEBUG("Display backlight and padding configured");
 #endif
+    
     tuya_lvgl_mutex_unlock();
-    PR_DEBUG("ui init success");
+    PR_DEBUG("UI initialization completed successfully");
 
     for (;;) {
         memset(&msg_data, 0, sizeof(DISPLAY_MSG_T));
+        PR_DEBUG("Waiting for display message...");
         tal_queue_fetch(sg_display.queue_hdl, &msg_data, 0xFFFFFFFF);
+        PR_DEBUG("Received display message type: %d", msg_data.type);
 
         __app_display_msg_handle(&msg_data);
 

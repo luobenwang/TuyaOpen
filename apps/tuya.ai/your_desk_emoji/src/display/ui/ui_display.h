@@ -73,6 +73,10 @@ void ui_set_chat_mode(const char *chat_mode);
 
 void ui_set_status_bar_pad(int32_t value);
 
+// Emoji UI show/hide functions
+void ui_emoji_show(void);
+void ui_emoji_hide(void);
+
 #if defined(ENABLE_GUI_STREAM_AI_TEXT) && (ENABLE_GUI_STREAM_AI_TEXT == 1)
 void ui_set_assistant_msg_stream_start(void);
 

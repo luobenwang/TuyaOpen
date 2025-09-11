@@ -13,8 +13,8 @@
 #define SERVO_PWM_CYCLE              10000   // tkl_pwm cycle = 10000
 #define SERVO_STEP_COUNT             50      // Number of steps for smooth movement (reduced for faster movement)
 #define SERVO_MOVE_TIME_MS           400     // Total move time in ms (reduced for faster movement)
-#define SERVO_FAST_MOVE_TIME_MS      200     // Fast movement time for quick actions
-#define SERVO_SLOW_MOVE_TIME_MS      600     // Slow movement time for smooth actions
+#define SERVO_FAST_MOVE_TIME_MS      400     // Fast movement time for quick actions (reduced speed)
+#define SERVO_SLOW_MOVE_TIME_MS      1200    // Slow movement time for smooth actions (reduced speed)
 
 // Servo action angle constants
 #define SERVO_ANGLE_UP           0
@@ -42,7 +42,7 @@ STATIC SERVO_POSITION_E s_servo_vertical_state = SERVO_POS_CENTER_VERT;
 STATIC SERVO_POSITION_E s_servo_horizontal_state = SERVO_POS_CENTER_HORI;
 
 // Auto center timer variables
-#define AUTO_CENTER_TIMEOUT_MS        10000   // 10 seconds timeout
+#define AUTO_CENTER_TIMEOUT_MS        5000   // 5 seconds timeout
 STATIC TIMER_ID s_auto_center_timer = 0;
 STATIC BOOL_T s_auto_center_enabled = TRUE;
 
@@ -330,92 +330,74 @@ STATIC VOID app_servo_nod(VOID)
     PR_DEBUG("Enhanced nod action completed");
 }
 
-// Enhanced clockwise action: smoother and more fluid movement
+// Simple and stable clockwise rotation
 STATIC VOID app_servo_clockwise(VOID)
 {
-    PR_DEBUG("Starting enhanced clockwise rotation");
+    PR_DEBUG("Starting simple clockwise rotation");
     
-    // Center position with fast movement
-    app_servo_move_to_with_speed(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT, SERVO_FAST_MOVE_TIME_MS);
-    app_servo_move_to_with_speed(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI, SERVO_FAST_MOVE_TIME_MS);
-    tal_system_sleep(100);
+    // Ensure we start from center
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI);
+    tal_system_sleep(500);
 
-    // Smooth clockwise sequence with reduced delays and faster movement
+    // Simple clockwise sequence: Right -> Down -> Left -> Up -> Center
     PR_DEBUG("Clockwise: Right");
-    app_servo_move_to_with_speed(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_RIGHT, SERVO_FAST_MOVE_TIME_MS);
-    tal_system_sleep(150);
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_RIGHT);
+    tal_system_sleep(800);
 
     PR_DEBUG("Clockwise: Down");
-    app_servo_move_to_with_speed(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_DOWN, SERVO_FAST_MOVE_TIME_MS);
-    tal_system_sleep(150);
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_DOWN);
+    tal_system_sleep(800);
 
     PR_DEBUG("Clockwise: Left");
-    app_servo_move_to_with_speed(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_LEFT, SERVO_FAST_MOVE_TIME_MS);
-    tal_system_sleep(150);
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_LEFT);
+    tal_system_sleep(800);
 
     PR_DEBUG("Clockwise: Up");
-    app_servo_move_to_with_speed(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_UP, SERVO_FAST_MOVE_TIME_MS);
-    tal_system_sleep(150);
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_UP);
+    tal_system_sleep(800);
 
-    // Add one more cycle for more fluid motion
-    PR_DEBUG("Clockwise: Second cycle - Right");
-    app_servo_move_to_with_speed(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_RIGHT, SERVO_FAST_MOVE_TIME_MS);
-    tal_system_sleep(100);
-
-    PR_DEBUG("Clockwise: Second cycle - Down");
-    app_servo_move_to_with_speed(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_DOWN, SERVO_FAST_MOVE_TIME_MS);
-    tal_system_sleep(100);
-
-    // Return to center with smooth movement
+    // Return to center
     PR_DEBUG("Clockwise: Return to center");
-    app_servo_move_to_with_speed(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT, SERVO_SLOW_MOVE_TIME_MS);
-    app_servo_move_to_with_speed(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI, SERVO_SLOW_MOVE_TIME_MS);
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI);
     
-    PR_DEBUG("Enhanced clockwise rotation completed");
+    PR_DEBUG("Simple clockwise rotation completed");
 }
 
-// Enhanced counter-clockwise action: smoother and more fluid movement
+// Simple and stable counter-clockwise rotation
 STATIC VOID app_servo_anticlockwise(VOID)
 {
-    PR_DEBUG("Starting enhanced anticlockwise rotation");
+    PR_DEBUG("Starting simple anticlockwise rotation");
     
-    // Center position with fast movement
-    app_servo_move_to_with_speed(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT, SERVO_FAST_MOVE_TIME_MS);
-    app_servo_move_to_with_speed(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI, SERVO_FAST_MOVE_TIME_MS);
-    tal_system_sleep(100);
+    // Ensure we start from center
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI);
+    tal_system_sleep(500);
 
-    // Smooth counter-clockwise sequence: Right -> Up -> Left -> Down -> Right
+    // Simple counter-clockwise sequence: Right -> Up -> Left -> Down -> Center
     PR_DEBUG("Anticlockwise: Right");
-    app_servo_move_to_with_speed(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_RIGHT, SERVO_FAST_MOVE_TIME_MS);
-    tal_system_sleep(150);
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_RIGHT);
+    tal_system_sleep(800);
 
     PR_DEBUG("Anticlockwise: Up");
-    app_servo_move_to_with_speed(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_UP, SERVO_FAST_MOVE_TIME_MS);
-    tal_system_sleep(150);
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_UP);
+    tal_system_sleep(800);
 
     PR_DEBUG("Anticlockwise: Left");
-    app_servo_move_to_with_speed(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_LEFT, SERVO_FAST_MOVE_TIME_MS);
-    tal_system_sleep(150);
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_LEFT);
+    tal_system_sleep(800);
 
     PR_DEBUG("Anticlockwise: Down");
-    app_servo_move_to_with_speed(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_DOWN, SERVO_FAST_MOVE_TIME_MS);
-    tal_system_sleep(150);
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_DOWN);
+    tal_system_sleep(800);
 
-    // Add one more cycle for more fluid motion
-    PR_DEBUG("Anticlockwise: Second cycle - Right");
-    app_servo_move_to_with_speed(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_RIGHT, SERVO_FAST_MOVE_TIME_MS);
-    tal_system_sleep(100);
-
-    PR_DEBUG("Anticlockwise: Second cycle - Up");
-    app_servo_move_to_with_speed(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_UP, SERVO_FAST_MOVE_TIME_MS);
-    tal_system_sleep(100);
-
-    // Return to center with smooth movement
+    // Return to center
     PR_DEBUG("Anticlockwise: Return to center");
-    app_servo_move_to_with_speed(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT, SERVO_SLOW_MOVE_TIME_MS);
-    app_servo_move_to_with_speed(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI, SERVO_SLOW_MOVE_TIME_MS);
+    app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
+    app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI);
     
-    PR_DEBUG("Enhanced anticlockwise rotation completed");
+    PR_DEBUG("Simple anticlockwise rotation completed");
 }
 
 OPERATE_RET app_servo_init(VOID)
