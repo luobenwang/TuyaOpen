@@ -12,6 +12,12 @@
 #include "tdd_audio.h"
 #include "tdd_led_gpio.h"
 #include "tdd_button_gpio.h"
+
+#if defined(TUYA_T5AI_CORE_EX_MODULE_13565LCD) && (TUYA_T5AI_CORE_EX_MODULE_13565LCD == 1)
+#include "tdd_disp_st7789.h"
+#elif defined(TUYA_T5AI_CORE_EX_MODULE_ST7735S_XLT) && (TUYA_T5AI_CORE_EX_MODULE_ST7735S_XLT == 1)
+#include "tdd_disp_spi_st7735s_xlt.h"
+#endif
 /***********************************************************
 ************************macro define************************
 ***********************************************************/
@@ -22,6 +28,38 @@
 
 #define BOARD_LED_PIN       TUYA_GPIO_NUM_9
 #define BOARD_LED_ACTIVE_LV TUYA_GPIO_LEVEL_HIGH
+
+#if defined(TUYA_T5AI_CORE_EX_MODULE_13565LCD) && (TUYA_T5AI_CORE_EX_MODULE_13565LCD == 1) || defined(TUYA_T5AI_CORE_EX_MODULE_ST7735S_XLT) && (TUYA_T5AI_CORE_EX_MODULE_ST7735S_XLT == 1)
+
+#define BOARD_LCD_BL_TYPE      TUYA_DISP_BL_TP_GPIO
+#define BOARD_LCD_BL_PIN       TUYA_GPIO_NUM_5
+#define BOARD_LCD_BL_ACTIVE_LV TUYA_GPIO_LEVEL_HIGH
+
+#if defined(TUYA_T5AI_CORE_EX_MODULE_13565LCD) && (TUYA_T5AI_CORE_EX_MODULE_13565LCD == 1) 
+#define BOARD_LCD_WIDTH      240
+#define BOARD_LCD_HEIGHT     240
+#define BOARD_LCD_SPI_CS_PIN  TUYA_GPIO_NUM_15
+#elif defined(TUYA_T5AI_CORE_EX_MODULE_ST7735S_XLT) && (TUYA_T5AI_CORE_EX_MODULE_ST7735S_XLT == 1)
+#define BOARD_LCD_WIDTH      160
+#define BOARD_LCD_HEIGHT     80
+#define BOARD_LCD_SPI_CS_PIN  TUYA_GPIO_NUM_13
+#endif
+
+#define BOARD_LCD_PIXELS_FMT TUYA_PIXEL_FMT_RGB565
+#define BOARD_LCD_ROTATION   TUYA_DISPLAY_ROTATION_180
+
+#define BOARD_LCD_SPI_PORT    TUYA_SPI_NUM_0
+#define BOARD_LCD_SPI_CLK     48000000
+
+#define BOARD_LCD_SPI_DC_PIN  TUYA_GPIO_NUM_17
+#define BOARD_LCD_SPI_RST_PIN TUYA_GPIO_NUM_19
+
+#define BOARD_LCD_PIXELS_FMT TUYA_PIXEL_FMT_RGB565
+
+#define BOARD_LCD_POWER_PIN       TUYA_GPIO_NUM_MAX
+#define BOARD_LCD_POWER_ACTIVE_LV TUYA_GPIO_LEVEL_HIGH
+
+#endif
 
 /***********************************************************
 ***********************typedef define***********************
@@ -97,6 +135,45 @@ static OPERATE_RET __board_register_led(void)
     return rt;
 }
 
+#if defined(TUYA_T5AI_CORE_EX_MODULE_13565LCD) && (TUYA_T5AI_CORE_EX_MODULE_13565LCD == 1) || defined(TUYA_T5AI_CORE_EX_MODULE_ST7735S_XLT) && (TUYA_T5AI_CORE_EX_MODULE_ST7735S_XLT == 1)
+static OPERATE_RET __board_register_display(void)
+{
+    OPERATE_RET rt = OPRT_OK;
+
+#if defined(DISPLAY_NAME)
+    DISP_SPI_DEVICE_CFG_T display_cfg;
+
+    memset(&display_cfg, 0, sizeof(DISP_SPI_DEVICE_CFG_T));
+
+    display_cfg.bl.type = BOARD_LCD_BL_TYPE;
+    display_cfg.bl.gpio.pin = BOARD_LCD_BL_PIN;
+    display_cfg.bl.gpio.active_level = BOARD_LCD_BL_ACTIVE_LV;
+
+    display_cfg.width = BOARD_LCD_WIDTH;
+    display_cfg.height = BOARD_LCD_HEIGHT;
+    display_cfg.pixel_fmt = BOARD_LCD_PIXELS_FMT;
+    display_cfg.rotation = BOARD_LCD_ROTATION;
+
+    display_cfg.port = BOARD_LCD_SPI_PORT;
+    display_cfg.spi_clk = BOARD_LCD_SPI_CLK;
+    display_cfg.cs_pin = BOARD_LCD_SPI_CS_PIN;
+    display_cfg.dc_pin = BOARD_LCD_SPI_DC_PIN;
+    display_cfg.rst_pin = BOARD_LCD_SPI_RST_PIN;
+
+    display_cfg.power.pin = BOARD_LCD_POWER_PIN;
+    display_cfg.power.active_level = BOARD_LCD_POWER_ACTIVE_LV;
+
+#if defined(TUYA_T5AI_CORE_EX_MODULE_13565LCD) && (TUYA_T5AI_CORE_EX_MODULE_13565LCD == 1)
+    TUYA_CALL_ERR_RETURN(tdd_disp_spi_st7789_register(DISPLAY_NAME, &display_cfg));
+#elif defined(TUYA_T5AI_CORE_EX_MODULE_ST7735S_XLT) && (TUYA_T5AI_CORE_EX_MODULE_ST7735S_XLT == 1)
+    TUYA_CALL_ERR_RETURN(tdd_disp_spi_st7735s_xlt_register(DISPLAY_NAME, &display_cfg));
+#endif
+#endif
+
+    return rt;
+}
+#endif
+
 /**
  * @brief Registers all the hardware peripherals (audio, button, LED) on the board.
  *
@@ -111,6 +188,10 @@ OPERATE_RET board_register_hardware(void)
     TUYA_CALL_ERR_LOG(__board_register_button());
 
     TUYA_CALL_ERR_LOG(__board_register_led());
+
+#if defined(TUYA_T5AI_CORE_EX_MODULE_13565LCD) && (TUYA_T5AI_CORE_EX_MODULE_13565LCD == 1) || defined(TUYA_T5AI_CORE_EX_MODULE_ST7735S_XLT) && (TUYA_T5AI_CORE_EX_MODULE_ST7735S_XLT == 1)
+    TUYA_CALL_ERR_LOG(__board_register_display());
+#endif
 
     return rt;
 }
