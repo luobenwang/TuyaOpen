@@ -38,6 +38,7 @@
 
 #if defined(ENABLE_CHAT_DISPLAY) && (ENABLE_CHAT_DISPLAY == 1)
 #include "app_display.h"
+#include "app_weather.h"
 #endif
 
 #include "board_com_api.h"
@@ -331,6 +332,21 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
     case TUYA_EVENT_TIMESTAMP_SYNC:
         PR_INFO("Sync timestamp:%d", event->value.asInteger);
         tal_time_set_posix(event->value.asInteger, 1);
+        
+        // Pass the synced timestamp to weather clock for independent time calculation
+        PR_DEBUG("Time synced, passing timestamp to weather clock: %d", event->value.asInteger);
+        app_display_send_msg(TY_DISPLAY_TP_WEATHER_CLOCK_UPDATE_TIME, 
+                            (uint8_t *)&event->value.asInteger, sizeof(event->value.asInteger));
+        PR_DEBUG("Weather clock timestamp update message sent");
+        
+        // Try to update weather data now that we have time sync
+        PR_DEBUG("=== ATTEMPTING WEATHER UPDATE AFTER TIME SYNC ===");
+        OPERATE_RET weather_ret = app_weather_check_and_update();
+        if (weather_ret == OPRT_OK) {
+            PR_DEBUG("Weather data updated successfully after time sync");
+        } else {
+            PR_DEBUG("Weather update failed after time sync: %d", weather_ret);
+        }
         break;
 
     case TUYA_EVENT_RESET:
@@ -498,6 +514,23 @@ void user_main(void)
         PR_DEBUG("Display system initialized successfully");
     }
     
+    // Initialize weather service
+    PR_DEBUG("Initializing weather service...");
+    ret = app_weather_init();
+    if (ret != OPRT_OK) {
+        PR_ERR("app_weather_init failed: %d", ret);
+    } else {
+        PR_DEBUG("Weather service initialized successfully");
+    }
+    
+    // Start weather update timer (30 minutes interval)
+    ret = app_weather_start_timer();
+    if (ret != OPRT_OK) {
+        PR_ERR("app_weather_start_timer failed: %d", ret);
+    } else {
+        PR_DEBUG("Weather update timer started successfully");
+    }
+    
     // Weather clock functionality enabled for testing
     PR_DEBUG("Weather clock functionality enabled for testing");
     
@@ -509,13 +542,6 @@ void user_main(void)
     PR_DEBUG("Message type: TY_DISPLAY_TP_WEATHER_CLOCK_SHOW");
     ret = app_display_send_msg(TY_DISPLAY_TP_WEATHER_CLOCK_SHOW, NULL, 0);
     PR_DEBUG("Weather clock show message sent, result: %d", ret);
-    
-    // Send initial weather data after a short delay
-    tal_system_sleep(1000);
-    char test_weather[] = "SUN,25C";
-    PR_DEBUG("Sending initial weather update: %s", test_weather);
-    app_display_send_msg(TY_DISPLAY_TP_WEATHER_CLOCK_UPDATE_WEATHER, 
-                        (uint8_t *)test_weather, strlen(test_weather));
     
     PR_DEBUG("Weather clock initialization completed");
 #endif

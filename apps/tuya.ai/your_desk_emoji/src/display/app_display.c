@@ -240,28 +240,57 @@ static void __app_display_msg_handle(DISPLAY_MSG_T *msg_data)
     } break;
     case TY_DISPLAY_TP_WEATHER_CLOCK_UPDATE_WEATHER: {
         PR_DEBUG("=== WEATHER UPDATE MESSAGE RECEIVED ===");
-        PR_DEBUG("Weather data: %s", msg_data->data ? msg_data->data : "NULL");
+        PR_DEBUG("Message data length: %d", msg_data->len);
+        PR_DEBUG("Raw weather data: '%s'", msg_data->data ? msg_data->data : "NULL");
+        
         if (msg_data->data != NULL) {
             // Parse weather data (format: "icon,temperature" or "icon temperature")
             char *weather_icon = msg_data->data;
             char *temperature = strchr(msg_data->data, ',');
+            
+            PR_DEBUG("Looking for comma separator in: '%s'", msg_data->data);
+            
             if (temperature != NULL) {
+                PR_DEBUG("Found comma at position %d", (int)(temperature - msg_data->data));
                 *temperature = '\0';
                 temperature++;
+                PR_DEBUG("Parsed weather_icon: '%s'", weather_icon);
+                PR_DEBUG("Parsed temperature: '%s'", temperature);
                 ui_weather_clock_update_weather(weather_icon, temperature);
             } else {
+                PR_DEBUG("No comma found, trying space separator");
                 // Try space separator
                 temperature = strchr(msg_data->data, ' ');
                 if (temperature != NULL) {
+                    PR_DEBUG("Found space at position %d", (int)(temperature - msg_data->data));
                     *temperature = '\0';
                     temperature++;
+                    PR_DEBUG("Parsed weather_icon: '%s'", weather_icon);
+                    PR_DEBUG("Parsed temperature: '%s'", temperature);
                     ui_weather_clock_update_weather(weather_icon, temperature);
                 } else {
+                    PR_DEBUG("No separator found, using as icon with default temperature");
                     // Single string, use as icon
                     ui_weather_clock_update_weather(weather_icon, "22°C");
                 }
             }
+        } else {
+            PR_ERR("Weather data is NULL");
         }
+        PR_DEBUG("=== WEATHER UPDATE MESSAGE PROCESSED ===");
+    } break;
+    case TY_DISPLAY_TP_WEATHER_CLOCK_UPDATE_TIME: {
+        PR_DEBUG("=== TIME UPDATE MESSAGE RECEIVED ===");
+        if (msg_data->data != NULL && msg_data->len >= sizeof(int)) {
+            int timestamp = *(int *)msg_data->data;
+            PR_DEBUG("Received timestamp: %d, updating weather clock time", timestamp);
+            ui_weather_clock_set_timestamp(timestamp);
+            PR_DEBUG("Weather clock timestamp set successfully");
+        } else {
+            PR_DEBUG("No timestamp data, using current system time");
+            ui_weather_clock_update_time();
+        }
+        PR_DEBUG("Time updated successfully");
     } break;
     default: {
         PR_ERR("Invalid display type: %d", msg_data->type);

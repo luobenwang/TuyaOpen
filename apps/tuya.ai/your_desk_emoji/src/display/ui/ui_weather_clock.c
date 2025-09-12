@@ -14,6 +14,7 @@
 #include "font_awesome_symbols.h"
 #include "tal_log.h"
 #include "tal_system.h"
+#include "tal_time_service.h"
 #include "tkl_memory.h"
 #include "lvgl.h"
 #include <time.h>
@@ -41,20 +42,46 @@ static void __get_current_time_string(char *time_str, int buffer_size)
         return;
     }
 
-    time_t timestamp = time(NULL);
-    if (timestamp == (time_t)-1) {
-        PR_DEBUG("System time not available, using default time");
-        strcpy(time_str, "12:00:00");
-        return;
+    time_t timestamp;
+    
+    // Use independent time calculation if base timestamp is set
+    if (sg_weather_clock.base_timestamp > 0) {
+        SYS_TICK_T current_uptime_ms = tal_time_get_posix_ms();
+        uint32_t elapsed_seconds = (current_uptime_ms - sg_weather_clock.base_uptime_ms) / 1000;
+        timestamp = sg_weather_clock.base_timestamp + elapsed_seconds;
+        PR_DEBUG("Using independent time calculation: base=%ld, elapsed=%d, current=%ld", 
+                 sg_weather_clock.base_timestamp, elapsed_seconds, timestamp);
+    } else {
+        // Fallback to system time
+        timestamp = time(NULL);
+        if (timestamp == (time_t)-1) {
+            PR_DEBUG("System time not available, using default time");
+            strcpy(time_str, "12:00:00");
+            return;
+        }
+        PR_DEBUG("Using system time: %ld", timestamp);
     }
     
-    struct tm *time_info = localtime(&timestamp);
-    if (time_info != NULL) {
+    // Use Tuya's time service to get local time (handles timezone automatically)
+    POSIX_TM_S local_time;
+    OPERATE_RET ret = tal_time_get_local_time_custom(timestamp, &local_time);
+    if (ret == OPRT_OK) {
         snprintf(time_str, buffer_size, "%02d:%02d:%02d", 
-                time_info->tm_hour, time_info->tm_min, time_info->tm_sec);
+                local_time.tm_hour, local_time.tm_min, local_time.tm_sec);
+        PR_DEBUG("Local time calculated: %02d:%02d:%02d (UTC timestamp: %ld)", 
+                 local_time.tm_hour, local_time.tm_min, local_time.tm_sec, timestamp);
     } else {
-        PR_DEBUG("Failed to convert time to local time, using default");
-        strcpy(time_str, "12:00:00");
+        // Fallback to system localtime
+        struct tm *time_info = localtime(&timestamp);
+        if (time_info != NULL) {
+            snprintf(time_str, buffer_size, "%02d:%02d:%02d", 
+                    time_info->tm_hour, time_info->tm_min, time_info->tm_sec);
+            PR_DEBUG("Using system localtime fallback: %02d:%02d:%02d", 
+                     time_info->tm_hour, time_info->tm_min, time_info->tm_sec);
+        } else {
+            PR_DEBUG("Failed to convert time to local time, using default");
+            strcpy(time_str, "12:00:00");
+        }
     }
 }
 
@@ -79,20 +106,43 @@ static void __get_current_date_string(char *date_str, int buffer_size)
         return;
     }
 
-    time_t timestamp = time(NULL);
-    if (timestamp == (time_t)-1) {
-        PR_DEBUG("System time not available, using default date");
-        strcpy(date_str, "01/01");
-        return;
+    time_t timestamp;
+    
+    // Use independent time calculation if base timestamp is set
+    if (sg_weather_clock.base_timestamp > 0) {
+        SYS_TICK_T current_uptime_ms = tal_time_get_posix_ms();
+        uint32_t elapsed_seconds = (current_uptime_ms - sg_weather_clock.base_uptime_ms) / 1000;
+        timestamp = sg_weather_clock.base_timestamp + elapsed_seconds;
+    } else {
+        // Fallback to system time
+        timestamp = time(NULL);
+        if (timestamp == (time_t)-1) {
+            PR_DEBUG("System time not available, using default date");
+            strcpy(date_str, "01/01");
+            return;
+        }
     }
     
-    struct tm *time_info = localtime(&timestamp);
-    if (time_info != NULL) {
+    // Use Tuya's time service to get local time (handles timezone automatically)
+    POSIX_TM_S local_time;
+    OPERATE_RET ret = tal_time_get_local_time_custom(timestamp, &local_time);
+    if (ret == OPRT_OK) {
         snprintf(date_str, buffer_size, "%02d/%02d", 
-                time_info->tm_mon + 1, time_info->tm_mday);
+                local_time.tm_mon + 1, local_time.tm_mday);
+        PR_DEBUG("Local date calculated: %02d/%02d (UTC timestamp: %ld)", 
+                 local_time.tm_mon + 1, local_time.tm_mday, timestamp);
     } else {
-        PR_DEBUG("Failed to convert time to local time for date, using default");
-        strcpy(date_str, "01/01");
+        // Fallback to system localtime
+        struct tm *time_info = localtime(&timestamp);
+        if (time_info != NULL) {
+            snprintf(date_str, buffer_size, "%02d/%02d", 
+                    time_info->tm_mon + 1, time_info->tm_mday);
+            PR_DEBUG("Using system localtime fallback for date: %02d/%02d", 
+                     time_info->tm_mon + 1, time_info->tm_mday);
+        } else {
+            PR_DEBUG("Failed to convert time to local time for date, using default");
+            strcpy(date_str, "01/01");
+        }
     }
 }
 
@@ -123,13 +173,37 @@ static void __weather_clock_timer_cb(lv_timer_t *timer)
     // Update time display
     lv_label_set_text(sg_weather_clock.ui.time_label, time_str);
     
-    // Update date display (combine with weather info)
+    // Only update date part, preserve existing weather info
     if (sg_weather_clock.ui.date_weather_label != NULL) {
-        char date_weather_str[32];
-        const char* sun_symbol = __get_sun_symbol();
-        snprintf(date_weather_str, sizeof(date_weather_str), "%s  %s 22°C", date_str, sun_symbol);
-        lv_label_set_text(sg_weather_clock.ui.date_weather_label, date_weather_str);
-        PR_DEBUG("Updated date/weather: %s", date_weather_str);
+        // Get current weather label text
+        const char* current_text = lv_label_get_text(sg_weather_clock.ui.date_weather_label);
+        
+        if (current_text != NULL && strlen(current_text) > 0) {
+            // Extract weather part from current text (everything after the date)
+            char* weather_part = strstr(current_text, "  ");
+            if (weather_part != NULL) {
+                weather_part += 2; // Skip the "  " separator
+                // Update with new date but keep existing weather
+                char date_weather_str[32];
+                snprintf(date_weather_str, sizeof(date_weather_str), "%s  %s", date_str, weather_part);
+                lv_label_set_text(sg_weather_clock.ui.date_weather_label, date_weather_str);
+                PR_DEBUG("Updated date/weather: %s", date_weather_str);
+            } else {
+                // Fallback: use default weather if no weather part found
+                char date_weather_str[32];
+                const char* sun_symbol = __get_sun_symbol();
+                snprintf(date_weather_str, sizeof(date_weather_str), "%s  %s 22°C", date_str, sun_symbol);
+                lv_label_set_text(sg_weather_clock.ui.date_weather_label, date_weather_str);
+                PR_DEBUG("Updated date/weather (fallback): %s", date_weather_str);
+            }
+        } else {
+            // Fallback: use default weather if no current text
+            char date_weather_str[32];
+            const char* sun_symbol = __get_sun_symbol();
+            snprintf(date_weather_str, sizeof(date_weather_str), "%s  %s 22°C", date_str, sun_symbol);
+            lv_label_set_text(sg_weather_clock.ui.date_weather_label, date_weather_str);
+            PR_DEBUG("Updated date/weather (no current text): %s", date_weather_str);
+        }
     } else {
         PR_ERR("Date weather label is NULL");
     }
@@ -423,6 +497,7 @@ void ui_weather_clock_show(void)
         snprintf(weather_text, sizeof(weather_text), "%s  %s 22°C", date_str, sun_symbol);
         lv_label_set_text(sg_weather_clock.ui.date_weather_label, weather_text);
         PR_DEBUG("Initial date/weather update completed: %s", weather_text);
+        PR_DEBUG("Note: This initial display will be updated when real weather data arrives");
     }
     
     // Minimal design - no status bar updates needed
@@ -456,9 +531,12 @@ void ui_weather_clock_hide(void)
 
 void ui_weather_clock_update_weather(const char *weather_icon, const char *temperature)
 {
-    PR_DEBUG("Updating weather: icon=%s, temp=%s", 
-             weather_icon ? weather_icon : "NULL", 
-             temperature ? temperature : "NULL");
+    PR_DEBUG("=== UI WEATHER UPDATE CALLED ===");
+    PR_DEBUG("Input parameters:");
+    PR_DEBUG("  - weather_icon: '%s'", weather_icon ? weather_icon : "NULL");
+    PR_DEBUG("  - temperature: '%s'", temperature ? temperature : "NULL");
+    PR_DEBUG("  - weather_icon length: %d", weather_icon ? strlen(weather_icon) : 0);
+    PR_DEBUG("  - temperature length: %d", temperature ? strlen(temperature) : 0);
     
     if (!sg_weather_clock.is_visible) {
         PR_DEBUG("Weather clock not visible, skipping weather update");
@@ -472,18 +550,23 @@ void ui_weather_clock_update_weather(const char *weather_icon, const char *tempe
 
     char date_str[16];
     __get_current_date_string(date_str, sizeof(date_str));
+    PR_DEBUG("Current date string: '%s'", date_str);
     
     char date_weather_str[32];
     if (weather_icon != NULL && temperature != NULL) {
+        PR_DEBUG("Using real weather data: icon='%s', temp='%s'", weather_icon, temperature);
         snprintf(date_weather_str, sizeof(date_weather_str), "%s  %s %s", 
                 date_str, weather_icon, temperature);
     } else {
+        PR_DEBUG("Using default weather data (icon or temp is NULL)");
         const char* sun_symbol = __get_sun_symbol();
         snprintf(date_weather_str, sizeof(date_weather_str), "%s  %s 22°C", date_str, sun_symbol);
     }
     
+    PR_DEBUG("Final weather string: '%s'", date_weather_str);
     lv_label_set_text(sg_weather_clock.ui.date_weather_label, date_weather_str);
-    PR_DEBUG("Weather updated to: %s", date_weather_str);
+    PR_DEBUG("Weather label updated successfully");
+    PR_DEBUG("=== UI WEATHER UPDATE COMPLETED ===");
 }
 
 void ui_weather_clock_update_network(const char *wifi_icon)
@@ -503,6 +586,73 @@ void ui_weather_clock_show_notification(const char *notification)
 BOOL_T ui_weather_clock_is_visible(void)
 {
     return sg_weather_clock.is_visible;
+}
+
+void ui_weather_clock_set_timestamp(int timestamp)
+{
+    PR_DEBUG("Setting weather clock base timestamp: %d", timestamp);
+    
+    // Set base timestamp and current uptime for independent time calculation
+    sg_weather_clock.base_timestamp = (time_t)timestamp;
+    sg_weather_clock.base_uptime_ms = tal_time_get_posix_ms();
+    
+    PR_DEBUG("Base timestamp set to %ld, base uptime: %d ms", 
+             sg_weather_clock.base_timestamp, sg_weather_clock.base_uptime_ms);
+    
+    // Immediately update the display with the new time
+    ui_weather_clock_update_time();
+}
+
+void ui_weather_clock_update_time(void)
+{
+    if (!sg_weather_clock.is_visible || sg_weather_clock.ui.time_label == NULL) {
+        return;
+    }
+    
+    char time_str[16];
+    char date_str[16];
+    
+    // Get current time and date using independent calculation
+    __get_current_time_string(time_str, sizeof(time_str));
+    __get_current_date_string(date_str, sizeof(date_str));
+    
+    // Update time display
+    lv_label_set_text(sg_weather_clock.ui.time_label, time_str);
+    
+    // Only update date part, preserve existing weather info
+    if (sg_weather_clock.ui.date_weather_label != NULL) {
+        // Get current weather label text
+        const char* current_text = lv_label_get_text(sg_weather_clock.ui.date_weather_label);
+        
+        if (current_text != NULL && strlen(current_text) > 0) {
+            // Extract weather part from current text (everything after the date)
+            char* weather_part = strstr(current_text, "  ");
+            if (weather_part != NULL) {
+                weather_part += 2; // Skip the "  " separator
+                // Update with new date but keep existing weather
+                char date_weather_str[32];
+                snprintf(date_weather_str, sizeof(date_weather_str), "%s  %s", date_str, weather_part);
+                lv_label_set_text(sg_weather_clock.ui.date_weather_label, date_weather_str);
+                PR_DEBUG("Updated date/weather: %s", date_weather_str);
+            } else {
+                // Fallback: use default weather if no weather part found
+                char date_weather_str[32];
+                const char* sun_symbol = __get_sun_symbol();
+                snprintf(date_weather_str, sizeof(date_weather_str), "%s  %s 22°C", date_str, sun_symbol);
+                lv_label_set_text(sg_weather_clock.ui.date_weather_label, date_weather_str);
+                PR_DEBUG("Updated date/weather (fallback): %s", date_weather_str);
+            }
+        } else {
+            // Fallback: use default weather if no current text
+            char date_weather_str[32];
+            const char* sun_symbol = __get_sun_symbol();
+            snprintf(date_weather_str, sizeof(date_weather_str), "%s  %s 22°C", date_str, sun_symbol);
+            lv_label_set_text(sg_weather_clock.ui.date_weather_label, date_weather_str);
+            PR_DEBUG("Updated date/weather (no current text): %s", date_weather_str);
+        }
+    }
+    
+    PR_DEBUG("Time updated: %s, date: %s", time_str, date_str);
 }
 
 void ui_weather_clock_cleanup(void)

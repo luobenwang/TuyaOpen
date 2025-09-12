@@ -45,6 +45,8 @@ typedef struct {
     WEATHER_CLOCK_UI_T ui;
     UI_FONT_T font;
     BOOL_T is_visible;
+    time_t base_timestamp;      // Base timestamp for independent time calculation
+    SYS_TICK_T base_uptime_ms;  // System uptime when timestamp was set
 } WEATHER_CLOCK_T;
 
 /***********************************************************
@@ -74,6 +76,17 @@ void ui_weather_clock_hide(void);
  * @param temperature Temperature in Celsius (e.g., "22°C")
  */
 void ui_weather_clock_update_weather(const char *weather_icon, const char *temperature);
+
+/**
+ * @brief Set base timestamp for independent time calculation
+ * @param timestamp Unix timestamp from time sync
+ */
+void ui_weather_clock_set_timestamp(int timestamp);
+
+/**
+ * @brief Update time display using current system time
+ */
+void ui_weather_clock_update_time(void);
 
 /**
  * @brief Update network status
