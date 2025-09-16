@@ -1,146 +1,190 @@
 [English](./README.md) | 简体中文
 
 # your_desk_emoji
- [your_desk_emoji](https://github.com/tuya/TuyaOpen/tree/master/apps/tuya.ai/your_desk_emoji) 是基于 tuya.ai 的智能桌面表情机器人。结合AI对话、手势识别、舵机控制和表情显示，打造一个互动的桌面伙伴。
 
+[your_desk_emoji](https://github.com/tuya/TuyaOpen/tree/master/apps/tuya.ai/your_desk_emoji) 是基于 tuya.ai 的智能桌面表情机器人。结合AI对话、手势识别、舵机控制、表情显示和天气信息，打造一个互动的桌面伙伴。
 
 ## 支持功能
 
-1. AI 智能对话
-2. 按键唤醒/语音唤醒, 回合制对话，支持语音打断（需硬件支持）
-3. Emmo表情显示，支持眨眼动画
-4. 基于PAJ7620传感器的手势识别
-5. 舵机电机控制，实现互动动作
-6. 支持 LCD 显示实时聊天内容、支持 APP 端实时查看聊天内容
-7. 蓝牙配网快捷连接路由器
-8. APP 端实时切换 AI 智能体角色
+1. **AI 智能对话**
+   - 多种对话模式：按键对话、语音唤醒、自由对话
+   - 支持不同唤醒词
+   - LCD屏幕实时聊天内容显示
 
-![](../../../docs/images/apps/your_chat_bot.png)
+2. **手势识别**
+   - 基于PAJ7620传感器
+   - 支持方向手势（上、下、左、右、前、后）
+   - 手势触发舵机动作和表情变化
+
+3. **舵机电机控制**
+   - 双舵机控制（垂直和水平运动）
+   - 平滑运动动画
+   - 基于手势和对话的互动动作
+
+4. **表情显示系统**
+   - 多种表情动画
+   - 眨眼动画增强互动效果
+   - 基于用户交互的实时表情切换
+
+5. **天气时钟显示**
+   - 从涂鸦云获取实时天气信息
+   - 时间同步和显示
+   - LCD显示日期和天气信息
+
+6. **显示界面**
+   - 多种UI风格：微信式、聊天机器人式、OLED
+   - 实时聊天内容显示
+   - 天气和时间信息显示
+
+7. **网络配置**
+   - 蓝牙网络配置
+   - WiFi连接管理
+   - 网络状态监控
 
 ## 依赖硬件能力
-1. 音频采集
-2. 音频播放
-3. I2C接口用于手势传感器(PAJ7620)
-4. PWM接口用于舵机电机控制
-5. 显示接口用于表情动画
+
+1. **音频系统**
+   - 音频采集能力
+   - 音频播放能力
+   - 喇叭控制
+
+2. **传感器接口**
+   - I2C接口用于PAJ7620手势传感器
+   - GPIO用于手势传感器中断
+
+3. **电机控制**
+   - PWM接口用于舵机电机控制
+   - 双舵机支持（头部和身体运动）
+
+4. **显示接口**
+   - LCD显示用于表情动画和信息
+   - 支持不同屏幕尺寸和类型
+
+5. **用户界面**
+   - 按键用于对话控制
+   - LED指示灯用于状态显示
 
 ## 已支持硬件
-|  型号  | config | 说明 | 重置方式 |
+
+| 型号 | 配置文件 | 说明 | 重置方式 |
 | --- | --- | --- | ----- |
-| TUYA T5AI_Board 开发板 | TUYA_T5AI_BOARD_LCD_3.5.config | [https://developer.tuya.com/cn/docs/iot-device-dev/T5-E1-IPEX-development-board?id=Ke9xehig1cabj](https://developer.tuya.com/cn/docs/iot-device-dev/T5-E1-IPEX-development-board?id=Ke9xehig1cabj) | 重启(按 RST 按钮) 3 次重置 |
-| TUYA T5AI_EVB 开发板 | TUYA_T5AI_EVB.config | [https://oshwhub.com/flyingcys/t5ai_evb](https://oshwhub.com/flyingcys/t5ai_evb) | 重启(按 RST 按钮) 3 次重置 |
-| moji T5AI 版 | T5AI_MOJI_1.28.config |  | 重启(按 RST 按钮) 3 次重置 |
-| 正点原子 ESP32S3BOX | DNESP32S3_BOX.config | [https://www.alientek.com/Product_Details/118.html](https://www.alientek.com/Product_Details/118.html) | 重启(按 RST 按钮) 3 次重置 |
-| ESP32S3 面包板 | ESP32S3_BREAD_COMPACT_WIFI.config |  | 重启(按 RST 按钮) 3 次重置 |
-| waveshare ESP32S3 1.8 英寸触摸 AMOLED 开发板 | WAVESHARE_ESP32S3_TOUCH_AMOLED_1_8.config | [https://www.waveshare.net/shop/ESP32-S3-Touch-AMOLED-1.8.htm](https://www.waveshare.net/shop/ESP32-S3-Touch-AMOLED-1.8.htm) | 重启(按 RST 按钮) 3 次重置 |
-| ESP32S3 星智 0.96 OLED 开发板 | XINGZHI_Cube_0_96OLED_WIFI.config | [https://www.nologo.tech/product/esp32/esp32s3/esp32s3ai/esp32s3ai.html](https://www.nologo.tech/product/esp32/esp32s3/esp32s3ai/esp32s3ai.html) | 重启(按 RST 按钮) 3 次重置 |
+| TUYA T5AI Core | TUYA_T5AI_CORE.config | T5AI Core开发板，配备13565LCD显示屏 | 重启(按 RST 按钮) 3 次重置 |
+| T5AI Mini (ST7735S) | app_default.config | T5AI Mini开发板，配备ST7735S彩色LCD显示屏 | 重启(按 RST 按钮) 3 次重置 |
+| T5AI Mini (13565LCD) | T5AI_MINI_LCD.config | T5AI Mini开发板，配备13565LCD显示屏 | 重启(按 RST 按钮) 3 次重置 |
 
 
 ## 编译
-1. 运行 `tos config_choice` 命令， 选择当前运行的开发板。
-2. 如需修改配置，请先运行 `tos menuconfig` 命令修改配置。
-3. 运行 `tos build` 命令，编译工程。
+
+1. **选择配置**：根据您的硬件选择合适的配置文件：
+   - TUYA T5AI Core + 13565LCD：使用 `TUYA_T5AI_CORE.config`
+   - T5AI Mini + ST7735S LCD：使用 `app_default.config`
+   - T5AI Mini + 13565LCD：使用 `T5AI_MINI_LCD.config`
+
+2. **应用配置**：运行 `tos config_choice` 命令，选择当前运行的开发板。
+
+3. **自定义设置**：如需修改配置，请先运行 `tos menuconfig` 命令修改配置。
+
+4. **编译工程**：运行 `tos build` 命令，编译工程。
 
 ## 配置说明
 
 ### 默认配置
 - 随意对话模式，未开启 AEC，不支持打断
 - 唤醒词：
-  - T5AI 版本： 你好涂鸦
+  - T5AI 版本：你好涂鸦
   - ESP32 版本：你好小智
 
 ### 通用配置
 
-- **选择对话模式**
+#### 对话模式选择
 
-  - 长按对话模式
+- **长按对话模式**
+  - `ENABLE_CHAT_MODE_KEY_PRESS_HOLD_SINGEL`：按住按键后说话，一句话说完后松开按键
 
-    | 宏                                     | 类型 | 说明                                   |
-    | -------------------------------------- | ---- | -------------------------------------- |
-    | ENABLE_CHAT_MODE_KEY_PRESS_HOLD_SINGEL | 布尔 | 按住按键后说话，一句话说完后松开按键。 |
+- **按键对话模式**
+  - `ENABLE_CHAT_MODE_KEY_TRIG_VAD_FREE`：按一下按键，设备会进入/退出聆听状态，支持VAD检测
 
-  - 按键对话模式
+- **唤醒对话模式**
+  - `ENABLE_CHAT_MODE_ASR_WAKEUP_SINGEL`：需要说出唤醒词才能唤醒设备，进行单轮对话
 
-    | 宏                                 | 类型 | 说明                                                         |
-    | ---------------------------------- | ---- | ------------------------------------------------------------ |
-    | ENABLE_CHAT_MODE_KEY_TRIG_VAD_FREE | 布尔 | 按一下按键，设备会进入/退出聆听状态。如果在聆听状态，会开启 vad 检测，此时可以进行对话。 |
+- **随意对话模式**
+  - `ENABLE_CHAT_MODE_ASR_WAKEUP_FREE`：需要说出唤醒词才能唤醒设备，支持连续对话（30秒超时）
 
-  - 唤醒对话模式
+#### 唤醒词选择
+该配置只会在对话模式选择**唤醒对话**和**随意对话**两种模式下才会出现。
 
-    | 宏                                 | 类型 | 说明                                                         |
-    | ---------------------------------- | ---- | ------------------------------------------------------------ |
-    | ENABLE_CHAT_MODE_ASR_WAKEUP_SINGEL | 布尔 | 需要说出唤醒词才能唤醒设备，设备唤醒后会进入聆听状态，此时可以进行对话。每次唤醒只能进行一轮对话。如果想继续对话，需要再次用唤醒词唤醒。 |
+| 宏 | 类型 | 说明 |
+| --- | --- | --- |
+| `ENABLE_WAKEUP_KEYWORD_NIHAO_TUYA` | 布尔 | 唤醒词是 "你好涂鸦" |
+| `ENABLE_WAKEUP_KEYWORD_NIHAO_XIAOZHI` | 布尔 | 唤醒词是 "你好小智" |
+| `ENABLE_WAKEUP_KEYWORD_XIAOZHI_TONGXUE` | 布尔 | 唤醒词是 "小智同学" |
+| `ENABLE_WAKEUP_KEYWORD_XIAOZHI_GUANJIA` | 布尔 | 唤醒词是 "小智管家" |
 
-  - 随意对话模式
-
-    | 宏                               | 类型 | 说明                                                         |
-    | -------------------------------- | ---- | ------------------------------------------------------------ |
-    | ENABLE_CHAT_MODE_ASR_WAKEUP_FREE | 布尔 | 需要说出唤醒词才能唤醒设备，设备唤醒后会进入聆听状态，此时可以进行随意对话。如果 30S 没有检测到声音，则需要再次唤醒。 |
-
-- **选择唤醒词**
-
-  该配置只会在对话模式选择**唤醒对话**和**随意对话**两种模式下才会出现。
-
-  | 宏                                    | 类型 | 说明                |
-  | ------------------------------------- | ---- | ------------------- |
-  | ENABLE_WAKEUP_KEYWORD_NIHAO_TUYA      | 布尔 | 唤醒词是 “你好涂鸦” |
-  | ENABLE_WAKEUP_KEYWORD_NIHAO_XIAOZHI   | 布尔 | 唤醒词是 “你好小智” |
-  | ENABLE_WAKEUP_KEYWORD_XIAOZHI_TONGXUE | 布尔 | 唤醒词是 “小智同学” |
-  | ENABLE_WAKEUP_KEYWORD_XIAOZHI_GUANJIA | 布尔 | 唤醒词是 “小智管家” |
+#### 音频配置
 
 - **是否支持 AEC**
-
-  | 宏         | 类型 | 说明                                                         |
-  | ---------- | ---- | ------------------------------------------------------------ |
-  | ENABLE_AEC | 布尔 | 这个是根据板子的硬件是否有回声消除功能来配置。<br />如果板子支持回声消除，则把该配置打开。**如果板子不支持回声消除，则需要关闭该功能，否则会影响唤醒对话功能**。<br />该配置没打开，则不支持语音打断的功能。 |
+  - `ENABLE_AEC`：根据板子的硬件是否有回声消除功能来配置
 
 - **喇叭使能引脚**
-
-  | 宏             | 类型 | 说明                                 |
-  | -------------- | ---- | ------------------------------------ |
-  | SPEAKER_EN_PIN | 数值 | 该引脚控制喇叭是否使能，范围：0-64。 |
+  - `SPEAKER_EN_PIN`：该引脚控制喇叭是否使能，范围：0-64
 
 - **对话按键引脚**
-
-  | 宏              | 类型 | 说明                             |
-  | --------------- | ---- | -------------------------------- |
-  | CHAT_BUTTON_PIN | 数值 | 控制对话的按键引脚，范围：0-64。 |
+  - `CHAT_BUTTON_PIN`：控制对话的按键引脚，范围：0-64
 
 - **指示灯引脚**
+  - `CHAT_INDICATE_LED_PIN`：控制指示灯引脚，该指示灯主要用来显示对话状态，范围：0-64
 
-  | 宏                    | 类型 | 说明                                                       |
-  | --------------------- | ---- | ---------------------------------------------------------- |
-  | CHAT_INDICATE_LED_PIN | 数值 | 控制指示灯引脚，该指示灯主要用来显示对话状态，范围：0-64。 |
+#### 显示配置
 
 - **使能显示**
-
-  | 宏                  | 类型 | 说明                                             |
-  | ------------------- | ---- | ------------------------------------------------ |
-  | ENABLE_CHAT_DISPLAY | 布尔 | 使能显示功能，如果板子有带屏幕，可将该功能打开。 |
-
-### 显示配置
-
-显示使能被打开后，以下配置才会出现。
+  - `ENABLE_CHAT_DISPLAY`：使能显示功能，如果板子有带屏幕，可将该功能打开
 
 - **选择显示 UI 风格**
-
-  | 宏                 | 类型 | 说明                     |
-  | ------------------ | ---- | ------------------------ |
-  | ENABLE_GUI_WECHAT  | 布尔 | 类似微信聊天界面式风格   |
-  | ENABLE_GUI_CHATBOT | 布尔 | 聊天盒子式风格           |
-  | ENABLE_GUI_OLED    | 布尔 | 滑动字幕，适合 oled 小屏 |
+  - `ENABLE_GUI_WECHAT`：类似微信聊天界面式风格
+  - `ENABLE_GUI_CHATBOT`：聊天盒子式风格
+  - `ENABLE_GUI_OLED`：滑动字幕，适合 OLED 小屏
 
 - **使能文本流式显示**
+  - `ENABLE_GUI_STREAM_AI_TEXT`：AI 回复的文本可进行流式的显示
 
-  | 宏                        | 类型 | 说明                                                      |
-  | ------------------------- | ---- | --------------------------------------------------------- |
-  | ENABLE_GUI_STREAM_AI_TEXT | 布尔 | AI 回复的文本可进行流式的显示，而不是一下子出现文本内容。 |
+- **选择OLED 屏类型**（当选择OLED UI风格时出现）
+  - `OLED_SSD1306_128X32`：OLED 屏幕的尺寸大小为128*32
+  - `OLED_SSD1306_128X64`：OLED 屏幕的尺寸大小为128*64
 
-- **选择OLED 屏类型**
+## 项目结构
 
-  该配置只有在选择 OLED UI 风格时才会出现。
+```
+src/
+├── app_chat_bot.c          # AI对话管理
+├── app_gesture.c           # PAJ7620手势识别
+├── app_servo.c             # 舵机电机控制
+├── app_weather.c           # 天气服务和数据
+├── app_system_info.c       # 系统信息显示
+├── tuya_main.c             # 主应用程序入口
+├── display/                # 显示系统
+│   ├── app_display.c       # 显示管理
+│   ├── ui/                 # UI组件
+│   │   ├── ui_emoji.c      # 表情显示
+│   │   ├── ui_weather_clock.c # 天气时钟UI
+│   │   ├── ui_chatbot.c    # 聊天机器人UI
+│   │   ├── ui_wechat.c     # 微信风格UI
+│   │   └── ui_oled.c       # OLED显示UI
+│   └── font/               # 字体资源
+└── media/                  # 媒体资源
+```
 
-  | 宏                  | 类型 | 说明                        |
-  | ------------------- | ---- | --------------------------- |
-  | OLED_SSD1306_128X32 | 布尔 | oled 屏幕的尺寸大小为128*32 |
-  | OLED_SSD1306_128X64 | 布尔 | oled 屏幕的尺寸大小为128*64 |
+## 使用方法
+
+1. **初始设置**：配置开发板并编译项目
+2. **网络配置**：使用蓝牙或按键重置进行WiFi设置
+3. **交互使用**：使用语音唤醒或按键按压开始对话
+4. **手势控制**：向不同方向挥手触发动作
+5. **天气显示**：在显示屏上查看实时天气和时间信息
+
+## 开发说明
+
+- 项目支持多种对话模式，可根据硬件能力进行配置
+- 手势识别需要PAJ7620传感器通过I2C连接
+- 舵机控制支持双轴运动，用于头部和身体
+- 天气信息每30分钟从涂鸦云获取一次
+- 显示系统支持多种UI风格，适配不同屏幕类型

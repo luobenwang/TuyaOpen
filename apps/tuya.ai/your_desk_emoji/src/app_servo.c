@@ -4,9 +4,18 @@
 #include "tal_sw_timer.h"
 
 #include "app_servo.h"
+#define EMOJI_GPIO_NUM_18   TUYA_PWM_NUM_0
+#define EMOJI_GPIO_NUM_24   TUYA_PWM_NUM_1
+#define EMOJI_GPIO_NUM_32   TUYA_PWM_NUM_2
+#define EMOJI_GPIO_NUM_34   TUYA_PWM_NUM_3
+#define EMOJI_GPIO_NUM_36   TUYA_PWM_NUM_4
+#define EMOJI_GPIO_NUM_9    TUYA_PWM_NUM_5
 
-#define SERVO_PWM_VERTICAL           TUYA_PWM_NUM_1
-#define SERVO_PWM_HORIZONTAL         TUYA_PWM_NUM_2
+
+#define SERVO_PWM_VERTICAL           EMOJI_GPIO_NUM_34 //head
+#define SERVO_PWM_HORIZONTAL         EMOJI_GPIO_NUM_9 //body
+
+
 #define SERVO_PWM_FREQ               50      // 50Hz
 #define SERVO_MIN_DUTY               250     // 0°, duty = 0.5ms/20ms * cycle = 250
 #define SERVO_MAX_DUTY               1250    // 180°, duty = 2.5ms/20ms * cycle = 1250
@@ -20,7 +29,7 @@
 #define SERVO_ANGLE_UP           0
 #define SERVO_ANGLE_DOWN         90
 #define SERVO_ANGLE_CENTER_VERT  45
-#define SERVO_ANGLE_CENTER_HORI  95
+#define SERVO_ANGLE_CENTER_HORI  90
 #define SERVO_ANGLE_LEFT         30
 #define SERVO_ANGLE_RIGHT        150
 
@@ -310,8 +319,8 @@ STATIC VOID app_servo_nod(VOID)
 {
     UINT_T i;
     // Increased amplitude for more noticeable nodding
-    INT_T nod_down = SERVO_ANGLE_CENTER_VERT + 25;  // More down movement
-    INT_T nod_up = SERVO_ANGLE_CENTER_VERT - 15;    // More up movement
+    INT_T nod_down = SERVO_ANGLE_CENTER_VERT + 35;  // More down movement
+    INT_T nod_up = SERVO_ANGLE_CENTER_VERT - 25;    // More up movement
 
     PR_DEBUG("Starting enhanced nod action");
     
@@ -338,24 +347,24 @@ STATIC VOID app_servo_clockwise(VOID)
     // Ensure we start from center
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
     app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI);
-    tal_system_sleep(500);
+    tal_system_sleep(100);
 
     // Simple clockwise sequence: Right -> Down -> Left -> Up -> Center
     PR_DEBUG("Clockwise: Right");
     app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_RIGHT);
-    tal_system_sleep(800);
+    tal_system_sleep(200);
 
     PR_DEBUG("Clockwise: Down");
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_DOWN);
-    tal_system_sleep(800);
+    tal_system_sleep(200);
 
     PR_DEBUG("Clockwise: Left");
     app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_LEFT);
-    tal_system_sleep(800);
+    tal_system_sleep(200);
 
     PR_DEBUG("Clockwise: Up");
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_UP);
-    tal_system_sleep(800);
+    tal_system_sleep(200);
 
     // Return to center
     PR_DEBUG("Clockwise: Return to center");
@@ -373,24 +382,24 @@ STATIC VOID app_servo_anticlockwise(VOID)
     // Ensure we start from center
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_CENTER_VERT);
     app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_CENTER_HORI);
-    tal_system_sleep(500);
+    tal_system_sleep(100);
 
     // Simple counter-clockwise sequence: Right -> Up -> Left -> Down -> Center
     PR_DEBUG("Anticlockwise: Right");
     app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_RIGHT);
-    tal_system_sleep(800);
+    tal_system_sleep(200);
 
     PR_DEBUG("Anticlockwise: Up");
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_UP);
-    tal_system_sleep(800);
+    tal_system_sleep(200);
 
     PR_DEBUG("Anticlockwise: Left");
     app_servo_move_to(SERVO_PWM_HORIZONTAL, &s_servo_horizontal_angle, SERVO_ANGLE_LEFT);
-    tal_system_sleep(800);
+    tal_system_sleep(200);
 
     PR_DEBUG("Anticlockwise: Down");
     app_servo_move_to(SERVO_PWM_VERTICAL, &s_servo_vertical_angle, SERVO_ANGLE_DOWN);
-    tal_system_sleep(800);
+    tal_system_sleep(200);
 
     // Return to center
     PR_DEBUG("Anticlockwise: Return to center");

@@ -22,7 +22,6 @@
 #include <stdio.h>
 
 // Static function declarations
-static void __weather_type_to_icon(int weather_type, char *icon_buffer, int buffer_size);
 static OPERATE_RET __update_weather_data(void);
 static void __send_weather_to_display(void);
 static void __weather_work_callback(void *data);
@@ -38,110 +37,6 @@ static BOOL_T sg_weather_initialized = FALSE;
 ***********************function define**********************
 ***********************************************************/
 
-/**
- * @brief Convert weather type to icon string
- * @param weather_type Weather type from Tuya Cloud
- * @param icon_buffer Buffer to store icon string
- * @param buffer_size Size of the buffer
- */
-static void __weather_type_to_icon(int weather_type, char *icon_buffer, int buffer_size)
-{
-    if (icon_buffer == NULL || buffer_size < 4) {
-        return;
-    }
-    
-    // Convert weather type to simple ASCII icon or display number
-    switch (weather_type) {
-        case 0:  // Sunny
-            snprintf(icon_buffer, buffer_size, "SUN");
-            break;
-        case 1:  // Cloudy
-            snprintf(icon_buffer, buffer_size, "CLD");
-            break;
-        case 2:  // Partly cloudy
-            snprintf(icon_buffer, buffer_size, "PCL");
-            break;
-        case 3:  // Rainy
-            snprintf(icon_buffer, buffer_size, "RAIN");
-            break;
-        case 4:  // Snowy
-            snprintf(icon_buffer, buffer_size, "SNOW");
-            break;
-        case 5:  // Foggy
-            snprintf(icon_buffer, buffer_size, "FOG");
-            break;
-        case 6:  // Stormy
-            snprintf(icon_buffer, buffer_size, "STORM");
-            break;
-        case 100:  // Clear
-            snprintf(icon_buffer, buffer_size, "CLEAR");
-            break;
-        case 101:  // Partly cloudy
-            snprintf(icon_buffer, buffer_size, "PCL");
-            break;
-        case 102:  // Cloudy
-            snprintf(icon_buffer, buffer_size, "CLD");
-            break;
-        case 103:  // Overcast
-            snprintf(icon_buffer, buffer_size, "OVER");
-            break;
-        case 104:  // Light rain
-            snprintf(icon_buffer, buffer_size, "LRAIN");
-            break;
-        case 105:  // Moderate rain
-            snprintf(icon_buffer, buffer_size, "MRAIN");
-            break;
-        case 106:  // Heavy rain
-            snprintf(icon_buffer, buffer_size, "HRAIN");
-            break;
-        case 107:  // Thunderstorm
-            snprintf(icon_buffer, buffer_size, "THUNDER");
-            break;
-        case 108:  // Snow
-            snprintf(icon_buffer, buffer_size, "SNOW");
-            break;
-        case 109:  // Fog
-            snprintf(icon_buffer, buffer_size, "FOG");
-            break;
-        case 110:  // Haze
-            snprintf(icon_buffer, buffer_size, "HAZE");
-            break;
-        case 111:  // Sandstorm
-            snprintf(icon_buffer, buffer_size, "SAND");
-            break;
-        case 112:  // Dust
-            snprintf(icon_buffer, buffer_size, "DUST");
-            break;
-        case 113:  // Windy
-            snprintf(icon_buffer, buffer_size, "WIND");
-            break;
-        case 114:  // Breeze
-            snprintf(icon_buffer, buffer_size, "BREEZE");
-            break;
-        case 115:  // Cold
-            snprintf(icon_buffer, buffer_size, "COLD");
-            break;
-        case 116:  // Hot
-            snprintf(icon_buffer, buffer_size, "HOT");
-            break;
-        case 117:  // Warm
-            snprintf(icon_buffer, buffer_size, "WARM");
-            break;
-        case 118:  // Cool
-            snprintf(icon_buffer, buffer_size, "COOL");
-            break;
-        case 119:  // Freezing
-            snprintf(icon_buffer, buffer_size, "FREEZE");
-            break;
-        case 120:  // Unknown weather type 120
-            snprintf(icon_buffer, buffer_size, "W120");
-            break;
-        default:
-            // For unknown weather types, display the number directly
-            snprintf(icon_buffer, buffer_size, "W%d", weather_type);
-            break;
-    }
-}
 
 /**
  * @brief Update weather data from Tuya Cloud
@@ -191,9 +86,9 @@ static OPERATE_RET __update_weather_data(void)
     sg_weather_data.temperature = current_conditions.temp;
     sg_weather_data.is_valid = TRUE;
     
-    // Convert weather type to icon
-    __weather_type_to_icon(current_conditions.weather, sg_weather_data.weather_icon, 
-                          sizeof(sg_weather_data.weather_icon));
+    // Store weather type directly as icon string
+    snprintf(sg_weather_data.weather_icon, sizeof(sg_weather_data.weather_icon), "%d", 
+             current_conditions.weather);
     
     // Format temperature string
     snprintf(sg_weather_data.temp_str, sizeof(sg_weather_data.temp_str), "%d°C", 
@@ -295,7 +190,7 @@ OPERATE_RET app_weather_init(void)
     
     // Set default weather data
     PR_DEBUG("Setting default weather data...");
-    strcpy(sg_weather_data.weather_icon, "SUN");
+    snprintf(sg_weather_data.weather_icon, sizeof(sg_weather_data.weather_icon), "%d", 0);
     strcpy(sg_weather_data.temp_str, "25°C");
     sg_weather_data.temperature = 22;
     sg_weather_data.weather_type = 0;

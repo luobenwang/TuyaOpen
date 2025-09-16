@@ -302,7 +302,7 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
     case TUYA_EVENT_MQTT_CONNECTED:
         PR_INFO("Device MQTT Connected!");
         tal_event_publish(EVENT_MQTT_CONNECTED, NULL);
-
+        app_weather_update_now();
         static uint8_t first = 1;
         if (first) {
             first = 0;

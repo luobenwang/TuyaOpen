@@ -28,9 +28,9 @@ extern "C" {
 ***********************typedef define***********************
 ***********************************************************/
 typedef struct {
-    int weather_type;      // Weather type (sunny, cloudy, rainy, etc.)
+    int weather_type;      // Weather type code from Tuya Cloud
     int temperature;       // Current temperature in Celsius
-    char weather_icon[8];  // Weather icon string
+    char weather_icon[8];  // Weather type code as string (e.g., "0", "100", "104")
     char temp_str[16];     // Temperature string (e.g., "25°C")
     BOOL_T is_valid;       // Whether weather data is valid
 } WEATHER_DATA_T;
