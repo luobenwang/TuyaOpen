@@ -80,11 +80,11 @@
    - T5AI Mini + ST7735S LCD：使用 `app_default.config`
    - T5AI Mini + 13565LCD：使用 `T5AI_MINI_LCD.config`
 
-2. **应用配置**：运行 `tos config_choice` 命令，选择当前运行的开发板。
+2. **应用配置**：运行 `tos.py config choice` 命令，选择当前运行的开发板。
 
-3. **自定义设置**：如需修改配置，请先运行 `tos menuconfig` 命令修改配置。
+3. **自定义设置**：如需修改配置，请先运行 `tos.py config menu` 命令，查看当前配置。` 命令修改配置。
 
-4. **编译工程**：运行 `tos build` 命令，编译工程。
+4. **编译工程**：运行 `tos.py build` 命令，编译工程。
 
 ## 配置说明
 

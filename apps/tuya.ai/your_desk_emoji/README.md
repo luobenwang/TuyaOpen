@@ -80,11 +80,11 @@ English | [简体中文](./RAEDME_zh.md)
    - For T5AI Mini with ST7735S LCD: Use `app_default.config`
    - For T5AI Mini with 13565LCD: Use `T5AI_MINI_LCD.config`
 
-2. **Apply Configuration**: Run `tos config_choice` command to select the current development board.
+2. **Apply Configuration**: Run `tos.py config choice` command to select the current development board.
 
-3. **Customize Settings**: If you need to modify the configuration, run `tos menuconfig` command to make changes.
+3. **Customize Settings**: If you need to modify the configuration, run `tos.py config menu` command to make changes.
 
-4. **Build Project**: Run `tos build` command to compile the project.
+4. **Build Project**: Run `tos.py build` command to compile the project.
 
 ## Configuration
 
