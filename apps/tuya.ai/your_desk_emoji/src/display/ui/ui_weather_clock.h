@@ -33,8 +33,10 @@ extern "C" {
 typedef struct {
     lv_obj_t *container;
     lv_obj_t *status_bar;
-    lv_obj_t *time_label;
-    lv_obj_t *date_weather_label;
+    lv_obj_t *time_label;           // 时间显示
+    lv_obj_t *date_weather_label;   // 日期显示
+    lv_obj_t *temperature_label;    // 温度显示
+    lv_obj_t *weather_icon_img;     // 天气图标显示
     lv_obj_t *network_label;
     lv_obj_t *notification_label;
     lv_obj_t *status_label;
@@ -71,11 +73,35 @@ void ui_weather_clock_show(void);
 void ui_weather_clock_hide(void);
 
 /**
- * @brief Update weather information
+ * @brief Update weather information (legacy function for compatibility)
  * @param weather_icon Weather icon (e.g., "☀️", "🌧️", "⛅")
  * @param temperature Temperature in Celsius (e.g., "22°C")
  */
 void ui_weather_clock_update_weather(const char *weather_icon, const char *temperature);
+
+/**
+ * @brief Update time display
+ * @param time_str Time string (e.g., "14:30:25")
+ */
+void ui_weather_clock_update_time_display(const char *time_str);
+
+/**
+ * @brief Update date display
+ * @param date_str Date string (e.g., "12/25")
+ */
+void ui_weather_clock_update_date_display(const char *date_str);
+
+/**
+ * @brief Update temperature display
+ * @param temperature Temperature string (e.g., "25°C")
+ */
+void ui_weather_clock_update_temperature_display(const char *temperature);
+
+/**
+ * @brief Update weather icon display
+ * @param weather_icon Weather icon identifier (e.g., "120", "cloudy_112", etc.)
+ */
+void ui_weather_clock_update_weather_icon_display(const char *weather_icon);
 
 /**
  * @brief Set base timestamp for independent time calculation
