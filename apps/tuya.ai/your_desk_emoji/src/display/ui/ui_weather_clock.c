@@ -40,9 +40,9 @@
 ***********************macro / helpers**********************
 ***********************************************************/
 
-/* 256 == 1.0x, 512 == 2.0x => 1.8x ≈ 256 * 1.8 = 461 */
-#ifndef TIME_LABEL_ZOOM_1P8X
-#define TIME_LABEL_ZOOM_1P8X 461
+/* 256 == 1.0x, 512 == 2.0x => 1.2x ≈ 256 * 1.2 = 307 */
+#ifndef TIME_LABEL_ZOOM_1P2X
+#define TIME_LABEL_ZOOM_1P2X 307
 #endif
 
 
@@ -81,19 +81,19 @@ static const lv_image_dsc_t* __get_weather_icon_descriptor(const char *weather_i
     
     // Map weather icon strings to their corresponding descriptors
     // Note: Generated C files use img_[name] format for descriptors
-    if (strcmp(weather_icon, "120") == 0 ) {//sun_120
+    if (strcmp(weather_icon, "120" ) == 0 || strcmp(weather_icon, "119") == 0) {//sun_120
         return &img_sun_120;
-    } else if (strcmp(weather_icon, "129") == 0 || strcmp(weather_icon, "142") == 0) { //cloudy_129
+    } else if (strcmp(weather_icon, "129") == 0 || strcmp(weather_icon, "142") == 0 || strcmp(weather_icon, "132") == 0) { //cloudy_129
         return &img_cloudy_129;
-    } else if (strcmp(weather_icon, "112") == 0) {
+    } else if (strcmp(weather_icon, "112") == 0 || strcmp(weather_icon, "101") == 0 || strcmp(weather_icon, "107") == 0 || strcmp(weather_icon, "108") == 0) {
         return &img_rain_112;
     } else if (strcmp(weather_icon, "139") == 0 ) {//small_rain_139
         return &img_small_rain_139;
-    } else if (strcmp(weather_icon, "105") == 0 ) {//snow_105
+    } else if (strcmp(weather_icon, "105") == 0 || strcmp(weather_icon, "104") == 0 || strcmp(weather_icon, "115") == 0 || strcmp(weather_icon, "124") == 0 || strcmp(weather_icon, "126") == 0) {//snow_105
         return &img_snow_105;
-    } else if (strcmp(weather_icon, "110") == 0 ) {//thunder_110
+    } else if (strcmp(weather_icon, "110") == 0 || strcmp(weather_icon, "138") == 0) {//thunder_110
         return &img_thunder_110;
-    } else if (strcmp(weather_icon, "143") == 0 ) {//thundershower_143
+    } else if (strcmp(weather_icon, "143") == 0 || strcmp(weather_icon, "102") == 0) {//thundershower_143
         return &img_thundershower_143;
     } else if (strcmp(weather_icon, "114") == 0 ) {//windy_114
         return &img_windy_114;
@@ -258,6 +258,9 @@ static void __weather_clock_timer_cb(lv_timer_t *timer)
     /* Timer only updates time, weather updates come from weather service */
 }
 
+/* Demo timer callback: cycle icons every 2 seconds */
+/* demo timer removed */
+
 /**
  * @brief Initialize minimal weather clock UI for 160x80 display
  * @param ui_font Font configuration
@@ -334,7 +337,7 @@ static int __ui_weather_clock_init_160x80(UI_FONT_T *ui_font)
     lv_obj_set_style_text_align(sg_weather_clock.ui.date_weather_label, LV_TEXT_ALIGN_LEFT, 0);
     lv_obj_set_style_text_letter_space(sg_weather_clock.ui.date_weather_label, 0, 0);
     lv_obj_set_size(sg_weather_clock.ui.date_weather_label, 80, 20);  // Increased width for longer date formats
-    lv_obj_align(sg_weather_clock.ui.date_weather_label, LV_ALIGN_TOP_LEFT, 8, 8);
+    lv_obj_align(sg_weather_clock.ui.date_weather_label, LV_ALIGN_TOP_LEFT, 8, 4);
     // Date label initially visible with current date
     char initial_date[16];
     __get_current_date_string(initial_date, sizeof(initial_date));
@@ -347,7 +350,7 @@ static int __ui_weather_clock_init_160x80(UI_FONT_T *ui_font)
         return -1;
     }
     lv_obj_set_size(sg_weather_clock.ui.weather_icon_img, 16, 16);
-    lv_obj_align(sg_weather_clock.ui.weather_icon_img, LV_ALIGN_TOP_RIGHT, -8, 8);
+    lv_obj_align(sg_weather_clock.ui.weather_icon_img, LV_ALIGN_TOP_RIGHT, -8, 4);
     lv_obj_add_flag(sg_weather_clock.ui.weather_icon_img, LV_OBJ_FLAG_HIDDEN);  // Initially hidden
     PR_DEBUG("Weather icon image created successfully: %p", sg_weather_clock.ui.weather_icon_img);
     
@@ -362,7 +365,7 @@ static int __ui_weather_clock_init_160x80(UI_FONT_T *ui_font)
     lv_obj_set_style_text_align(sg_weather_clock.ui.temperature_label, LV_TEXT_ALIGN_RIGHT, 0);
     lv_obj_set_style_text_letter_space(sg_weather_clock.ui.temperature_label, 0, 0);
     lv_obj_set_size(sg_weather_clock.ui.temperature_label, 60, 20);
-    lv_obj_align(sg_weather_clock.ui.temperature_label, LV_ALIGN_TOP_RIGHT, -32, 8);  // 32px left of weather icon (16px icon + 16px gap)
+    lv_obj_align(sg_weather_clock.ui.temperature_label, LV_ALIGN_TOP_RIGHT, -32, 4);  // 32px left of weather icon (16px icon + 16px gap)
     lv_obj_add_flag(sg_weather_clock.ui.temperature_label, LV_OBJ_FLAG_HIDDEN);  // Initially hidden
 
     /* 4. Time label - center */
@@ -376,8 +379,14 @@ static int __ui_weather_clock_init_160x80(UI_FONT_T *ui_font)
     lv_obj_set_style_text_color(sg_weather_clock.ui.time_label, lv_color_hex(0xFFFFFF), 0);
     lv_obj_set_style_text_align(sg_weather_clock.ui.time_label, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_letter_space(sg_weather_clock.ui.time_label, 1, 0);
+    /* Scale time label to 1.2x */
+    lv_obj_set_style_transform_scale(sg_weather_clock.ui.time_label, TIME_LABEL_ZOOM_1P2X, 0);
     lv_obj_set_width(sg_weather_clock.ui.time_label, LV_HOR_RES);
-    lv_obj_align(sg_weather_clock.ui.time_label, LV_ALIGN_CENTER, 0, 0);
+    /* Center time label */
+
+    lv_obj_align(sg_weather_clock.ui.time_label, LV_ALIGN_CENTER,-13, 0);
+    
+
 
     PR_DEBUG("4 independent UI controls created: date(top-left 80x20), weather-icon-image(top-right 32x32), temperature(top-right-48px 60x20), time(center)");
 
