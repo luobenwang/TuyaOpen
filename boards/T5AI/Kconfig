@@ -55,6 +55,12 @@ choice
             rsource "./T5AI_MOJI_1_28/Kconfig"
         endif
 
+    config BOARD_CHOICE_T5AI_OTTO
+        bool "T5AI_OTTO"
+        if (BOARD_CHOICE_T5AI_OTTO)
+            rsource "./T5AI_OTTO/Kconfig"
+        endif
+
     config BOARD_CHOICE_TUYA_T5AI_POCKET
         bool "TUYA_T5AI_POCKET"
         if (BOARD_CHOICE_TUYA_T5AI_POCKET)
