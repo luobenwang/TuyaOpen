@@ -54,6 +54,7 @@ static UI_CONTROL_T sg_ui_control = {0};
 
 // Forward declarations
 static void __sword_takeoff_animation(void);
+static void __sword_landing_animation(void);
 
 static void __takeoff_btn_event_cb(lv_event_t *e)
 {
@@ -92,6 +93,7 @@ static void __landing_btn_event_cb(lv_event_t *e)
     
     if (code == LV_EVENT_CLICKED) {
         lv_label_set_text(sg_ui_control.status_label, "Landing... touch down!");
+        __sword_landing_animation(); // Start sword downward animation
         PR_DEBUG("Landing button clicked");
     }
 }
@@ -105,6 +107,18 @@ static void __sword_takeoff_animation(void)
     lv_anim_set_time(&sg_ui_control.sword_anim, 3000); // 3 seconds
     lv_anim_set_exec_cb(&sg_ui_control.sword_anim, (lv_anim_exec_xcb_t)lv_obj_set_y);
     lv_anim_set_path_cb(&sg_ui_control.sword_anim, lv_anim_path_ease_out);
+    lv_anim_start(&sg_ui_control.sword_anim);
+}
+
+static void __sword_landing_animation(void)
+{
+    // Start sword downward movement animation
+    lv_anim_init(&sg_ui_control.sword_anim);
+    lv_anim_set_var(&sg_ui_control.sword_anim, sg_ui_control.sword_img);
+    lv_anim_set_values(&sg_ui_control.sword_anim, 0, 70); // Move from 0px (center) to 70px down
+    lv_anim_set_time(&sg_ui_control.sword_anim, 3000); // 3 seconds
+    lv_anim_set_exec_cb(&sg_ui_control.sword_anim, (lv_anim_exec_xcb_t)lv_obj_set_y);
+    lv_anim_set_path_cb(&sg_ui_control.sword_anim, lv_anim_path_ease_in);
     lv_anim_start(&sg_ui_control.sword_anim);
 }
 
