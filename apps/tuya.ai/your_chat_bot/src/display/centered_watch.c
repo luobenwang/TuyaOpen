@@ -302,7 +302,28 @@ static void create_watch_marks(void)
     lv_obj_clear_flag(decorative_ring, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_clear_flag(decorative_ring, LV_OBJ_FLAG_SCROLLABLE);
     
-    printf("Created 12 hour marks, numbers, 60 minute marks, and decorative ring\n");
+    /* 添加复古怀表文字标签 */
+    lv_obj_t *watch_title = lv_label_create(g_watch.screen);
+    lv_label_set_text(watch_title, "TUYA AI HISTORY");
+    lv_obj_set_style_text_color(watch_title, lv_color_hex(0x8B7355), 0);  /* 复古棕色 */
+    lv_obj_set_style_text_opa(watch_title, LV_OPA_60, 0);  /* 半透明，不显眼 */
+    lv_obj_set_style_text_letter_space(watch_title, 2, 0);  /* 增加字母间距 */
+    lv_obj_set_style_text_line_space(watch_title, 5, 0);   /* 增加行间距 */
+    lv_obj_align(watch_title, LV_ALIGN_CENTER, 0, 30);  /* 位于表盘下方 */
+    lv_obj_clear_flag(watch_title, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_clear_flag(watch_title, LV_OBJ_FLAG_SCROLLABLE);
+    
+    /* 添加副标题装饰 */
+    lv_obj_t *watch_subtitle = lv_label_create(g_watch.screen);
+    lv_label_set_text(watch_subtitle, "VINTAGE WATCH");
+    lv_obj_set_style_text_color(watch_subtitle, lv_color_hex(0x6B5B47), 0);  /* 更深的复古色 */
+    lv_obj_set_style_text_opa(watch_subtitle, LV_OPA_40, 0);  /* 更透明 */
+    lv_obj_set_style_text_letter_space(watch_subtitle, 1, 0);
+    lv_obj_align(watch_subtitle, LV_ALIGN_CENTER, 0, 50);  /* 位于主标题下方 */
+    lv_obj_clear_flag(watch_subtitle, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_clear_flag(watch_subtitle, LV_OBJ_FLAG_SCROLLABLE);
+    
+    printf("Created 12 hour marks, numbers, 60 minute marks, decorative ring, and vintage text\n");
 }
 
 static void create_watch_hands(void)
