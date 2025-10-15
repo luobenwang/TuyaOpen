@@ -10,6 +10,7 @@ set(APP_MODULE_SRCS)
 list(APPEND APP_MODULE_SRCS
         ${APP_MODULE_PATH}/app_display.c
         ${APP_MODULE_PATH}/tuya_lvgl.c
+        ${APP_MODULE_PATH}/centered_watch.c
     )
 
 aux_source_directory(${APP_MODULE_PATH}/font FONT_SRCS)

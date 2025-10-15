@@ -88,6 +88,13 @@ OPERATE_RET app_display_init(void);
  */
 OPERATE_RET app_display_send_msg(TY_DISPLAY_TYPE_E tp, uint8_t *data, int len);
 
+/**
+ * @brief Initialize watch UI
+ *
+ * @return OPERATE_RET Result of initialization, OPRT_OK indicates success
+ */
+OPERATE_RET watch_ui_init(void);
+
 #ifdef __cplusplus
 }
 #endif

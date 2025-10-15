@@ -95,7 +95,7 @@ static OPERATE_RET __get_ui_font(UI_FONT_T *ui_font)
         return OPRT_INVALID_PARM;
     }
 
-#if (defined(BOARD_CHOICE_TUYA_T5AI_BOARD) || defined(BOARD_CHOICE_TUYA_T5AI_EVB) ||                                   \
+#if (defined(BOARD_CHOICE_TUYA_T5AI_BOARD) || defined(BOARD_CHOICE_TUYA_T5AI_EVB) ||  defined(BOARD_CHOICE_TUYA_T5AI_CORE) ||                                   \
      defined(BOARD_CHOICE_T5AI_MOJI_1_28) || defined(BOARD_CHOICE_T5AI_MINI) || defined(BOARD_CHOICE_DNESP32S3_BOX) || \
      defined(BOARD_CHOICE_DNESP32S3_BOX2_WIFI)) ||                                                                     \
     defined(BOARD_CHOICE_WAVESHARE_T5AI_TOUCH_AMOLED_1_75)
@@ -238,7 +238,10 @@ static void __chat_bot_ui_task(void *args)
     // Initialize the display font
     TUYA_CALL_ERR_LOG(__get_ui_font(&sg_display.ui_font));
     // ui initialization
-    TUYA_CALL_ERR_LOG(ui_init(&sg_display.ui_font));
+    
+    if (0 )TUYA_CALL_ERR_LOG(ui_init(&sg_display.ui_font));
+    // Initialize watch UI
+    TUYA_CALL_ERR_LOG(watch_ui_init());
 #if defined(BOARD_CHOICE_WAVESHARE_ESP32_S3_TOUCH_AMOLED_1_8)
     extern void lcd_sh8601_set_backlight(uint8_t brightness);
     lcd_sh8601_set_backlight(80); // set backlight to 80%
@@ -315,5 +318,24 @@ OPERATE_RET app_display_send_msg(TY_DISPLAY_TYPE_E tp, uint8_t *data, int len)
 
     tal_queue_post(sg_display.queue_hdl, &msg_data, 0xFFFFFFFF);
 
+    return OPRT_OK;
+}
+
+// External declaration for watch functions
+extern void lv_demo_vintage_watch(void);
+
+/**
+ * @brief Initialize watch UI
+ * 
+ * @return OPERATE_RET 操作结果
+ */
+OPERATE_RET watch_ui_init(void)
+{
+    PR_DEBUG("Watch UI init start");
+    
+    // Call the vintage watch demo function
+    lv_demo_vintage_watch();
+    
+    PR_DEBUG("Watch UI init success");
     return OPRT_OK;
 }

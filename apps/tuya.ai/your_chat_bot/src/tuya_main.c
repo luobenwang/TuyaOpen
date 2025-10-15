@@ -191,6 +191,9 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
     case TUYA_EVENT_TIMESTAMP_SYNC:
         PR_INFO("Sync timestamp:%d", event->value.asInteger);
         tal_time_set_posix(event->value.asInteger, 1);
+        // 通知时钟开始转动
+        extern void vintage_watch_set_sync_time(time_t sync_time);
+        vintage_watch_set_sync_time(event->value.asInteger);
         break;
 
     case TUYA_EVENT_RESET:
