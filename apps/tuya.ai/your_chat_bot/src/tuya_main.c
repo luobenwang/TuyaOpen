@@ -46,6 +46,7 @@
 #include "ai_audio.h"
 #include "reset_netcfg.h"
 #include "app_system_info.h"
+#include "gpio_control.h"
 
 /* Tuya device handle */
 tuya_iot_client_t ai_client;
@@ -339,7 +340,7 @@ void user_main(void)
     tkl_wifi_set_lp_mode(0, 0);
 
     reset_netconfig_check();
-
+    gpio_control_init();
     for (;;) {
         /* Loop to receive packets, and handles client keepalive */
         tuya_iot_yield(&ai_client);

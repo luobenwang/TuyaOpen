@@ -20,7 +20,7 @@
 
 #include "tal_log.h"
 #include "tkl_memory.h"
-
+#include "gpio_control.h"
 /***********************************************************
 ************************macro define************************
 ***********************************************************/
@@ -58,6 +58,7 @@ static void __sword_landing_animation(void);
 static void __sword_draw_animation(void);
 static void __sword_draw_phase1_ready_cb(lv_anim_t *a);
 static void __sword_draw_phase2_animation(void);
+static void __sword_rotate_animation(void);
 
 static void __takeoff_btn_event_cb(lv_event_t *e)
 {
@@ -66,6 +67,8 @@ static void __takeoff_btn_event_cb(lv_event_t *e)
     if (code == LV_EVENT_CLICKED) {
         lv_label_set_text(sg_ui_control.status_label, "Taking off... Ready for flight!");
         __sword_takeoff_animation(); // Start sword upward animation
+        set_gpio2_high();
+        PR_DEBUG("*****************SET GPIO2 HIGH *****************");
         PR_DEBUG("Takeoff button clicked");
     }
 }
@@ -87,6 +90,9 @@ static void __rotate_btn_event_cb(lv_event_t *e)
     
     if (code == LV_EVENT_CLICKED) {
         lv_label_set_text(sg_ui_control.status_label, "Rotating... Changing direction!");
+        __sword_rotate_animation(); // Start sword rotation animation
+        set_gpio3_high();
+        PR_DEBUG("*****************SET GPIO3 HIGH *****************");
         PR_DEBUG("Rotate button clicked");
     }
 }
@@ -98,6 +104,8 @@ static void __landing_btn_event_cb(lv_event_t *e)
     if (code == LV_EVENT_CLICKED) {
         lv_label_set_text(sg_ui_control.status_label, "Landing... touch down!");
         __sword_landing_animation(); // Start sword downward animation
+        set_gpio2_high();
+        PR_DEBUG("*****************SET GPIO2 HIGH *****************");
         PR_DEBUG("Landing button clicked");
     }
 }
@@ -168,6 +176,18 @@ static void __sword_draw_animation(void)
     lv_anim_set_exec_cb(&sg_ui_control.sword_anim, (lv_anim_exec_xcb_t)lv_obj_set_x);
     lv_anim_set_path_cb(&sg_ui_control.sword_anim, lv_anim_path_ease_in);
     lv_anim_set_ready_cb(&sg_ui_control.sword_anim, __sword_draw_phase1_ready_cb);
+    lv_anim_start(&sg_ui_control.sword_anim);
+}
+
+static void __sword_rotate_animation(void)
+{
+    // Start sword rotation animation - 360 degrees
+    lv_anim_init(&sg_ui_control.sword_anim);
+    lv_anim_set_var(&sg_ui_control.sword_anim, sg_ui_control.sword_img);
+    lv_anim_set_values(&sg_ui_control.sword_anim, 0, 3600); // 360 degrees (3600 = 360 * 10 for LVGL)
+    lv_anim_set_time(&sg_ui_control.sword_anim, 2000); // 2 seconds for full rotation
+    lv_anim_set_exec_cb(&sg_ui_control.sword_anim, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_angle);
+    lv_anim_set_path_cb(&sg_ui_control.sword_anim, lv_anim_path_linear);
     lv_anim_start(&sg_ui_control.sword_anim);
 }
 
@@ -300,5 +320,23 @@ void ui_control_cleanup(void)
     if (sg_ui_control.container) {
         lv_obj_del(sg_ui_control.container);
         memset(&sg_ui_control, 0, sizeof(UI_CONTROL_T));
+    }
+}
+
+/**
+ * @brief 控制剑的显示动画
+ * 
+ * @param[in] show true-起飞动画，false-降落动画
+ */
+void ui_control_sword_show(bool show)
+{
+    if (show) {
+        // 触发起飞动画
+        __sword_takeoff_animation();
+        PR_DEBUG("UI control: sword takeoff animation triggered");
+    } else {
+        // 触发降落动画
+        __sword_landing_animation();
+        PR_DEBUG("UI control: sword landing animation triggered");
     }
 }

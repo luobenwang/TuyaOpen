@@ -24,6 +24,8 @@
 #include "ai_audio.h"
 #include "app_chat_bot.h"
 #include "media_src_zh.h"
+#include "gpio_control.h"
+#include "ui_display.h"
 /***********************************************************
 ************************macro define************************
 ***********************************************************/
@@ -147,7 +149,27 @@ static void __app_ai_audio_evt_inform_cb(AI_AUDIO_EVENT_E event, uint8_t *data, 
     switch (event) {
     case AI_AUDIO_EVT_HUMAN_ASR_TEXT: {
         if (len > 0 && data) {
-// send asr text to display
+        // send asr text to display
+        PR_DEBUG("*****************ASR TEXT, %s *****************", data);
+        if( strstr((const char*)data, "剑来") != NULL) {
+            set_gpio2_high();
+            ui_control_sword_show(true); // 触发起飞UI动画
+            PR_DEBUG("*****************SET GPIO2 HIGH 剑来 + UI动画 *****************");
+
+        } else if(strstr((const char*)data, "降落") != NULL) {
+            set_gpio2_high();
+            ui_control_sword_show(false); // 触发降落UI动画
+            PR_DEBUG("*****************SET GPIO2 HIGH 降落 + UI动画 *****************");
+        }
+        else if(strstr((const char*)data, "起飞") != NULL) {
+            set_gpio2_high();
+            ui_control_sword_show(true); // 触发起飞UI动画
+            PR_DEBUG("*****************SET GPIO2 HIGH 起飞 + UI动画 *****************");
+        }
+        else if(strstr((const char*)data, "悬浮") != NULL) {
+            set_gpio3_high();
+            PR_DEBUG("*****************SET GPIO3 HIGH 悬浮 *****************");
+        }
 #if defined(ENABLE_CHAT_DISPLAY) && (ENABLE_CHAT_DISPLAY == 1)
             app_display_send_msg(TY_DISPLAY_TP_USER_MSG, data, len);
 #endif

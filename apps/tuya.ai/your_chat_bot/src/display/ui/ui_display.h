@@ -74,6 +74,7 @@ void ui_set_status_bar_pad(int32_t value);
 // Control UI functions
 int ui_control_init(UI_FONT_T *ui_font);
 void ui_control_cleanup(void);
+void ui_control_sword_show(bool show);
 
 #if defined(ENABLE_GUI_STREAM_AI_TEXT) && (ENABLE_GUI_STREAM_AI_TEXT == 1)
 void ui_set_assistant_msg_stream_start(void);
