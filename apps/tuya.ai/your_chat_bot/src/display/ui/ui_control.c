@@ -203,10 +203,10 @@ int ui_control_init(UI_FONT_T *ui_font)
     lv_obj_center(landing_label);
     lv_obj_add_event_cb(sg_ui_control.landing_btn, __landing_btn_event_cb, LV_EVENT_ALL, NULL);
 
-    // Create sword image in the center of the screen
+    // Create sword image in the center of the screen, moved down 70 pixels
     sg_ui_control.sword_img = lv_img_create(sg_ui_control.container);
     lv_img_set_src(sg_ui_control.sword_img, &sword);
-    lv_obj_align(sg_ui_control.sword_img, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_align(sg_ui_control.sword_img, LV_ALIGN_CENTER, 0, 70);
 
     PR_DEBUG("Control UI initialized successfully");
     return 0;
