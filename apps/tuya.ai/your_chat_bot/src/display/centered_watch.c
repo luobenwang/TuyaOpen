@@ -307,39 +307,39 @@ static void create_watch_marks(void)
 
 static void create_watch_hands(void)
 {
-    /* Hour hand - positioned at screen center, extending rightward */
+    /* Hour hand - positioned at screen center, extending upward to 12 o'clock */
     g_watch.hour_hand = lv_obj_create(g_watch.screen);
     lv_obj_remove_style_all(g_watch.hour_hand);
-    lv_obj_set_size(g_watch.hour_hand, 40, 6);  /* 40px long, 6px thick */
+    lv_obj_set_size(g_watch.hour_hand, 6, 40);  /* 6px thick, 40px long - vertical */
     lv_obj_set_style_bg_color(g_watch.hour_hand, lv_color_hex(VINTAGE_GOLD_COLOR), 0);
     lv_obj_set_style_bg_opa(g_watch.hour_hand, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(g_watch.hour_hand, 3, 0);
-    /* Position at screen center, extending rightward */
-    lv_obj_set_pos(g_watch.hour_hand, SCREEN_CENTER_X, SCREEN_CENTER_Y - 3);
+    /* Position at screen center, extending upward to 12 o'clock */
+    lv_obj_set_pos(g_watch.hour_hand, SCREEN_CENTER_X - 3, SCREEN_CENTER_Y - 40);
     lv_obj_clear_flag(g_watch.hour_hand, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_clear_flag(g_watch.hour_hand, LV_OBJ_FLAG_SCROLLABLE);
     
-    /* Minute hand - positioned at screen center, extending rightward */
+    /* Minute hand - positioned at screen center, extending upward to 12 o'clock */
     g_watch.minute_hand = lv_obj_create(g_watch.screen);
     lv_obj_remove_style_all(g_watch.minute_hand);
-    lv_obj_set_size(g_watch.minute_hand, 55, 4);  /* 55px long, 4px thick */
+    lv_obj_set_size(g_watch.minute_hand, 4, 55);  /* 4px thick, 55px long - vertical */
     lv_obj_set_style_bg_color(g_watch.minute_hand, lv_color_hex(VINTAGE_GOLD_COLOR), 0);
     lv_obj_set_style_bg_opa(g_watch.minute_hand, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(g_watch.minute_hand, 2, 0);
-    /* Position at screen center, extending rightward */
-    lv_obj_set_pos(g_watch.minute_hand, SCREEN_CENTER_X, SCREEN_CENTER_Y - 2);
+    /* Position at screen center, extending upward to 12 o'clock */
+    lv_obj_set_pos(g_watch.minute_hand, SCREEN_CENTER_X - 2, SCREEN_CENTER_Y - 55);
     lv_obj_clear_flag(g_watch.minute_hand, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_clear_flag(g_watch.minute_hand, LV_OBJ_FLAG_SCROLLABLE);
     
-    /* Second hand - positioned at screen center, extending rightward */
+    /* Second hand - positioned at screen center, extending upward to 12 o'clock */
     g_watch.second_hand = lv_obj_create(g_watch.screen);
     lv_obj_remove_style_all(g_watch.second_hand);
-    lv_obj_set_size(g_watch.second_hand, 65, 2);  /* 65px long, 2px thick */
+    lv_obj_set_size(g_watch.second_hand, 2, 65);  /* 2px thick, 65px long - vertical */
     lv_obj_set_style_bg_color(g_watch.second_hand, lv_color_hex(0xFF0000), 0);
     lv_obj_set_style_bg_opa(g_watch.second_hand, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(g_watch.second_hand, 1, 0);
-    /* Position at screen center, extending rightward */
-    lv_obj_set_pos(g_watch.second_hand, SCREEN_CENTER_X, SCREEN_CENTER_Y - 1);
+    /* Position at screen center, extending upward to 12 o'clock */
+    lv_obj_set_pos(g_watch.second_hand, SCREEN_CENTER_X - 1, SCREEN_CENTER_Y - 65);
     lv_obj_clear_flag(g_watch.second_hand, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_clear_flag(g_watch.second_hand, LV_OBJ_FLAG_SCROLLABLE);
     
@@ -398,20 +398,20 @@ static void update_hands(void)
         second_angle = 0.0f;
     }
     
-    /* Update hour hand rotation - pivot at object center */
+    /* Update hour hand rotation - pivot at watch center */
     lv_obj_set_style_transform_angle(g_watch.hour_hand, (int16_t)(hour_angle * 10), 0);
-    lv_obj_set_style_transform_pivot_x(g_watch.hour_hand, 0, 0);  /* Pivot at object center */
-    lv_obj_set_style_transform_pivot_y(g_watch.hour_hand, 3, 0);  /* Pivot at object center */
+    lv_obj_set_style_transform_pivot_x(g_watch.hour_hand, 3, 0);  /* Pivot at watch center */
+    lv_obj_set_style_transform_pivot_y(g_watch.hour_hand, 40, 0);  /* Pivot at watch center */
     
-    /* Update minute hand rotation - pivot at object center */
+    /* Update minute hand rotation - pivot at watch center */
     lv_obj_set_style_transform_angle(g_watch.minute_hand, (int16_t)(minute_angle * 10), 0);
-    lv_obj_set_style_transform_pivot_x(g_watch.minute_hand, 0, 0);  /* Pivot at object center */
-    lv_obj_set_style_transform_pivot_y(g_watch.minute_hand, 2, 0);  /* Pivot at object center */
+    lv_obj_set_style_transform_pivot_x(g_watch.minute_hand, 2, 0);  /* Pivot at watch center */
+    lv_obj_set_style_transform_pivot_y(g_watch.minute_hand, 55, 0);  /* Pivot at watch center */
     
-    /* Update second hand rotation - pivot at object center */
+    /* Update second hand rotation - pivot at watch center */
     lv_obj_set_style_transform_angle(g_watch.second_hand, (int16_t)(second_angle * 10), 0);
-    lv_obj_set_style_transform_pivot_x(g_watch.second_hand, 0, 0);  /* Pivot at object center */
-    lv_obj_set_style_transform_pivot_y(g_watch.second_hand, 1, 0);  /* Pivot at object center */
+    lv_obj_set_style_transform_pivot_x(g_watch.second_hand, 1, 0);  /* Pivot at watch center */
+    lv_obj_set_style_transform_pivot_y(g_watch.second_hand, 65, 0);  /* Pivot at watch center */
     
     /* Force refresh of the objects */
     lv_obj_invalidate(g_watch.hour_hand);
