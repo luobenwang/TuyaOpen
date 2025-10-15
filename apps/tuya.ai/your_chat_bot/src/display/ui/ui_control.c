@@ -55,6 +55,9 @@ static UI_CONTROL_T sg_ui_control = {0};
 // Forward declarations
 static void __sword_takeoff_animation(void);
 static void __sword_landing_animation(void);
+static void __sword_draw_animation(void);
+static void __sword_draw_phase1_ready_cb(lv_anim_t *a);
+static void __sword_draw_phase2_animation(void);
 
 static void __takeoff_btn_event_cb(lv_event_t *e)
 {
@@ -73,6 +76,7 @@ static void __draw_sword_btn_event_cb(lv_event_t *e)
     
     if (code == LV_EVENT_CLICKED) {
         lv_label_set_text(sg_ui_control.status_label, "Drawing sword... ");
+        __sword_draw_animation(); // Start sword draw animation
         PR_DEBUG("Draw sword button clicked");
     }
 }
@@ -119,6 +123,51 @@ static void __sword_landing_animation(void)
     lv_anim_set_time(&sg_ui_control.sword_anim, 3000); // 3 seconds
     lv_anim_set_exec_cb(&sg_ui_control.sword_anim, (lv_anim_exec_xcb_t)lv_obj_set_y);
     lv_anim_set_path_cb(&sg_ui_control.sword_anim, lv_anim_path_ease_in);
+    lv_anim_start(&sg_ui_control.sword_anim);
+}
+
+static void __sword_draw_phase2_animation(void);
+
+static void __sword_draw_phase1_ready_cb(lv_anim_t *a)
+{
+    // After moving right, position at left edge and start phase 2
+    lv_obj_set_x(sg_ui_control.sword_img, -LV_HOR_RES); // Position at left edge
+    lv_obj_set_style_opa(sg_ui_control.sword_img, LV_OPA_TRANSP, 0); // Make transparent
+    __sword_draw_phase2_animation();
+}
+
+static void __sword_draw_phase2_animation(void)
+{
+    // Second phase: Move from left to center and fade in
+    lv_anim_init(&sg_ui_control.sword_anim);
+    lv_anim_set_var(&sg_ui_control.sword_anim, sg_ui_control.sword_img);
+    lv_anim_set_values(&sg_ui_control.sword_anim, -LV_HOR_RES, 0); // Move from left edge to center
+    lv_anim_set_time(&sg_ui_control.sword_anim, 2000); // 2 seconds to move from left
+    lv_anim_set_exec_cb(&sg_ui_control.sword_anim, (lv_anim_exec_xcb_t)lv_obj_set_x);
+    lv_anim_set_path_cb(&sg_ui_control.sword_anim, lv_anim_path_ease_out);
+    lv_anim_start(&sg_ui_control.sword_anim);
+    
+    // Fade in animation
+    lv_anim_t fade_anim;
+    lv_anim_init(&fade_anim);
+    lv_anim_set_var(&fade_anim, sg_ui_control.sword_img);
+    lv_anim_set_values(&fade_anim, LV_OPA_TRANSP, LV_OPA_COVER);
+    lv_anim_set_time(&fade_anim, 2000); // 2 seconds to fade in
+    lv_anim_set_exec_cb(&fade_anim, (lv_anim_exec_xcb_t)lv_obj_set_style_opa);
+    lv_anim_set_path_cb(&fade_anim, lv_anim_path_ease_out);
+    lv_anim_start(&fade_anim);
+}
+
+static void __sword_draw_animation(void)
+{
+    // First phase: Move sword to the right and fade out
+    lv_anim_init(&sg_ui_control.sword_anim);
+    lv_anim_set_var(&sg_ui_control.sword_anim, sg_ui_control.sword_img);
+    lv_anim_set_values(&sg_ui_control.sword_anim, 0, LV_HOR_RES); // Move from center to right edge
+    lv_anim_set_time(&sg_ui_control.sword_anim, 1500); // 1.5 seconds to move right
+    lv_anim_set_exec_cb(&sg_ui_control.sword_anim, (lv_anim_exec_xcb_t)lv_obj_set_x);
+    lv_anim_set_path_cb(&sg_ui_control.sword_anim, lv_anim_path_ease_in);
+    lv_anim_set_ready_cb(&sg_ui_control.sword_anim, __sword_draw_phase1_ready_cb);
     lv_anim_start(&sg_ui_control.sword_anim);
 }
 
