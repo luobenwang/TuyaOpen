@@ -16,6 +16,7 @@
 
 #include "font_awesome_symbols.h"
 #include "lvgl.h"
+#include "sword.c"
 
 #include "tal_log.h"
 #include "tkl_memory.h"
@@ -38,6 +39,7 @@ typedef struct {
     lv_obj_t *draw_sword_btn;
     lv_obj_t *rotate_btn;
     lv_obj_t *landing_btn;
+    lv_obj_t *sword_img;
 } UI_CONTROL_T;
 
 /***********************************************************
@@ -200,6 +202,11 @@ int ui_control_init(UI_FONT_T *ui_font)
     lv_obj_set_style_text_font(landing_label, ui_font->text, 0);
     lv_obj_center(landing_label);
     lv_obj_add_event_cb(sg_ui_control.landing_btn, __landing_btn_event_cb, LV_EVENT_ALL, NULL);
+
+    // Create sword image in the center of the screen
+    sg_ui_control.sword_img = lv_img_create(sg_ui_control.container);
+    lv_img_set_src(sg_ui_control.sword_img, &sword);
+    lv_obj_align(sg_ui_control.sword_img, LV_ALIGN_CENTER, 0, 0);
 
     PR_DEBUG("Control UI initialized successfully");
     return 0;
