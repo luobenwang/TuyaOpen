@@ -24,6 +24,8 @@
 #define SCREEN_CENTER_Y (WATCH_SCREEN_HEIGHT / 2)  /* 120 */
 #define SCREEN_CENTER (SCREEN_CENTER_X)            /* 120 */
 
+LV_FONT_DECLARE(font_puhui_18_2);
+
 /**********************
  *      TYPEDEFS
  **********************/
@@ -37,6 +39,11 @@ typedef struct {
     lv_obj_t *center_pin;
     lv_timer_t *time_timer;
     struct tm current_time;
+    
+    /* Text display components */
+    lv_obj_t *text_screen;       /* Independent text screen */
+    lv_obj_t *text_label;        /* Text label */
+    lv_timer_t *text_hide_timer; /* 10-second auto-hide timer */
 } centered_watch_t;
 
 /**********************
@@ -53,6 +60,8 @@ static void create_watch_marks(void);
 static void create_watch_hands(void);
 static void update_hands(void);
 static void on_time_tick(lv_timer_t *timer);
+static void create_text_screen(void);
+static void on_text_hide_timer(lv_timer_t *timer);
 
 /**********************
  *   GLOBAL FUNCTIONS
@@ -72,6 +81,9 @@ void lv_demo_vintage_watch(void)
            g_watch.current_time.tm_min, 
            g_watch.current_time.tm_sec);
     
+    /* Create text display screen */
+    create_text_screen();
+
     /* Create UI components */
     create_root();
     create_watch_face();
@@ -229,7 +241,7 @@ static void create_watch_marks(void)
         /* 创建数字标签 */
         lv_obj_t *label = lv_label_create(g_watch.screen);
         lv_label_set_text(label, hour_labels[i]);
-        lv_obj_set_style_text_font(label, &lv_font_montserrat_14, 0);
+        lv_obj_set_style_text_font(label, &font_puhui_18_2, 0);
         lv_obj_set_style_text_color(label, lv_color_hex(VINTAGE_TEXT_COLOR), 0);
         lv_obj_set_style_text_opa(label, LV_OPA_COVER, 0);
         lv_obj_set_pos(label, label_x - 8, label_y - 7);
@@ -445,4 +457,82 @@ static void on_time_tick(lv_timer_t *timer)
     (void)timer;
     printf("Timer tick - updating watch hands\n");
     vintage_watch_update_time();
+}
+
+static void create_text_screen(void)
+{
+    /* Create independent text screen with vintage parchment style */
+    g_watch.text_screen = lv_obj_create(NULL);
+    lv_obj_set_size(g_watch.text_screen, WATCH_SCREEN_WIDTH, WATCH_SCREEN_HEIGHT);
+    lv_obj_set_style_bg_color(g_watch.text_screen, lv_color_hex(0xF5E6D3), 0);  /* Warm beige parchment */
+    lv_obj_set_style_bg_opa(g_watch.text_screen, LV_OPA_COVER, 0);
+    lv_obj_set_style_radius(g_watch.text_screen, WATCH_RADIUS - 5, 0);
+    lv_obj_set_style_clip_corner(g_watch.text_screen, true, 0);
+    
+    /* Vintage golden border */
+    lv_obj_set_style_border_width(g_watch.text_screen, 6, 0);
+    lv_obj_set_style_border_color(g_watch.text_screen, lv_color_hex(VINTAGE_GOLD_COLOR), 0);
+    
+    /* Subtle shadow for depth */
+    lv_obj_set_style_shadow_width(g_watch.text_screen, 10, 0);
+    lv_obj_set_style_shadow_color(g_watch.text_screen, lv_color_hex(VINTAGE_SHADOW_COLOR), 0);
+    lv_obj_set_style_shadow_ofs_x(g_watch.text_screen, 2, 0);
+    lv_obj_set_style_shadow_ofs_y(g_watch.text_screen, 2, 0);
+    
+    /* Create centered text label */
+    g_watch.text_label = lv_label_create(g_watch.text_screen);
+    lv_obj_set_width(g_watch.text_label, WATCH_SCREEN_WIDTH - 60);  /* 30px margin on each side */
+    lv_obj_set_style_text_align(g_watch.text_label, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_color(g_watch.text_label, lv_color_hex(0x4A3728), 0);  /* Deep brown */
+    lv_obj_set_style_text_opa(g_watch.text_label, LV_OPA_COVER, 0);
+    lv_obj_set_style_text_font(g_watch.text_label, &font_puhui_18_2, 0);
+    lv_label_set_long_mode(g_watch.text_label, LV_LABEL_LONG_WRAP);  /* Auto wrap for long text */
+    lv_obj_set_style_text_letter_space(g_watch.text_label, 2, 0);
+    lv_obj_set_style_text_line_space(g_watch.text_label, 8, 0);
+    lv_obj_center(g_watch.text_label);
+    
+    printf("Created text screen with vintage parchment style\n");
+}
+
+static void on_text_hide_timer(lv_timer_t *timer)
+{
+    (void)timer;
+    
+    printf("Text hide timer triggered - switching back to watch screen\n");
+    
+    /* Switch back to watch screen */
+    lv_screen_load(g_watch.screen);
+    
+    /* Clean up timer */
+    if (g_watch.text_hide_timer) {
+        lv_timer_del(g_watch.text_hide_timer);
+        g_watch.text_hide_timer = NULL;
+    }
+}
+
+void vintage_watch_show_text(const char *text)
+{
+    if (!text || !g_watch.text_screen || !g_watch.text_label) {
+        printf("Error: Invalid text or text screen not initialized\n");
+        return;
+    }
+    
+    printf("Showing text: %s\n", text);
+    
+    /* Delete existing timer if any */
+    if (g_watch.text_hide_timer) {
+        lv_timer_del(g_watch.text_hide_timer);
+        g_watch.text_hide_timer = NULL;
+    }
+    
+    /* Update text content */
+    lv_label_set_text(g_watch.text_label, text);
+    
+    /* Switch to text screen */
+    lv_screen_load(g_watch.text_screen);
+    
+    /* Create 10-second auto-hide timer */
+    g_watch.text_hide_timer = lv_timer_create(on_text_hide_timer, 10000, NULL);
+    
+    printf("Text screen loaded, will auto-hide in 10 seconds\n");
 }

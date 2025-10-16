@@ -204,8 +204,90 @@ int ui_init(UI_FONT_T *ui_font)
     return 0;
 }
 
+extern void vintage_watch_show_text(const char *text);
+
 void ui_set_user_msg(const char *text)
 {
+    printf("ui_set_user_msg: %s\n", text);
+    
+    /* Check for historical years and events */
+    if (text) {
+        if (strstr(text, "一九四九") != NULL || strstr(text, "1949") != NULL) {
+            printf("Detected 1949 in user message, showing on watch\n");
+            vintage_watch_show_text("1949 中华人民共和国成立");
+        }
+        else if (strstr(text, "一九五零") != NULL || strstr(text, "1950") != NULL) {
+            printf("Detected 1950 in user message, showing on watch\n");
+            vintage_watch_show_text("1950 抗美援朝战争开始");
+        }
+        else if (strstr(text, "一九五三") != NULL || strstr(text, "1953") != NULL) {
+            printf("Detected 1953 in user message, showing on watch\n");
+            vintage_watch_show_text("1953 第一个五年计划开始");
+        }
+        else if (strstr(text, "一九五八") != NULL || strstr(text, "1958") != NULL) {
+            printf("Detected 1958 in user message, showing on watch\n");
+            vintage_watch_show_text("1958 大跃进运动开始");
+        }
+        else if (strstr(text, "一九七六") != NULL || strstr(text, "1976") != NULL) {
+            printf("Detected 1976 in user message, showing on watch\n");
+            vintage_watch_show_text("1976 毛泽东逝世");
+        }
+        else if (strstr(text, "一九七八") != NULL || strstr(text, "1978") != NULL) {
+            printf("Detected 1978 in user message, showing on watch\n");
+            vintage_watch_show_text("1978 改革开放开始");
+        }
+        else if (strstr(text, "一九七九") != NULL || strstr(text, "1979") != NULL) {
+            printf("Detected 1979 in user message, showing on watch\n");
+            vintage_watch_show_text("1979 中美建交");
+        }
+        else if (strstr(text, "一九八零") != NULL || strstr(text, "1980") != NULL) {
+            printf("Detected 1980 in user message, showing on watch\n");
+            vintage_watch_show_text("1980 深圳经济特区成立");
+        }
+        else if (strstr(text, "一九八四") != NULL || strstr(text, "1984") != NULL) {
+            printf("Detected 1984 in user message, showing on watch\n");
+            vintage_watch_show_text("1984 中英联合声明签署");
+        }
+        else if (strstr(text, "一九八六") != NULL || strstr(text, "1986") != NULL) {
+            printf("Detected 1986 in user message, showing on watch\n");
+            vintage_watch_show_text("1986 中国加入关贸总协定");
+        }
+
+ 
+        else if (strstr(text, "一九九零") != NULL || strstr(text, "1990") != NULL) {
+            printf("Detected 1990 in user message, showing on watch\n");
+            vintage_watch_show_text("1990 北京亚运会");
+        }
+        else if (strstr(text, "一九九二") != NULL || strstr(text, "1992") != NULL) {
+            printf("Detected 1992 in user message, showing on watch\n");
+            vintage_watch_show_text("1992 邓小平南巡讲话");
+        }
+        else if (strstr(text, "一九九七") != NULL || strstr(text, "1997") != NULL) {
+            printf("Detected 1997 in user message, showing on watch\n");
+            vintage_watch_show_text("1997 香港回归");
+        }
+        else if (strstr(text, "一九九九") != NULL || strstr(text, "1999") != NULL) {
+            printf("Detected 1999 in user message, showing on watch\n");
+            vintage_watch_show_text("1999 澳门回归");
+        }
+        else if (strstr(text, "二零零一") != NULL || strstr(text, "2001") != NULL) {
+            printf("Detected 2001 in user message, showing on watch\n");
+            vintage_watch_show_text("2001 中国加入WTO");
+        }
+        else if (strstr(text, "二零零八") != NULL || strstr(text, "2008") != NULL) {
+            printf("Detected 2008 in user message, showing on watch\n");
+            vintage_watch_show_text("2008 北京奥运会");
+        }
+        else if (strstr(text, "二零一零") != NULL || strstr(text, "2010") != NULL) {
+            printf("Detected 2010 in user message, showing on watch\n");
+            vintage_watch_show_text("2010 上海世博会");
+        }
+        else if (strstr(text, "中国") != NULL) {
+            printf("Detected '中国' in user message, showing on watch\n");
+            vintage_watch_show_text("1949 新中国");
+        }
+    }
+
     if (sg_ui.ui.content == NULL) {
         return;
     }

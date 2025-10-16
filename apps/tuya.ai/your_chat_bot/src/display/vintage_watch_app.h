@@ -82,6 +82,12 @@ void vintage_watch_start_smooth_hands(void);
 void vintage_watch_stop_smooth_hands(void);
 void vintage_watch_set_animation_speed(float speed);
 
+/* Text display function */
+void vintage_watch_show_text(const char *text);
+
+/* Time sync function */
+void vintage_watch_set_sync_time(time_t sync_time);
+
 #ifdef __cplusplus
 }
 #endif
