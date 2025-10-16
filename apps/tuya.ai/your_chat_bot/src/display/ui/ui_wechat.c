@@ -215,7 +215,7 @@ void ui_set_user_msg(const char *text)
     
     /* Check for theme change commands first */
     if (text) {
-        if (strstr(text, "深色主题") != NULL || strstr(text, "深色模式") != NULL || 
+        if (strstr(text, "科技") != NULL || strstr(text, "深色模式") != NULL || 
             strstr(text, "dark theme") != NULL || strstr(text, "dark mode") != NULL) {
             printf("Detected dark theme command, switching to dark theme\n");
             extern void vintage_watch_set_dark_theme(void);
@@ -224,7 +224,7 @@ void ui_set_user_msg(const char *text)
             return;
         }
         
-        if (strstr(text, "浅色主题") != NULL || strstr(text, "浅色模式") != NULL || 
+        if (strstr(text, "复古") != NULL || strstr(text, "浅色模式") != NULL || 
             strstr(text, "light theme") != NULL || strstr(text, "light mode") != NULL) {
             printf("Detected light theme command, switching to light theme\n");
             extern void vintage_watch_set_light_theme(void);
@@ -233,7 +233,7 @@ void ui_set_user_msg(const char *text)
             return;
         }
         
-        if (strstr(text, "蓝色主题") != NULL || strstr(text, "blue theme") != NULL) {
+        if (strstr(text, "星空模式") != NULL || strstr(text, "blue theme") != NULL) {
             printf("Detected blue theme command, switching to blue theme\n");
             extern void vintage_watch_set_custom_theme(uint32_t bg_color, uint32_t face_color, uint32_t hand_color);
             vintage_watch_set_custom_theme(0x000080, 0x1E3A8A, 0xFFFFFF); // Navy blue theme
@@ -241,7 +241,7 @@ void ui_set_user_msg(const char *text)
             return;
         }
         
-        if (strstr(text, "红色主题") != NULL || strstr(text, "red theme") != NULL) {
+        if (strstr(text, "幻彩模式") != NULL || strstr(text, "red theme") != NULL) {
             printf("Detected red theme command, switching to red theme\n");
             extern void vintage_watch_set_custom_theme(uint32_t bg_color, uint32_t face_color, uint32_t hand_color);
             vintage_watch_set_custom_theme(0x800000, 0xDC2626, 0xFFFFFF); // Red theme
