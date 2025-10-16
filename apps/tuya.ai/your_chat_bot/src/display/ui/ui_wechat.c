@@ -24,6 +24,7 @@
 #include "tuya_ringbuf.h"
 #include "tkl_mutex.h"
 
+
 /***********************************************************
 ************************macro define************************
 ***********************************************************/
@@ -80,6 +81,8 @@ typedef struct {
 ***********************variable define**********************
 ***********************************************************/
 static APP_CHATBOT_UI_T sg_ui = {0};
+
+/* Watch style variables - removed duplicate definition */
 
 /***********************************************************
 ***********************function define**********************
@@ -209,6 +212,43 @@ extern void vintage_watch_show_text(const char *text);
 void ui_set_user_msg(const char *text)
 {
     printf("ui_set_user_msg: %s\n", text);
+    
+    /* Check for theme change commands first */
+    if (text) {
+        if (strstr(text, "深色主题") != NULL || strstr(text, "深色模式") != NULL || 
+            strstr(text, "dark theme") != NULL || strstr(text, "dark mode") != NULL) {
+            printf("Detected dark theme command, switching to dark theme\n");
+            extern void vintage_watch_set_dark_theme(void);
+            vintage_watch_set_dark_theme();
+            printf("Dark theme applied successfully\n");
+            return;
+        }
+        
+        if (strstr(text, "浅色主题") != NULL || strstr(text, "浅色模式") != NULL || 
+            strstr(text, "light theme") != NULL || strstr(text, "light mode") != NULL) {
+            printf("Detected light theme command, switching to light theme\n");
+            extern void vintage_watch_set_light_theme(void);
+            vintage_watch_set_light_theme();
+            printf("Light theme applied successfully\n");
+            return;
+        }
+        
+        if (strstr(text, "蓝色主题") != NULL || strstr(text, "blue theme") != NULL) {
+            printf("Detected blue theme command, switching to blue theme\n");
+            extern void vintage_watch_set_custom_theme(uint32_t bg_color, uint32_t face_color, uint32_t hand_color);
+            vintage_watch_set_custom_theme(0x000080, 0x1E3A8A, 0xFFFFFF); // Navy blue theme
+            printf("Blue theme applied successfully\n");
+            return;
+        }
+        
+        if (strstr(text, "红色主题") != NULL || strstr(text, "red theme") != NULL) {
+            printf("Detected red theme command, switching to red theme\n");
+            extern void vintage_watch_set_custom_theme(uint32_t bg_color, uint32_t face_color, uint32_t hand_color);
+            vintage_watch_set_custom_theme(0x800000, 0xDC2626, 0xFFFFFF); // Red theme
+            printf("Red theme applied successfully\n");
+            return;
+        }
+    }
     
     /* Check for historical years and events */
     if (text) {

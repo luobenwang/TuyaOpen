@@ -47,6 +47,15 @@ extern "C" {
 #define VINTAGE_PLATINUM_COLOR 0xC0C0C0 /* Platinum accents */
 #define VINTAGE_ROSE_GOLD 0xE8B4B8     /* Rose gold accents */
 
+/* Dark theme colors */
+#define DARK_BG_COLOR 0x000000         /* Pure black background */
+#define DARK_FACE_COLOR 0x1A1A1A       /* Dark gray face */
+#define DARK_ACCENT_COLOR 0x00FF00     /* Green accent */
+#define DARK_HAND_COLOR 0xFFFFFF       /* White hands */
+#define DARK_TEXT_COLOR 0xFFFFFF      /* White text */
+#define DARK_BORDER_COLOR 0x333333     /* Dark gray border */
+#define DARK_SHADOW_COLOR 0x000000     /* Black shadow */
+
 /* Watch modes */
 typedef enum {
     WATCH_MODE_ANALOG = 0,
@@ -76,6 +85,11 @@ void vintage_watch_toggle_seconds(void);
 void vintage_watch_set_face_color(uint32_t color);
 void vintage_watch_set_hands_color(uint32_t color);
 void vintage_watch_set_text_color(uint32_t color);
+
+/* Theme functions */
+void vintage_watch_set_dark_theme(void);
+void vintage_watch_set_light_theme(void);
+void vintage_watch_set_custom_theme(uint32_t bg_color, uint32_t face_color, uint32_t hand_color);
 
 /* Animation controls */
 void vintage_watch_start_smooth_hands(void);

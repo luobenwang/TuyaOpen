@@ -83,7 +83,7 @@ void lv_demo_vintage_watch(void)
     
     /* Create text display screen */
     create_text_screen();
-
+    
     /* Create UI components */
     create_root();
     create_watch_face();
@@ -146,6 +146,134 @@ void vintage_watch_toggle_seconds(void) {}
 void vintage_watch_set_face_color(uint32_t color) { (void)color; }
 void vintage_watch_set_hands_color(uint32_t color) { (void)color; }
 void vintage_watch_set_text_color(uint32_t color) { (void)color; }
+
+/**
+ * @brief Set dark theme for the watch
+ */
+void vintage_watch_set_dark_theme(void)
+{
+    printf("Setting dark theme for watch\n");
+    
+    if (g_watch.screen) {
+        lv_obj_set_style_bg_color(g_watch.screen, lv_color_hex(DARK_BG_COLOR), 0);
+        printf("Screen background set to dark: 0x%06X\n", DARK_BG_COLOR);
+    }
+    
+    if (g_watch.viewport) {
+        lv_obj_set_style_bg_color(g_watch.viewport, lv_color_hex(DARK_BG_COLOR), 0);
+        printf("Viewport background set to dark: 0x%06X\n", DARK_BG_COLOR);
+    }
+    
+    if (g_watch.watch_face) {
+        lv_obj_set_style_bg_color(g_watch.watch_face, lv_color_hex(DARK_FACE_COLOR), 0);
+        lv_obj_set_style_border_color(g_watch.watch_face, lv_color_hex(DARK_BORDER_COLOR), 0);
+        lv_obj_set_style_shadow_color(g_watch.watch_face, lv_color_hex(DARK_SHADOW_COLOR), 0);
+        printf("Watch face set to dark theme: 0x%06X\n", DARK_FACE_COLOR);
+    }
+    
+    if (g_watch.hour_hand) {
+        lv_obj_set_style_bg_color(g_watch.hour_hand, lv_color_hex(DARK_HAND_COLOR), 0);
+        printf("Hour hand set to white: 0x%06X\n", DARK_HAND_COLOR);
+    }
+    
+    if (g_watch.minute_hand) {
+        lv_obj_set_style_bg_color(g_watch.minute_hand, lv_color_hex(DARK_HAND_COLOR), 0);
+        printf("Minute hand set to white: 0x%06X\n", DARK_HAND_COLOR);
+    }
+    
+    if (g_watch.second_hand) {
+        lv_obj_set_style_bg_color(g_watch.second_hand, lv_color_hex(DARK_ACCENT_COLOR), 0);
+        printf("Second hand set to green: 0x%06X\n", DARK_ACCENT_COLOR);
+    }
+    
+    // Force refresh to apply changes
+    lv_refr_now(NULL);
+    printf("Dark theme applied successfully\n");
+}
+
+/**
+ * @brief Set light theme for the watch (original vintage theme)
+ */
+void vintage_watch_set_light_theme(void)
+{
+    printf("Setting light theme for watch\n");
+    
+    if (g_watch.screen) {
+        lv_obj_set_style_bg_color(g_watch.screen, lv_color_hex(VINTAGE_BG_COLOR), 0);
+        printf("Screen background set to vintage: 0x%06X\n", VINTAGE_BG_COLOR);
+    }
+    
+    if (g_watch.viewport) {
+        lv_obj_set_style_bg_color(g_watch.viewport, lv_color_white(), 0);
+        printf("Viewport background set to white\n");
+    }
+    
+    if (g_watch.watch_face) {
+        lv_obj_set_style_bg_color(g_watch.watch_face, lv_color_hex(VINTAGE_FACE_COLOR), 0);
+        lv_obj_set_style_border_color(g_watch.watch_face, lv_color_hex(VINTAGE_GOLD_COLOR), 0);
+        lv_obj_set_style_shadow_color(g_watch.watch_face, lv_color_hex(VINTAGE_SHADOW_COLOR), 0);
+        printf("Watch face set to vintage theme: 0x%06X\n", VINTAGE_FACE_COLOR);
+    }
+    
+    if (g_watch.hour_hand) {
+        lv_obj_set_style_bg_color(g_watch.hour_hand, lv_color_hex(VINTAGE_DARK_GOLD), 0);
+        printf("Hour hand set to vintage gold: 0x%06X\n", VINTAGE_DARK_GOLD);
+    }
+    
+    if (g_watch.minute_hand) {
+        lv_obj_set_style_bg_color(g_watch.minute_hand, lv_color_hex(VINTAGE_DARK_GOLD), 0);
+        printf("Minute hand set to vintage gold: 0x%06X\n", VINTAGE_DARK_GOLD);
+    }
+    
+    if (g_watch.second_hand) {
+        lv_obj_set_style_bg_color(g_watch.second_hand, lv_color_hex(VINTAGE_ACCENT_COLOR), 0);
+        printf("Second hand set to lavender: 0x%06X\n", VINTAGE_ACCENT_COLOR);
+    }
+    
+    // Force refresh to apply changes
+    lv_refr_now(NULL);
+    printf("Light theme applied successfully\n");
+}
+
+/**
+ * @brief Set custom theme for the watch
+ * @param bg_color Background color
+ * @param face_color Face color
+ * @param hand_color Hand color
+ */
+void vintage_watch_set_custom_theme(uint32_t bg_color, uint32_t face_color, uint32_t hand_color)
+{
+    printf("Setting custom theme for watch\n");
+    printf("Background: 0x%06X, Face: 0x%06X, Hands: 0x%06X\n", bg_color, face_color, hand_color);
+    
+    if (g_watch.screen) {
+        lv_obj_set_style_bg_color(g_watch.screen, lv_color_hex(bg_color), 0);
+    }
+    
+    if (g_watch.viewport) {
+        lv_obj_set_style_bg_color(g_watch.viewport, lv_color_hex(bg_color), 0);
+    }
+    
+    if (g_watch.watch_face) {
+        lv_obj_set_style_bg_color(g_watch.watch_face, lv_color_hex(face_color), 0);
+    }
+    
+    if (g_watch.hour_hand) {
+        lv_obj_set_style_bg_color(g_watch.hour_hand, lv_color_hex(hand_color), 0);
+    }
+    
+    if (g_watch.minute_hand) {
+        lv_obj_set_style_bg_color(g_watch.minute_hand, lv_color_hex(hand_color), 0);
+    }
+    
+    if (g_watch.second_hand) {
+        lv_obj_set_style_bg_color(g_watch.second_hand, lv_color_hex(hand_color), 0);
+    }
+    
+    // Force refresh to apply changes
+    lv_refr_now(NULL);
+    printf("Custom theme applied successfully\n");
+}
 void vintage_watch_start_smooth_hands(void) {}
 void vintage_watch_stop_smooth_hands(void) {}
 void vintage_watch_set_animation_speed(float speed) { (void)speed; }
@@ -158,8 +286,9 @@ static void create_root(void)
 {
     g_watch.screen = lv_obj_create(NULL);
     lv_obj_set_size(g_watch.screen, WATCH_SCREEN_WIDTH, WATCH_SCREEN_HEIGHT);
-    lv_obj_set_style_bg_color(g_watch.screen, lv_color_hex(VINTAGE_BG_COLOR), 0);
+    lv_obj_set_style_bg_color(g_watch.screen, lv_color_hex(DARK_BG_COLOR), 0);
     lv_obj_set_style_bg_opa(g_watch.screen, LV_OPA_COVER, 0);
+    printf("Screen initialized with dark background: 0x%06X\n", DARK_BG_COLOR);
     
     /* Circular viewport */
     g_watch.viewport = lv_obj_create(g_watch.screen);
@@ -168,31 +297,35 @@ static void create_root(void)
     lv_obj_set_style_radius(g_watch.viewport, WATCH_RADIUS, 0);
     lv_obj_set_style_clip_corner(g_watch.viewport, true, 0);
     lv_obj_set_style_border_width(g_watch.viewport, 0, 0);
-    lv_obj_set_style_bg_color(g_watch.viewport, lv_color_white(), 0);
+    lv_obj_set_style_bg_color(g_watch.viewport, lv_color_hex(DARK_BG_COLOR), 0);
     lv_obj_set_style_bg_opa(g_watch.viewport, LV_OPA_COVER, 0);
+    printf("Viewport initialized with dark background: 0x%06X\n", DARK_BG_COLOR);
     
     lv_screen_load(g_watch.screen);
 }
 
 static void create_watch_face(void)
 {
-    /* Main watch face with vintage styling */
+    /* Main watch face with dark theme styling */
     g_watch.watch_face = lv_obj_create(g_watch.viewport);
     lv_obj_set_size(g_watch.watch_face, WATCH_SCREEN_WIDTH - 10, WATCH_SCREEN_HEIGHT - 10);
     lv_obj_center(g_watch.watch_face);
     lv_obj_set_style_radius(g_watch.watch_face, (WATCH_SCREEN_WIDTH - 10) / 2, 0);
-    lv_obj_set_style_bg_color(g_watch.watch_face, lv_color_hex(VINTAGE_FACE_COLOR), 0);
+    lv_obj_set_style_bg_color(g_watch.watch_face, lv_color_hex(DARK_FACE_COLOR), 0);
     lv_obj_set_style_bg_opa(g_watch.watch_face, LV_OPA_COVER, 0);
+    printf("Watch face initialized with dark theme: 0x%06X\n", DARK_FACE_COLOR);
     
-    /* 复古边框效果 */
+    /* Dark theme border effect */
     lv_obj_set_style_border_width(g_watch.watch_face, 4, 0);
-    lv_obj_set_style_border_color(g_watch.watch_face, lv_color_hex(VINTAGE_GOLD_COLOR), 0);
+    lv_obj_set_style_border_color(g_watch.watch_face, lv_color_hex(DARK_BORDER_COLOR), 0);
+    printf("Watch face border set to dark: 0x%06X\n", DARK_BORDER_COLOR);
     
-    /* 添加阴影效果 */
+    /* Dark theme shadow effect */
     lv_obj_set_style_shadow_width(g_watch.watch_face, 8, 0);
-    lv_obj_set_style_shadow_color(g_watch.watch_face, lv_color_hex(VINTAGE_SHADOW_COLOR), 0);
+    lv_obj_set_style_shadow_color(g_watch.watch_face, lv_color_hex(DARK_SHADOW_COLOR), 0);
     lv_obj_set_style_shadow_ofs_x(g_watch.watch_face, 2, 0);
     lv_obj_set_style_shadow_ofs_y(g_watch.watch_face, 2, 0);
+    printf("Watch face shadow set to dark: 0x%06X\n", DARK_SHADOW_COLOR);
     
     lv_obj_clear_flag(g_watch.watch_face, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_clear_flag(g_watch.watch_face, LV_OBJ_FLAG_SCROLLABLE);
@@ -215,7 +348,7 @@ static void create_watch_marks(void)
         lv_obj_remove_style_all(mark);
         lv_obj_set_size(mark, 2, 10);  /* 统一：2px宽，10px长 */
         lv_obj_set_pos(mark, mark_x - 1, mark_y - 5);
-        lv_obj_set_style_bg_color(mark, lv_color_hex(VINTAGE_GOLD_COLOR), 0);
+        lv_obj_set_style_bg_color(mark, lv_color_hex(DARK_HAND_COLOR), 0);
         lv_obj_set_style_bg_opa(mark, LV_OPA_COVER, 0);
         lv_obj_set_style_radius(mark, 1, 0);
         lv_obj_clear_flag(mark, LV_OBJ_FLAG_CLICKABLE);
@@ -242,7 +375,7 @@ static void create_watch_marks(void)
         lv_obj_t *label = lv_label_create(g_watch.screen);
         lv_label_set_text(label, hour_labels[i]);
         lv_obj_set_style_text_font(label, &font_puhui_18_2, 0);
-        lv_obj_set_style_text_color(label, lv_color_hex(VINTAGE_TEXT_COLOR), 0);
+        lv_obj_set_style_text_color(label, lv_color_hex(DARK_TEXT_COLOR), 0);
         lv_obj_set_style_text_opa(label, LV_OPA_COVER, 0);
         lv_obj_set_pos(label, label_x - 8, label_y - 7);
         lv_obj_clear_flag(label, LV_OBJ_FLAG_CLICKABLE);
@@ -266,7 +399,7 @@ static void create_watch_marks(void)
         lv_obj_remove_style_all(mark);
         lv_obj_set_size(mark, 1, 3);
         lv_obj_set_pos(mark, mark_x, mark_y - 1);
-        lv_obj_set_style_bg_color(mark, lv_color_hex(VINTAGE_GOLD_COLOR), 0);
+        lv_obj_set_style_bg_color(mark, lv_color_hex(DARK_HAND_COLOR), 0);
         lv_obj_set_style_bg_opa(mark, LV_OPA_COVER, 0);
         lv_obj_clear_flag(mark, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_clear_flag(mark, LV_OBJ_FLAG_SCROLLABLE);
@@ -277,14 +410,14 @@ static void create_watch_marks(void)
         lv_obj_set_style_transform_pivot_y(mark, 1, 0);
     }
     
-    /* 添加典雅的装饰环 - 多层精致效果 */
+    /* 添加典雅的装饰环 - 深色主题效果 */
     lv_obj_t *decorative_ring = lv_obj_create(g_watch.screen);
     lv_obj_remove_style_all(decorative_ring);
     lv_obj_set_size(decorative_ring, WATCH_RADIUS * 2 - 10, WATCH_RADIUS * 2 - 10);
     lv_obj_center(decorative_ring);
     lv_obj_set_style_radius(decorative_ring, WATCH_RADIUS - 5, 0);
     lv_obj_set_style_border_width(decorative_ring, 2, 0);
-    lv_obj_set_style_border_color(decorative_ring, lv_color_hex(VINTAGE_GOLD_COLOR), 0);
+    lv_obj_set_style_border_color(decorative_ring, lv_color_hex(DARK_BORDER_COLOR), 0);
     lv_obj_set_style_bg_opa(decorative_ring, LV_OPA_TRANSP, 0);
     
     /* 添加中层装饰环 */
@@ -294,7 +427,7 @@ static void create_watch_marks(void)
     lv_obj_center(middle_ring);
     lv_obj_set_style_radius(middle_ring, WATCH_RADIUS - 8, 0);
     lv_obj_set_style_border_width(middle_ring, 1, 0);
-    lv_obj_set_style_border_color(middle_ring, lv_color_hex(VINTAGE_PLATINUM_COLOR), 0);
+    lv_obj_set_style_border_color(middle_ring, lv_color_hex(DARK_BORDER_COLOR), 0);
     lv_obj_set_style_bg_opa(middle_ring, LV_OPA_TRANSP, 0);
     lv_obj_clear_flag(middle_ring, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_clear_flag(middle_ring, LV_OBJ_FLAG_SCROLLABLE);
@@ -306,7 +439,7 @@ static void create_watch_marks(void)
     lv_obj_center(inner_ring);
     lv_obj_set_style_radius(inner_ring, WATCH_RADIUS - 11, 0);
     lv_obj_set_style_border_width(inner_ring, 1, 0);
-    lv_obj_set_style_border_color(inner_ring, lv_color_hex(VINTAGE_DARK_GOLD), 0);
+    lv_obj_set_style_border_color(inner_ring, lv_color_hex(DARK_BORDER_COLOR), 0);
     lv_obj_set_style_bg_opa(inner_ring, LV_OPA_TRANSP, 0);
     lv_obj_clear_flag(inner_ring, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_clear_flag(inner_ring, LV_OBJ_FLAG_SCROLLABLE);
@@ -344,37 +477,40 @@ static void create_watch_hands(void)
     g_watch.hour_hand = lv_obj_create(g_watch.screen);
     lv_obj_remove_style_all(g_watch.hour_hand);
     lv_obj_set_size(g_watch.hour_hand, 6, 40);  /* 6px thick, 40px long - vertical */
-    lv_obj_set_style_bg_color(g_watch.hour_hand, lv_color_hex(VINTAGE_GOLD_COLOR), 0);
+    lv_obj_set_style_bg_color(g_watch.hour_hand, lv_color_hex(DARK_HAND_COLOR), 0);
     lv_obj_set_style_bg_opa(g_watch.hour_hand, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(g_watch.hour_hand, 3, 0);
     /* Position at screen center, extending upward to 12 o'clock */
     lv_obj_set_pos(g_watch.hour_hand, SCREEN_CENTER_X - 3, SCREEN_CENTER_Y - 40);
     lv_obj_clear_flag(g_watch.hour_hand, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_clear_flag(g_watch.hour_hand, LV_OBJ_FLAG_SCROLLABLE);
+    printf("Hour hand initialized with dark theme: 0x%06X\n", DARK_HAND_COLOR);
     
     /* Minute hand - positioned at screen center, extending upward to 12 o'clock */
     g_watch.minute_hand = lv_obj_create(g_watch.screen);
     lv_obj_remove_style_all(g_watch.minute_hand);
     lv_obj_set_size(g_watch.minute_hand, 4, 55);  /* 4px thick, 55px long - vertical */
-    lv_obj_set_style_bg_color(g_watch.minute_hand, lv_color_hex(VINTAGE_GOLD_COLOR), 0);
+    lv_obj_set_style_bg_color(g_watch.minute_hand, lv_color_hex(DARK_HAND_COLOR), 0);
     lv_obj_set_style_bg_opa(g_watch.minute_hand, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(g_watch.minute_hand, 2, 0);
     /* Position at screen center, extending upward to 12 o'clock */
     lv_obj_set_pos(g_watch.minute_hand, SCREEN_CENTER_X - 2, SCREEN_CENTER_Y - 55);
     lv_obj_clear_flag(g_watch.minute_hand, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_clear_flag(g_watch.minute_hand, LV_OBJ_FLAG_SCROLLABLE);
+    printf("Minute hand initialized with dark theme: 0x%06X\n", DARK_HAND_COLOR);
     
     /* Second hand - positioned at screen center, extending upward to 12 o'clock */
     g_watch.second_hand = lv_obj_create(g_watch.screen);
     lv_obj_remove_style_all(g_watch.second_hand);
     lv_obj_set_size(g_watch.second_hand, 2, 65);  /* 2px thick, 65px long - vertical */
-    lv_obj_set_style_bg_color(g_watch.second_hand, lv_color_hex(0xFF0000), 0);
+    lv_obj_set_style_bg_color(g_watch.second_hand, lv_color_hex(DARK_ACCENT_COLOR), 0);
     lv_obj_set_style_bg_opa(g_watch.second_hand, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(g_watch.second_hand, 1, 0);
     /* Position at screen center, extending upward to 12 o'clock */
     lv_obj_set_pos(g_watch.second_hand, SCREEN_CENTER_X - 1, SCREEN_CENTER_Y - 65);
     lv_obj_clear_flag(g_watch.second_hand, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_clear_flag(g_watch.second_hand, LV_OBJ_FLAG_SCROLLABLE);
+    printf("Second hand initialized with dark theme: 0x%06X\n", DARK_ACCENT_COLOR);
     
     printf("Created watch hands: Hour at (%d,%d), Minute at (%d,%d), Second at (%d,%d)\n",
            SCREEN_CENTER_X, SCREEN_CENTER_Y - 3,
