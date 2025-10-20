@@ -34,6 +34,7 @@
 ***********************************************************/
 typedef struct {
     lv_obj_t *container;
+    lv_obj_t *title_label;
     lv_obj_t *status_label;
     lv_obj_t *takeoff_btn;
     lv_obj_t *draw_sword_btn;
@@ -224,12 +225,27 @@ int ui_control_init(UI_FONT_T *ui_font)
     lv_obj_set_style_radius(sg_ui_control.container, 0, 0);
     lv_obj_clear_flag(sg_ui_control.container, LV_OBJ_FLAG_SCROLLABLE);
 
-    // Create status label at the top
+    // Create title label at the very top with bright colors and large font
+    sg_ui_control.title_label = lv_label_create(sg_ui_control.container);
+    lv_label_set_text(sg_ui_control.title_label, "T5AI 飞剑");
+    lv_obj_set_style_text_color(sg_ui_control.title_label, lv_color_hex(0xFF6B35), 0); // Bright orange color
+    lv_obj_set_style_text_font(sg_ui_control.title_label, ui_font->text, 0);
+    lv_obj_set_style_text_opa(sg_ui_control.title_label, LV_OPA_COVER, 0);
+    
+    // Set size and align to center
+    lv_obj_set_size(sg_ui_control.title_label, LV_HOR_RES, 60);
+    lv_obj_align(sg_ui_control.title_label, LV_ALIGN_TOP_MID, 0, 5);
+    
+    // Use text style to make it appear larger - set letter spacing and line height
+    lv_obj_set_style_text_letter_space(sg_ui_control.title_label, 3, 0); // Increase letter spacing
+    lv_obj_set_style_text_line_space(sg_ui_control.title_label, 10, 0);  // Increase line height
+
+    // Create status label below title (moved down 60 pixels from original position)
     sg_ui_control.status_label = lv_label_create(sg_ui_control.container);
     lv_label_set_text(sg_ui_control.status_label, "Control Panel Ready");
     lv_obj_set_style_text_color(sg_ui_control.status_label, lv_color_white(), 0);
     lv_obj_set_style_text_font(sg_ui_control.status_label, ui_font->text, 0);
-    lv_obj_align(sg_ui_control.status_label, LV_ALIGN_TOP_MID, 0, 20);
+    lv_obj_align(sg_ui_control.status_label, LV_ALIGN_TOP_MID, 0, 80); // 20 + 60 = 80
     lv_obj_set_width(sg_ui_control.status_label, LV_HOR_RES - 20);
 
     // Calculate button positions - 4 buttons in a row at the bottom
