@@ -23,143 +23,142 @@
 #include "tkl_output.h"
 #include "tkl_pwm.h"
 
-/***********************************************************
-*************************micro define***********************
-***********************************************************/
-#define PWM_DUTY          5000 // 50% duty
-#define PWM_FREQUENCY     10000
-#define TASK_PWM_PRIORITY THREAD_PRIO_2
-#define TASK_PWM_SIZE     4096
-
-/***********************************************************
-***********************typedef define***********************
-***********************************************************/
-#define PWM_ID TUYA_PWM_NUM_0
-
-/***********************************************************
-***********************variable define**********************
-***********************************************************/
-static THREAD_HANDLE sg_pwm_handle;
-
-/***********************************************************
-***********************function define**********************
-***********************************************************/
-
+// 包含舵机控制头文件
+#include "c_port/otto_ninja/otto_ninja_app_servo.h"
+ 
+ /***********************************************************
+ *************************micro define***********************
+ ***********************************************************/
+ #define PWM_DUTY          5000 // 50% duty
+ #define PWM_FREQUENCY     10000
+ #define TASK_PWM_PRIORITY THREAD_PRIO_2
+ #define TASK_PWM_SIZE     4096
+ 
+ /***********************************************************
+ ***********************typedef define***********************
+ ***********************************************************/
+ #define PWM_ID TUYA_PWM_NUM_0
+ 
+ /***********************************************************
+ ***********************variable define**********************
+ ***********************************************************/
+ static THREAD_HANDLE sg_pwm_handle;
+ 
+ /***********************************************************
+ ***********************function define**********************
+ ***********************************************************/
+ 
 /**
- * @brief pwm task
+ * @brief pwm task - 舵机运动控制演示
  *
  * @param[in] param:Task parameters
  * @return none
  */
 static void __example_pwm_task(void *param)
 {
-    OPERATE_RET rt = OPRT_OK;
-    uint32_t frequency = PWM_FREQUENCY;
-    uint32_t count = 0;
+    PR_NOTICE("=== OttoNinja Servo Control Task Start ===");
 
-    /*pwm init*/
-    TUYA_PWM_BASE_CFG_T pwm_cfg = {
-        .duty = PWM_DUTY, /* 1-10000 */
-        .frequency = PWM_FREQUENCY,
-        .polarity = TUYA_PWM_NEGATIVE,
-    };
-    TUYA_CALL_ERR_GOTO(tkl_pwm_init(PWM_ID, &pwm_cfg), __EXIT);
+    // 1. 初始化Tuya平台接口
+    platform_tuya_init();
+    PR_NOTICE("Platform initialized");
 
-    /*start PWM3*/
-    TUYA_CALL_ERR_GOTO(tkl_pwm_start(PWM_ID), __EXIT);
-    PR_NOTICE("PWM%d start", PWM_ID);
+    // 2. 初始化舵机控制系统
+    servo_control_init();
+    PR_NOTICE("Servo control system initialized");
 
+        // 1. 初始化
+    ninja_init();
+    delay_ms(1000);
+
+        // 2. 设置行走模式
+    //ninja_set_walk();
+        delay_ms(500);
+
+            // // 11. 设置滚动模式
+            PR_NOTICE("Setting roll mode");
+   ninja_set_roll();
+    //delay_ms(500);
+
+    // 3. 执行演示 - 依次执行所有动作
+    PR_NOTICE("Starting motion show...");
     while (1) {
-        /*Frequency, duty cycle settings*/
-        TUYA_CALL_ERR_LOG(tkl_pwm_frequency_set(PWM_ID, frequency));
-        TUYA_CALL_ERR_LOG(tkl_pwm_start(PWM_ID));
-        PR_NOTICE("PWM%d , frequency: %d", PWM_ID, frequency);
-
-        /*close pwm*/
-        if (count >= 3) {
-            break;
-        }
-        count++;
-        frequency = frequency + 10000;
-
-        tal_system_sleep(2000);
+        ninja_show();
+        PR_NOTICE("Motion show completed, restarting...");
+        tal_system_sleep(2000);  // 等待2秒后重新开始
     }
 
-    TUYA_CALL_ERR_LOG(tkl_pwm_stop(PWM_ID));
-
-__EXIT:
     PR_NOTICE("PWM task is finished, will delete");
     tal_thread_delete(sg_pwm_handle);
     return;
 }
-
-/**
- * @brief user_main
- *
- * @return none
- */
-void user_main(void)
-{
-    OPERATE_RET rt = OPRT_OK;
-
-    /* basic init */
-    tal_log_init(TAL_LOG_LEVEL_DEBUG, 1024, (TAL_LOG_OUTPUT_CB)tkl_log_output);
-
-    PR_NOTICE("Application information:");
-    PR_NOTICE("Project name:        %s", PROJECT_NAME);
-    PR_NOTICE("App version:         %s", PROJECT_VERSION);
-    PR_NOTICE("Compile time:        %s", __DATE__);
-    PR_NOTICE("TuyaOpen version:    %s", OPEN_VERSION);
-    PR_NOTICE("TuyaOpen commit-id:  %s", OPEN_COMMIT);
-    PR_NOTICE("Platform chip:       %s", PLATFORM_CHIP);
-    PR_NOTICE("Platform board:      %s", PLATFORM_BOARD);
-    PR_NOTICE("Platform commit-id:  %s", PLATFORM_COMMIT);
-
-    /* a pwm thread */
-    THREAD_CFG_T pwm_param = {.priority = TASK_PWM_PRIORITY, .stackDepth = TASK_PWM_SIZE, .thrdname = "pwm_task"};
-    TUYA_CALL_ERR_LOG(tal_thread_create_and_start(&sg_pwm_handle, NULL, NULL, __example_pwm_task, NULL, &pwm_param));
-
-    return;
-}
-
-/**
- * @brief main
- *
- * @param argc
- * @param argv
- * @return void
- */
-#if OPERATING_SYSTEM == SYSTEM_LINUX
-void main(int argc, char *argv[])
-{
-    user_main();
-
-    while (1) {
-        tal_system_sleep(500);
-    }
-}
-#else
-
-/* Tuya thread handle */
-static THREAD_HANDLE ty_app_thread = NULL;
-
-/**
- * @brief  task thread
- *
- * @param[in] arg:Parameters when creating a task
- * @return none
- */
-static void tuya_app_thread(void *arg)
-{
-    user_main();
-
-    tal_thread_delete(ty_app_thread);
-    ty_app_thread = NULL;
-}
-
-void tuya_app_main(void)
-{
-    THREAD_CFG_T thrd_param = {4096, 4, "tuya_app_main"};
-    tal_thread_create_and_start(&ty_app_thread, NULL, NULL, tuya_app_thread, NULL, &thrd_param);
-}
-#endif
+ 
+ /**
+  * @brief user_main
+  *
+  * @return none
+  */
+ void user_main(void)
+ {
+     OPERATE_RET rt = OPRT_OK;
+ 
+     /* basic init */
+     tal_log_init(TAL_LOG_LEVEL_DEBUG, 1024, (TAL_LOG_OUTPUT_CB)tkl_log_output);
+ 
+     PR_NOTICE("Application information:");
+     PR_NOTICE("Project name:        %s", PROJECT_NAME);
+     PR_NOTICE("App version:         %s", PROJECT_VERSION);
+     PR_NOTICE("Compile time:        %s", __DATE__);
+     PR_NOTICE("TuyaOpen version:    %s", OPEN_VERSION);
+     PR_NOTICE("TuyaOpen commit-id:  %s", OPEN_COMMIT);
+     PR_NOTICE("Platform chip:       %s", PLATFORM_CHIP);
+     PR_NOTICE("Platform board:      %s", PLATFORM_BOARD);
+     PR_NOTICE("Platform commit-id:  %s", PLATFORM_COMMIT);
+ 
+     /* a pwm thread */
+     THREAD_CFG_T pwm_param = {.priority = TASK_PWM_PRIORITY, .stackDepth = TASK_PWM_SIZE, .thrdname = "pwm_task"};
+     TUYA_CALL_ERR_LOG(tal_thread_create_and_start(&sg_pwm_handle, NULL, NULL, __example_pwm_task, NULL, &pwm_param));
+ 
+     return;
+ }
+ 
+ /**
+  * @brief main
+  *
+  * @param argc
+  * @param argv
+  * @return void
+  */
+ #if OPERATING_SYSTEM == SYSTEM_LINUX
+ void main(int argc, char *argv[])
+ {
+     user_main();
+ 
+     while (1) {
+         tal_system_sleep(500);
+     }
+ }
+ #else
+ 
+ /* Tuya thread handle */
+ static THREAD_HANDLE ty_app_thread = NULL;
+ 
+ /**
+  * @brief  task thread
+  *
+  * @param[in] arg:Parameters when creating a task
+  * @return none
+  */
+ static void tuya_app_thread(void *arg)
+ {
+     user_main();
+ 
+     tal_thread_delete(ty_app_thread);
+     ty_app_thread = NULL;
+ }
+ 
+ void tuya_app_main(void)
+ {
+     THREAD_CFG_T thrd_param = {4096, 4, "tuya_app_main"};
+     tal_thread_create_and_start(&ty_app_thread, NULL, NULL, tuya_app_thread, NULL, &thrd_param);
+ }
+ #endif
