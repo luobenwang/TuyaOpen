@@ -92,7 +92,7 @@ void ninja_walk_backward(void);
 /**
  * 滚动模式控制
  */
-void ninja_roll_control(void);
+ void ninja_roll_control(bool forward);
 
 // ==================== 手臂控制 ====================
 /**

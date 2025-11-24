@@ -282,10 +282,41 @@ void servo_write(uint8_t pin, uint16_t angle)
     uint32_t duty_percent = (pulse_width * 100) / SERVO_PWM_PERIOD_US;
     
     // 打印角度和占空比信息
-    PR_NOTICE("servo_write: pin=%d, angle=%d, pulse_width=%d us, duty=%d%%", 
+    PR_NOTICE("servo_write: pin=%d, angle=%d, pulse_width=%d us, duty_percent=%d%%", 
               pin, angle, pulse_width, duty_percent);
     
-    pwm_set_pulse_width(pin, pulse_width);
+    //pwm_set_pulse_width(pin, pulse_width);
+
+    TUYA_PWM_NUM_E pwm_id = pin_to_pwm_id(pin);
+    
+    if (pwm_id >= TUYA_PWM_NUM_MAX) {
+        return;
+    }
+    
+    // 限制脉冲宽度范围
+    if (pulse_width > SERVO_PWM_PERIOD_US) {
+        pulse_width = SERVO_PWM_PERIOD_US;
+    }
+    
+    // 将脉冲宽度（微秒）转换为占空比
+    // Tuya SDK的duty范围是1-10000，对应0.01%-100%
+    // duty = (pulse_width_us / SERVO_PWM_PERIOD_US) * 10000
+    uint32_t duty = (pulse_width * 10000) / SERVO_PWM_PERIOD_US;
+    
+    // 确保duty在有效范围内（1-10000）
+    if (duty < 1) {
+        duty = 1;
+    } else if (duty > 10000) {
+        duty = 10000;
+    }
+    
+    // 设置占空比
+    tkl_pwm_duty_set(pwm_id, duty);
+
+    PR_NOTICE("servo_write: pin=%d, angle=%d, pulse_width=%d us, duty=%d%%", 
+              pin, angle, pulse_width, duty);
+    // 确保PWM正在运行
+    tkl_pwm_start(pwm_id);
 }
 
 /**
@@ -559,7 +590,7 @@ void ninja_walk_backward(void)
 }
 
 // ==================== 滚动模式控制 ====================
-void ninja_roll_control(void)
+void ninja_roll_control(bool forward)
 {
     // 直行滚动（joystick_x=0, joystick_y=50）
     // 连接脚部舵机
@@ -567,8 +598,14 @@ void ninja_roll_control(void)
     servo_attach(SERVO_RIGHT_FOOT_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
     
     // 设置舵机角度（直行滚动）
-    servo_write(SERVO_LEFT_FOOT_PIN, 135);
-    servo_write(SERVO_RIGHT_FOOT_PIN, 45);
+    if (forward == true) {
+        servo_write(SERVO_LEFT_FOOT_PIN, 135);
+        servo_write(SERVO_RIGHT_FOOT_PIN, 45);
+    }else{
+        servo_write(SERVO_LEFT_FOOT_PIN, 45);
+        servo_write(SERVO_RIGHT_FOOT_PIN, 135);
+    }
+    PR_NOTICE("ninja_roll_control: forward=%s", forward ? "true" : "false");
 }
 
 // ==================== 手臂控制函数 ====================

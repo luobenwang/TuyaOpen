@@ -81,10 +81,16 @@ static void __example_pwm_task(void *param)
 
     // 3. 执行演示 - 依次执行所有动作
     PR_NOTICE("Starting motion show...");
+
+   // int forwoard = 0;
+    bool forward = true;
     while (1) {
         ninja_show();
         PR_NOTICE("Motion show completed, restarting...");
-        tal_system_sleep(2000);  // 等待2秒后重新开始
+       
+        tal_system_sleep(5000);  // 等待2秒后重新开始
+        ninja_roll_control(forward);
+        forward = !forward;
     }
 
     PR_NOTICE("PWM task is finished, will delete");
