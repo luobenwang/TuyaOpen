@@ -71,26 +71,28 @@ static void __example_pwm_task(void *param)
     delay_ms(1000);
 
         // 2. 设置行走模式
-    //ninja_set_walk();
+        ninja_set_walk();
         delay_ms(500);
 
             // // 11. 设置滚动模式
-            PR_NOTICE("Setting roll mode");
-   ninja_set_roll();
+           // PR_NOTICE("Setting roll mode");
+   //ninja_set_roll();
     //delay_ms(500);
 
     // 3. 执行演示 - 依次执行所有动作
     PR_NOTICE("Starting motion show...");
+    //ninja_walk_forward();
 
    // int forwoard = 0;
-    bool forward = true;
+    //bool forward = true;
     while (1) {
         ninja_show();
-        PR_NOTICE("Motion show completed, restarting...");
-       
-        tal_system_sleep(5000);  // 等待2秒后重新开始
-        ninja_roll_control(forward);
-        forward = !forward;
+        //PR_NOTICE("Motion show completed, restarting...");
+        ninja_walk_forward();
+      //  ninja_walk_backward();
+        tal_system_sleep(10);  // 等待2秒后重新开始
+        // ninja_roll_control(forward);
+        // forward = !forward;
     }
 
     PR_NOTICE("PWM task is finished, will delete");
@@ -140,6 +142,7 @@ static void __example_pwm_task(void *param)
      user_main();
  
      while (1) {
+        
          tal_system_sleep(500);
      }
  }

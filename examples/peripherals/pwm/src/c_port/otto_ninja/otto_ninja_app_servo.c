@@ -492,17 +492,20 @@ void ninja_walk_forward(void)
     int interval4 = 250 + rt + 250 + lt;
     int interval5 = 250 + rt + 250 + lt + 50;
     
-    uint32_t current_time = get_millis();
+  
+    //PR_NOTICE("ninja_walk_forward: interval1=%d, interval2=%d, interval3=%d, interval4=%d, interval5=%d", interval1, interval2, interval3, interval4, interval5);
     
     // 重置循环计时器
-    if (current_time > currentmillis1 + interval5) {
-        currentmillis1 = current_time;
+    if (get_millis() > currentmillis1 + interval5) {
+        currentmillis1 = get_millis();
+        //PR_NOTICE("ninja_walk_forward 1: currentmillis1=%ld", currentmillis1);
     }
     
-    uint32_t elapsed = current_time - currentmillis1;
+
     
     // 阶段1: 设置腿部到右倾斜位置
-    if (elapsed <= interval1) {
+    if (get_millis() - currentmillis1 <= interval1) {
+        PR_NOTICE("ninja_walk_forward 1: get_millis()=%ld", get_millis());
         servo_attach(SERVO_LEFT_LEG_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
         servo_attach(SERVO_RIGHT_LEG_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
         servo_attach(SERVO_RIGHT_FOOT_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
@@ -510,26 +513,36 @@ void ninja_walk_forward(void)
         servo_write(SERVO_LEFT_LEG_PIN, LATR);
         servo_write(SERVO_RIGHT_LEG_PIN, RATR);
     }
-    
+
+
     // 阶段2: 右脚旋转
-    if (elapsed >= interval1 && elapsed <= interval2) {
+    if ((get_millis() - currentmillis1 >= interval1) && (get_millis() - currentmillis1 <= interval2)) {
+        PR_NOTICE("ninja_walk_forward 2: get_millis()=%ld", get_millis());
         servo_write(SERVO_RIGHT_FOOT_PIN, 90 - RFFWRS);
+        
     }
+
+   
+    //return;
     
     // 阶段3: 右脚停止，设置腿部到左倾斜位置
-    if (elapsed >= interval2 && elapsed <= interval3) {
+    if ((get_millis() - currentmillis1 >= interval2) && (get_millis() - currentmillis1 <= interval3)) {
+        PR_NOTICE("ninja_walk_forward 3: get_millis()=%ld", get_millis());
         servo_detach(SERVO_RIGHT_FOOT_PIN);
         servo_write(SERVO_LEFT_LEG_PIN, LATL);
         servo_write(SERVO_RIGHT_LEG_PIN, RATL);
+       
     }
     
     // 阶段4: 左脚旋转
-    if (elapsed >= interval3 && elapsed <= interval4) {
+    if ((get_millis() - currentmillis1 >= interval3) && (get_millis() - currentmillis1 <= interval4)) {
+        PR_NOTICE("ninja_walk_forward 4: get_millis()=%ld", get_millis());
         servo_write(SERVO_LEFT_FOOT_PIN, 90 + LFFWRS);
     }
     
     // 阶段5: 左脚停止
-    if (elapsed >= interval4 && elapsed <= interval5) {
+    if ((get_millis() - currentmillis1 >= interval4) && (get_millis() - currentmillis1 <= interval5)) {
+        PR_NOTICE("ninja_walk_forward 5: get_millis()=%ld", get_millis());
         servo_detach(SERVO_LEFT_FOOT_PIN);
     }
 }
@@ -637,5 +650,5 @@ void ninja_right_arm_down(void)
  */
 void ninja_show(void)
 {
-    delay_ms(500);
+    //delay_ms(500);
 }
