@@ -47,7 +47,115 @@
  /***********************************************************
  ***********************function define**********************
  ***********************************************************/
- 
+ // 假设这些是从遥控器或传感器获取的值
+ /**
+  * @brief 设置摇杆X轴值
+  * @param value: 摇杆X轴值
+  * @return none
+  */
+int8_t joystick_x = 0;
+void set_joystick_x(int8_t value){
+    joystick_x = value;
+}
+/**
+  * @brief 获取摇杆X轴值
+  * @return 摇杆X轴值
+  */
+int8_t get_joystick_x(void){
+    return joystick_x;
+}
+/**
+  * @brief 设置摇杆Y轴值
+  * @param value: 摇杆Y轴值
+  * @return none
+  */
+int8_t joystick_y = 0;
+void set_joystick_y(int8_t value){
+    joystick_y = value;
+}
+/**
+  * @brief 获取摇杆Y轴值
+  * @return 摇杆Y轴值
+  */
+int8_t get_joystick_y(void){
+    return joystick_y;
+}
+
+/**
+  * @brief 设置按钮A值
+  * @param value: 按钮A值
+  * @return none
+  */
+bool button_a = false;
+void set_button_a(bool value){
+    button_a = value;
+}
+/**
+  * @brief 获取按钮A值
+  * @return 按钮A值
+  */
+bool get_button_a(void){
+    return button_a;
+}
+
+bool button_b = false;
+/**
+  * @brief 设置按钮B值
+  * @param value: 按钮B值
+  * @return none
+  */
+void set_button_b(bool value){
+    button_b = value;
+}
+/**
+  * @brief 获取按钮B值
+  * @return 按钮B值
+  */
+bool get_button_b(void){
+    return button_b;
+}
+
+bool button_x = false;
+/**
+  * @brief 设置按钮X值
+  * @param value: 按钮X值
+  * @return none
+  */
+void set_button_x(bool value){
+    button_x = value;
+}
+/**
+  * @brief 获取按钮X值
+  * @return 按钮X值
+  */
+bool get_button_x(void){
+    return button_x;
+}
+
+bool button_y = false;
+/**
+  * @brief 设置按钮Y值
+  * @param value: 按钮Y值
+  * @return none
+  */
+void set_button_y(bool value){
+    button_y = value;
+}
+/**
+  * @brief 获取按钮Y值
+  * @return 按钮Y值
+  */
+bool get_button_y(void){
+    return button_y;
+}
+
+static int mode_counter = 0;  // 0=行走模式, 1=滚动模式
+void set_mode_counter(int value){
+    mode_counter = value;
+}
+int get_mode_counter(void){
+    return mode_counter;
+}
 /**
  * @brief pwm task - 舵机运动控制演示
  *
@@ -62,17 +170,17 @@ static void __example_pwm_task(void *param)
     platform_tuya_init();
     PR_NOTICE("Platform initialized");
 
-    // 2. 初始化舵机控制系统
-    servo_control_init();
-    PR_NOTICE("Servo control system initialized");
+    // // 2. 初始化舵机控制系统
+   //  servo_control_init();
+    // PR_NOTICE("Servo control system initialized");
 
-        // 1. 初始化
-    ninja_init();
-    delay_ms(1000);
+    //     // 1. 初始化
+   // ninja_init();
+    // delay_ms(1000);
 
-        // 2. 设置行走模式
-        ninja_set_walk();
-        delay_ms(500);
+    //     // 2. 设置行走模式
+       // ninja_set_walk();
+    //     delay_ms(500);
 
             // // 11. 设置滚动模式
            // PR_NOTICE("Setting roll mode");
@@ -82,14 +190,55 @@ static void __example_pwm_task(void *param)
     // 3. 执行演示 - 依次执行所有动作
     PR_NOTICE("Starting motion show...");
     //ninja_walk_forward();
+    ninja_show();
 
    // int forwoard = 0;
     //bool forward = true;
+    main_init();
+    set_button_x(true); // 设置按钮X为false,不切换到滚动模式
+    set_button_y(false); // 设置按钮Y为true,切换到行走模式
+    set_joystick_x(0); // 设置摇杆X轴值为0
+    set_joystick_y(-100); // 设置摇杆Y轴值为50,前进
+    set_button_a(false); // 设置按钮A为false,不控制左臂
+    set_button_b(false); // 设置按钮B为false,不控制右臂
+        // bool button_a = get_button_a();
+    // bool button_b = get_button_b();
+    bool button_x = get_button_x();
+    bool button_y = get_button_y();
+    
+    // // 按钮X：切换到滚动模式
+    if (button_x) {
+        robot_set_roll();
+        mode_counter = 1;
+    }
+    
+    // 按钮Y：切换到行走模式
+    if (button_y) {
+        robot_set_walk();
+        mode_counter = 0;
+    }
+    
+    // 按钮A：左臂控制
+    if (button_a) {
+        robot_left_arm_up();
+    } else {
+        robot_left_arm_down();
+    }
+    
+    // 按钮B：右臂控制
+    if (button_b) {
+        robot_right_arm_up();
+    } else {
+        robot_right_arm_down();
+    }
+
     while (1) {
-        ninja_show();
+       
         //PR_NOTICE("Motion show completed, restarting...");
-        ninja_walk_forward();
+        //ninja_walk_forward();
+        //ninja_walk_forward_test(0, 50);
       //  ninja_walk_backward();
+       main_loop();
         tal_system_sleep(10);  // 等待2秒后重新开始
         // ninja_roll_control(forward);
         // forward = !forward;

@@ -3,6 +3,7 @@
  * 移植自: examples/App/OttoNinja_APP/OttoNinja_APP.ino
  */
 
+#include <inttypes.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "tuya_cloud_types.h"
@@ -35,6 +36,14 @@ static TUYA_PWM_NUM_E pin_to_pwm_id(uint8_t pin)
 {
     return (TUYA_PWM_NUM_E)pin;
 }
+
+/**
+ * 数值映射函数（对应Arduino的map函数）
+ */
+ static int map_value(int value, int in_min, int in_max, int out_min, int out_max)
+ {
+     return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+ }
 
 /**
  * @brief 获取系统运行时间（毫秒）
@@ -546,6 +555,83 @@ void ninja_walk_forward(void)
         servo_detach(SERVO_LEFT_FOOT_PIN);
     }
 }
+ /**
+  * 前进行走控制
+  * @param joystick_x 摇杆X值 (-100到100)
+  * @param joystick_y 摇杆Y值 (-100到100，应该>0表示前进)
+  */
+
+void ninja_walk_forward_test(int8_t joystick_x, int8_t joystick_y)
+{
+    // 直行前进（joystick_x=0, joystick_y=50）
+ 
+    if (joystick_y <= 0) return;  // 只处理前进
+      
+    // 计算左右转时间
+    int lt = map_value(joystick_x, 100, -100, 200, 700);
+    int rt = map_value(joystick_x, 100, -100, 700, 200);
+    PR_NOTICE("ninja_walk_forward_test: lt=%d, rt=%d", lt, rt);
+    // 计算时间间隔
+    int interval1 = 250;
+    int interval2 = 250 + rt;
+    int interval3 = 250 + rt + 250;
+    int interval4 = 250 + rt + 250 + lt;
+    int interval5 = 250 + rt + 250 + lt + 50;
+    
+  
+    //PR_NOTICE("ninja_walk_forward: interval1=%d, interval2=%d, interval3=%d, interval4=%d, interval5=%d", interval1, interval2, interval3, interval4, interval5);
+    
+    // 重置循环计时器
+    if (get_millis() > currentmillis1 + interval5) {
+        currentmillis1 = get_millis();
+        //PR_NOTICE("ninja_walk_forward 1: currentmillis1=%ld", currentmillis1);
+    }
+    
+
+    
+    // 阶段1: 设置腿部到右倾斜位置
+    if (get_millis() - currentmillis1 <= interval1) {
+        PR_NOTICE("ninja_walk_forward 1: get_millis()=%ld", get_millis());
+        servo_attach(SERVO_LEFT_LEG_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+        servo_attach(SERVO_RIGHT_LEG_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+        servo_attach(SERVO_RIGHT_FOOT_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+        servo_attach(SERVO_LEFT_FOOT_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+        servo_write(SERVO_LEFT_LEG_PIN, LATR);
+        servo_write(SERVO_RIGHT_LEG_PIN, RATR);
+    }
+
+
+    // 阶段2: 右脚旋转
+    if ((get_millis() - currentmillis1 >= interval1) && (get_millis() - currentmillis1 <= interval2)) {
+        PR_NOTICE("ninja_walk_forward 2: get_millis()=%ld", get_millis());
+        servo_write(SERVO_RIGHT_FOOT_PIN, 90 - RFFWRS);
+        
+    }
+
+   
+    //return;
+    
+    // 阶段3: 右脚停止，设置腿部到左倾斜位置
+    if ((get_millis() - currentmillis1 >= interval2) && (get_millis() - currentmillis1 <= interval3)) {
+        PR_NOTICE("ninja_walk_forward 3: get_millis()=%ld", get_millis());
+        servo_detach(SERVO_RIGHT_FOOT_PIN);
+        servo_write(SERVO_LEFT_LEG_PIN, LATL);
+        servo_write(SERVO_RIGHT_LEG_PIN, RATL);
+       
+    }
+    
+    // 阶段4: 左脚旋转
+    if ((get_millis() - currentmillis1 >= interval3) && (get_millis() - currentmillis1 <= interval4)) {
+        PR_NOTICE("ninja_walk_forward 4: get_millis()=%ld", get_millis());
+        servo_write(SERVO_LEFT_FOOT_PIN, 90 + LFFWRS);
+    }
+    
+    // 阶段5: 左脚停止
+    if ((get_millis() - currentmillis1 >= interval4) && (get_millis() - currentmillis1 <= interval5)) {
+        PR_NOTICE("ninja_walk_forward 5: get_millis()=%ld", get_millis());
+        servo_detach(SERVO_LEFT_FOOT_PIN);
+    }
+}
 
 void ninja_walk_backward(void)
 {
@@ -652,3 +738,433 @@ void ninja_show(void)
 {
     //delay_ms(500);
 }
+
+
+// ==================== 机器人运动函数 ====================
+
+/**
+ * 机器人初始化到初始位置
+ */
+ void robot_home(void)
+ {
+     // 连接所有舵机
+     servo_attach(SERVO_LEFT_LEG_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_attach(SERVO_RIGHT_LEG_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_attach(SERVO_LEFT_ARM_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_attach(SERVO_RIGHT_ARM_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_attach(SERVO_HEAD_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     
+     // 设置初始位置
+     servo_write(SERVO_LEFT_ARM_PIN, 180);
+     servo_write(SERVO_RIGHT_ARM_PIN, 0);
+     servo_write(SERVO_HEAD_PIN, 90);
+     delay_ms(400);
+     
+     // 设置腿部位置
+     servo_attach(SERVO_LEFT_FOOT_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_attach(SERVO_RIGHT_FOOT_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_write(SERVO_LEFT_FOOT_PIN, 90);
+     servo_write(SERVO_RIGHT_FOOT_PIN, 90);
+     servo_write(SERVO_LEFT_LEG_PIN, LA0);
+     servo_write(SERVO_RIGHT_LEG_PIN, RA0);
+     delay_ms(400);
+     
+     // 断开所有舵机（节省功耗）
+     servo_detach(SERVO_LEFT_FOOT_PIN);
+     servo_detach(SERVO_RIGHT_FOOT_PIN);
+     servo_detach(SERVO_LEFT_LEG_PIN);
+     servo_detach(SERVO_RIGHT_LEG_PIN);
+     servo_detach(SERVO_LEFT_ARM_PIN);
+     servo_detach(SERVO_RIGHT_ARM_PIN);
+     servo_detach(SERVO_HEAD_PIN);
+ }
+ 
+ /**
+  * 设置行走模式
+  */
+ void robot_set_walk(void)
+ {
+     // 手臂到中间位置
+     servo_attach(SERVO_LEFT_ARM_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_attach(SERVO_RIGHT_ARM_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_write(SERVO_LEFT_ARM_PIN, 90);
+     servo_write(SERVO_RIGHT_ARM_PIN, 90);
+     delay_ms(200);
+     servo_detach(SERVO_LEFT_ARM_PIN);
+     servo_detach(SERVO_RIGHT_ARM_PIN);
+     
+     // 踝关节到站立位置
+     servo_attach(SERVO_LEFT_LEG_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_attach(SERVO_RIGHT_LEG_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_write(SERVO_LEFT_LEG_PIN, LA0);
+     servo_write(SERVO_RIGHT_LEG_PIN, RA0);
+     delay_ms(300);
+     servo_detach(SERVO_LEFT_LEG_PIN);
+     servo_detach(SERVO_RIGHT_LEG_PIN);
+     
+     // 手臂到最终位置
+     servo_attach(SERVO_LEFT_ARM_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_attach(SERVO_RIGHT_ARM_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_write(SERVO_LEFT_ARM_PIN, 180);
+     servo_write(SERVO_RIGHT_ARM_PIN, 0);
+     servo_detach(SERVO_LEFT_ARM_PIN);
+     servo_detach(SERVO_RIGHT_ARM_PIN);
+ }
+ 
+ /**
+  * 设置滚动模式
+  */
+ void robot_set_roll(void)
+ {
+     // 手臂到中间位置
+     servo_attach(SERVO_LEFT_ARM_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_attach(SERVO_RIGHT_ARM_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_write(SERVO_LEFT_ARM_PIN, 90);
+     servo_write(SERVO_RIGHT_ARM_PIN, 90);
+     delay_ms(200);
+     servo_detach(SERVO_LEFT_ARM_PIN);
+     servo_detach(SERVO_RIGHT_ARM_PIN);
+     
+     // 踝关节到滚动位置
+     servo_attach(SERVO_LEFT_LEG_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_attach(SERVO_RIGHT_LEG_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_write(SERVO_LEFT_LEG_PIN, LA1);
+     servo_write(SERVO_RIGHT_LEG_PIN, RA1);
+     delay_ms(300);
+     servo_detach(SERVO_LEFT_LEG_PIN);
+     servo_detach(SERVO_RIGHT_LEG_PIN);
+     
+     // 手臂到最终位置
+     servo_attach(SERVO_LEFT_ARM_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_attach(SERVO_RIGHT_ARM_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_write(SERVO_LEFT_ARM_PIN, 180);
+     servo_write(SERVO_RIGHT_ARM_PIN, 0);
+     servo_detach(SERVO_LEFT_ARM_PIN);
+     servo_detach(SERVO_RIGHT_ARM_PIN);
+ }
+ 
+ /**
+  * 行走停止
+  */
+ void robot_walk_stop(void)
+ {
+     servo_write(SERVO_LEFT_FOOT_PIN, 90);
+     servo_write(SERVO_RIGHT_FOOT_PIN, 90);
+     servo_write(SERVO_LEFT_LEG_PIN, LA0);
+     servo_write(SERVO_RIGHT_LEG_PIN, RA0);
+ }
+ 
+ /**
+  * 滚动停止
+  */
+ void robot_roll_stop(void)
+ {
+     servo_write(SERVO_LEFT_FOOT_PIN, 90);
+     servo_write(SERVO_RIGHT_FOOT_PIN, 90);
+     servo_detach(SERVO_LEFT_FOOT_PIN);
+     servo_detach(SERVO_RIGHT_FOOT_PIN);
+ }
+ 
+ /**
+  * 前进行走控制
+  * @param joystick_x 摇杆X值 (-100到100)
+  * @param joystick_y 摇杆Y值 (-100到100，应该>0表示前进)
+  */
+ void robot_walk_forward(int8_t joystick_x, int8_t joystick_y)
+ {
+     if (joystick_y <= 0) return;  // 只处理前进
+     
+     // 计算左右转时间
+     int lt = map_value(joystick_x, 100, -100, 200, 700);
+     int rt = map_value(joystick_x, 100, -100, 700, 200);
+     PR_NOTICE("robot_walk_forward: lt=%d, rt=%d", lt, rt);
+     // 计算时间间隔
+     int interval1 = 250;
+     int interval2 = 250 + rt;
+     int interval3 = 250 + rt + 250;
+     int interval4 = 250 + rt + 250 + lt;
+     int interval5 = 250 + rt + 250 + lt + 50;
+     
+     uint32_t current_time = get_millis();
+     
+     // 重置循环计时器
+     if (current_time > currentmillis1 + interval5) {
+         currentmillis1 = current_time;
+     }
+     
+     uint32_t elapsed = get_millis() - currentmillis1;
+     
+     // 阶段1: 设置踝关节到右倾斜位置
+     if (elapsed <= interval1) {
+        PR_NOTICE("robot_walk_forward1: elapsed=%d,interval1=%d", elapsed, interval1);
+         servo_attach(SERVO_LEFT_LEG_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+         servo_attach(SERVO_RIGHT_LEG_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+         servo_attach(SERVO_RIGHT_FOOT_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+         servo_attach(SERVO_LEFT_FOOT_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+         
+         servo_write(SERVO_LEFT_LEG_PIN, LATR);
+         servo_write(SERVO_RIGHT_LEG_PIN, RATR);
+     }
+     
+     elapsed = get_millis() - currentmillis1;
+     // 阶段2: 右脚旋转
+     if (elapsed >= interval1 && elapsed <= interval2) {
+        PR_NOTICE("robot_walk_forward2: elapsed=%d,interval2=%d", elapsed, interval2);
+
+         servo_write(SERVO_RIGHT_FOOT_PIN, 90 - RFFWRS);
+     }
+     
+     // 阶段3: 右脚停止，设置踝关节到左倾斜位置
+     elapsed = get_millis() - currentmillis1;
+     if (elapsed >= interval2 && elapsed <= interval3) {
+        PR_NOTICE("robot_walk_forward3: elapsed=%d,interval3=%d", elapsed, interval3);
+         servo_detach(SERVO_RIGHT_FOOT_PIN);
+         servo_write(SERVO_LEFT_LEG_PIN, LATL);
+         servo_write(SERVO_RIGHT_LEG_PIN, RATL);
+     }
+     
+     // 阶段4: 左脚旋转
+     elapsed = get_millis() - currentmillis1;
+     if (elapsed >= interval3 && elapsed <= interval4) {
+        PR_NOTICE("robot_walk_forward4: elapsed=%d,interval4=%d", elapsed, interval4);
+         servo_write(SERVO_LEFT_FOOT_PIN, 90 + LFFWRS);
+     }
+     
+     // 阶段5: 左脚停止
+     elapsed = get_millis() - currentmillis1;
+     if (elapsed >= interval4 && elapsed <= interval5) {
+        PR_NOTICE("robot_walk_forward5: elapsed=%d,interval5=%d", elapsed, interval5);
+
+         servo_detach(SERVO_LEFT_FOOT_PIN);
+     }
+ }
+ 
+ /**
+  * 后退行走控制
+  * @param joystick_x 摇杆X值 (-100到100)
+  * @param joystick_y 摇杆Y值 (-100到100，应该<0表示后退)
+  */
+ void robot_walk_backward(int8_t joystick_x, int8_t joystick_y)
+ {
+     if (joystick_y >= 0) return;  // 只处理后退
+     
+     // 计算左右转时间
+     int lt = map_value(joystick_x, 100, -100, 200, 700);
+     int rt = map_value(joystick_x, 100, -100, 700, 200);
+     
+     // 计算时间间隔
+     int interval1 = 250;
+     int interval2 = 250 + rt;
+     int interval3 = 250 + rt + 250;
+     int interval4 = 250 + rt + 250 + lt;
+     int interval5 = 250 + rt + 250 + lt + 50;
+     
+     uint32_t current_time = get_millis();
+     
+     // 重置循环计时器
+     if (current_time > currentmillis1 + interval5) {
+         currentmillis1 = current_time;
+     }
+     
+     uint32_t elapsed = current_time - currentmillis1;
+     
+     // 阶段1: 设置踝关节到右倾斜位置
+     if (elapsed <= interval1) {
+        PR_NOTICE("robot_walk_backward1: elapsed=%d,interval1=%d", elapsed, interval1);
+         servo_attach(SERVO_LEFT_LEG_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+         servo_attach(SERVO_RIGHT_LEG_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+         servo_attach(SERVO_RIGHT_FOOT_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+         servo_attach(SERVO_LEFT_FOOT_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+         
+         servo_write(SERVO_LEFT_LEG_PIN, LATR);
+         servo_write(SERVO_RIGHT_LEG_PIN, RATR);
+     }
+     
+     // 阶段2: 右脚旋转（后退方向）
+     elapsed = get_millis() - currentmillis1;
+     if (elapsed >= interval1 && elapsed <= interval2) {
+        PR_NOTICE("robot_walk_backward2: elapsed=%d,interval2=%d", elapsed, interval2);
+         servo_write(SERVO_RIGHT_FOOT_PIN, 90 + RFBWRS);
+     }
+     
+     // 阶段3: 右脚停止，设置踝关节到左倾斜位置
+     elapsed = get_millis() - currentmillis1;
+     if (elapsed >= interval2 && elapsed <= interval3) {
+        PR_NOTICE("robot_walk_backward3: elapsed=%d,interval3=%d", elapsed, interval3);
+         servo_detach(SERVO_RIGHT_FOOT_PIN);
+         servo_write(SERVO_LEFT_LEG_PIN, LATL);
+         servo_write(SERVO_RIGHT_LEG_PIN, RATL);
+     }
+     
+     // 阶段4: 左脚旋转（后退方向）
+     elapsed = get_millis() - currentmillis1;
+     if (elapsed >= interval3 && elapsed <= interval4) {
+        PR_NOTICE("robot_walk_backward4: elapsed=%d,interval4=%d", elapsed, interval4);
+         servo_write(SERVO_LEFT_FOOT_PIN, 90 - LFBWRS);
+     }
+     
+     // 阶段5: 左脚停止
+     elapsed = get_millis() - currentmillis1;
+     if (elapsed >= interval4 && elapsed <= interval5) {
+        PR_NOTICE("robot_walk_backward5: elapsed=%d,interval5=%d", elapsed, interval5);
+         servo_detach(SERVO_LEFT_FOOT_PIN);
+     }
+ }
+ 
+ /**
+  * 滚动模式控制
+  * @param joystick_x 摇杆X值 (-100到100)
+  * @param joystick_y 摇杆Y值 (-100到100)
+  */
+ void robot_roll_control(int8_t joystick_x, int8_t joystick_y)
+ {
+     PR_NOTICE("robot_roll_control: joystick_x=%d, joystick_y=%d", joystick_x, joystick_y);
+     // 如果摇杆在中心位置，停止
+     if (joystick_x >= -10 && joystick_x <= 10 && 
+         joystick_y >= -10 && joystick_y <= 10) {
+         robot_roll_stop();
+         PR_NOTICE("robot_roll_stop");
+         return;
+     }
+     
+     // 连接脚部舵机
+     servo_attach(SERVO_LEFT_FOOT_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_attach(SERVO_RIGHT_FOOT_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     
+     // 计算左右轮速度
+     int left_wheel_speed = map_value(joystick_y, 100, -100, 135, 45);
+     int right_wheel_speed = map_value(joystick_y, 100, -100, 45, 135);
+     
+     // 计算左右转偏移
+     int left_wheel_delta = map_value(joystick_x, 100, -100, 45, 0);
+     int right_wheel_delta = map_value(joystick_x, 100, -100, 0, -45);
+     PR_NOTICE("robot_roll_control: left_wheel_speed=%d, right_wheel_speed=%d, left_wheel_delta=%d, right_wheel_delta=%d", left_wheel_speed, right_wheel_speed, left_wheel_delta, right_wheel_delta);
+     // 设置舵机角度
+
+     servo_write(SERVO_LEFT_FOOT_PIN, left_wheel_speed + left_wheel_delta);
+     PR_NOTICE("robot_roll_control: left_wheel_speed+left_wheel_delta=%d", left_wheel_speed+left_wheel_delta);
+     servo_write(SERVO_RIGHT_FOOT_PIN, right_wheel_speed + right_wheel_delta);
+     PR_NOTICE("robot_roll_control: right_wheel_speed+right_wheel_delta=%d", right_wheel_speed+right_wheel_delta);
+ }
+ 
+ /**
+  * 左臂抬起
+  */
+ void robot_left_arm_up(void)
+ {
+     servo_attach(SERVO_LEFT_ARM_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_write(SERVO_LEFT_ARM_PIN, 90);
+ }
+ 
+ /**
+  * 左臂放下
+  */
+ void robot_left_arm_down(void)
+ {
+     servo_write(SERVO_LEFT_ARM_PIN, 180);
+ }
+ 
+ /**
+  * 右臂抬起
+  */
+ void robot_right_arm_up(void)
+ {
+     servo_attach(SERVO_RIGHT_ARM_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
+     servo_write(SERVO_RIGHT_ARM_PIN, 90);
+ }
+ 
+ /**
+  * 右臂放下
+  */
+ void robot_right_arm_down(void)
+ {
+     servo_write(SERVO_RIGHT_ARM_PIN, 0);
+ }
+ 
+
+
+//平台相关函数声明（需要根据实际平台实现）
+
+
+// 假设这些是从遥控器或传感器获取的值
+extern int8_t get_joystick_x(void);
+extern int8_t get_joystick_y(void);
+extern bool get_button_a(void);
+extern bool get_button_b(void);
+extern bool get_button_x(void);
+extern bool get_button_y(void);
+extern int get_mode_counter(void);
+
+
+
+/**
+ * 主循环示例（对应Arduino的loop函数）
+ */
+void main_loop(void)
+{
+    // 读取摇杆和按钮状态
+    int8_t joystick_x = get_joystick_x();
+    int8_t joystick_y = get_joystick_y();
+
+    
+    // 根据模式执行不同的运动控制
+    if (get_mode_counter() == 0) {
+        // 行走模式
+        // 如果摇杆在中心位置，停止
+        if (joystick_x >= -10 && joystick_x <= 10 && 
+            joystick_y >= -10 && joystick_y <= 10) {
+            robot_walk_stop();
+            PR_NOTICE("robot_walk_stop");
+        }
+        // 前进
+        else if (joystick_y > 0) {
+            PR_NOTICE("robot_walk_forward: joystick_x=%d, joystick_y=%d", joystick_x, joystick_y);
+            robot_walk_forward(joystick_x, joystick_y);
+            //ninja_walk_forward_test(joystick_x, joystick_y);
+        }
+        // 后退
+        else if (joystick_y < 0) {
+            PR_NOTICE("robot_walk_backward: joystick_x=%d, joystick_y=%d", joystick_x, joystick_y);
+            robot_walk_backward(joystick_x, joystick_y);
+        }
+    }
+    else if (get_mode_counter() == 1) {
+        // 滚动模式
+        PR_NOTICE("robot_roll_control: joystick_x=%d, joystick_y=%d", joystick_x, joystick_y);
+        robot_roll_control(joystick_x, joystick_y);
+    }
+}
+
+/**
+ * 初始化示例（对应Arduino的setup函数）
+ */
+void main_init(void)
+{
+    // 初始化舵机控制系统
+    servo_control_init();
+    
+    // 机器人回到初始位置
+    robot_home();
+    
+    // 其他初始化代码...
+}
+
+/**
+ * 完整的主函数示例
+ */
+// int main(void)
+// {
+//     // 初始化
+//     main_init();
+    
+//     // 主循环
+//     while (1) {
+//         main_loop();
+        
+//         // 可以添加小延时，避免CPU占用过高
+//         delay_ms(10);
+//     }
+    
+//     return 0;
+// }
+

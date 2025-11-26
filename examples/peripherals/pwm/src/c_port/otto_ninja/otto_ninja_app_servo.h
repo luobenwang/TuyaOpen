@@ -125,5 +125,20 @@ void ninja_right_arm_down(void);
  */
 void ninja_show(void);
 
+
+void main_init(void);
+
+void main_loop(void);
+
+void ninja_walk_forward_test(int8_t joystick_x, int8_t joystick_y);
+void robot_set_roll(void);
+void robot_set_walk(void);
+void robot_left_arm_up(void);
+void robot_left_arm_down(void);
+void robot_right_arm_up(void);
+void robot_right_arm_down(void);
+void robot_roll_control(int8_t joystick_x, int8_t joystick_y);
+void robot_walk_forward(int8_t joystick_x, int8_t joystick_y);
+void robot_walk_backward(int8_t joystick_x, int8_t joystick_y);
 #endif // OTTO_NINJA_APP_SERVO_H
 
