@@ -17,6 +17,7 @@
 #include "tuya_cloud_types.h"
 
 #include <assert.h>
+#include <string.h>
 #include "cJSON.h"
 #include "tal_api.h"
 #include "tuya_config.h"
@@ -54,6 +55,10 @@
 #include "qrencode_print.h"
 #endif
 
+/* Additional MQTT client includes for AI MQTT */
+#include "mqtt_client_interface.h"
+#include "tuya_config_defaults.h"
+
 /* Tuya device handle */
 tuya_iot_client_t ai_client;
 
@@ -68,6 +73,23 @@ tuya_iot_license_t license;
 
 static uint8_t _need_reset = 0;
 
+/***********************************************************
+*********************** Additional MQTT Client ***********************
+***********************************************************/
+/* AI MQTT topics */
+#define AI_CMD_TOPIC "AI_CMD"
+#define AI_RET_TOPIC "AI_RET"
+
+/* AI message callback function type */
+typedef void (*ai_ret_message_cb_t)(const uint8_t *payload, size_t length, void *userdata);
+
+/* Additional MQTT client variables */
+static void *g_additional_mqtt_client_ctx = NULL;
+static ai_ret_message_cb_t g_ai_ret_callback = NULL;
+static void *g_ai_ret_userdata = NULL;
+static uint16_t g_ai_ret_subscribe_msgid = 0;  // Track AI_RET subscription msgid
+static bool g_additional_mqtt_connected = false;
+
 /**
  * @brief user defined log output api, in this demo, it will use uart0 as log-tx
  *
@@ -77,6 +99,206 @@ static uint8_t _need_reset = 0;
 void user_log_output_cb(const char *str)
 {
     tal_uart_write(TUYA_UART_NUM_0, (const uint8_t *)str, strlen(str));
+}
+
+/***********************************************************
+*********************** Additional MQTT Client Functions ***********************
+***********************************************************/
+
+/* Forward declarations */
+uint16_t ai_cmd_send(const uint8_t *data, size_t length, uint8_t qos);
+int ai_ret_register_callback(ai_ret_message_cb_t callback, void *userdata);
+void ai_ret_unregister_callback(void);
+
+/**
+ * @brief Additional MQTT client connected callback
+ */
+static void additional_mqtt_client_connected_cb(void *client, void *userdata)
+{
+    PR_INFO("Additional MQTT client connected! try to subscribe AI_RET topic");
+    g_additional_mqtt_connected = true;
+    
+    /* Subscribe to AI_RET topic to receive AI responses */
+    uint16_t msgid = mqtt_client_subscribe(client, AI_RET_TOPIC, MQTT_QOS_1);
+    if (msgid > 0) {
+        g_ai_ret_subscribe_msgid = msgid;
+        PR_INFO("Subscribe AI_RET topic success, ID:%d", msgid);
+    } else {
+        PR_ERR("Subscribe AI_RET topic failed!");
+    }
+}
+
+/**
+ * @brief Additional MQTT client disconnected callback
+ */
+static void additional_mqtt_client_disconnected_cb(void *client, void *userdata)
+{
+    PR_INFO("Additional MQTT client disconnected!");
+    g_additional_mqtt_connected = false;
+}
+
+/**
+ * @brief Additional MQTT client message callback
+ */
+static void additional_mqtt_client_message_cb(void *client, uint16_t msgid, const mqtt_client_message_t *msg, void *userdata)
+{
+    PR_DEBUG("Additional MQTT recv message TopicName:%s, payload len:%d", msg->topic, msg->length);
+    
+    /* Handle AI_RET topic messages */
+    if (msg->topic != NULL && strcmp(msg->topic, AI_RET_TOPIC) == 0) {
+        PR_INFO("Received AI_RET message, length: %zu", msg->length);
+        
+        /* Print payload content as string */
+        if (msg->payload != NULL && msg->length > 0) {
+            PR_INFO("AI_RET payload: %.*s", (int)msg->length, (const char *)msg->payload);
+        }
+        
+        if (g_ai_ret_callback != NULL) {
+            g_ai_ret_callback(msg->payload, msg->length, g_ai_ret_userdata);
+        } else {
+            PR_INFO("No AI_RET callback registered, message ignored");
+        }
+    }
+}
+
+/**
+ * @brief Additional MQTT client subscribed callback
+ */
+static void additional_mqtt_client_subscribed_cb(void *client, uint16_t msgid, void *userdata)
+{
+    PR_DEBUG("Additional MQTT subscribe successed ID:%d", msgid);
+    
+    /* Check if this is AI_RET topic subscription success */
+    if (msgid == g_ai_ret_subscribe_msgid && g_ai_ret_callback != NULL) {
+        PR_INFO("AI_RET topic subscribed successfully");
+    }
+}
+
+/**
+ * @brief Additional MQTT client published callback
+ */
+static void additional_mqtt_client_puback_cb(void *client, uint16_t msgid, void *userdata)
+{
+    PR_DEBUG("Additional MQTT PUBACK successed ID:%d", msgid);
+}
+
+/**
+ * @brief Send data to AI_CMD topic
+ *
+ * @param data Data to send
+ * @param length Data length
+ * @param qos Quality of Service level (0, 1, or 2)
+ * @return uint16_t Message ID if successful, 0 if failed
+ */
+uint16_t ai_cmd_send(const uint8_t *data, size_t length, uint8_t qos)
+{
+    if (g_additional_mqtt_client_ctx == NULL) {
+        PR_ERR("Additional MQTT client not initialized");
+        return 0;
+    }
+    
+    if (!g_additional_mqtt_connected) {
+        PR_ERR("Additional MQTT client not connected");
+        return 0;
+    }
+    
+    if (data == NULL || length == 0) {
+        PR_ERR("Invalid parameters: data is NULL or length is 0");
+        return 0;
+    }
+    
+    uint16_t msgid = mqtt_client_publish(g_additional_mqtt_client_ctx, AI_CMD_TOPIC, data, length, qos);
+    if (msgid > 0) {
+        PR_DEBUG("Send AI_CMD message success, ID:%d, length:%zu", msgid, length);
+    } else {
+        PR_ERR("Send AI_CMD message failed");
+    }
+    
+    return msgid;
+}
+
+/**
+ * @brief Register callback for AI_RET topic messages
+ *
+ * @param callback Callback function to handle AI_RET messages
+ * @param userdata User data to pass to callback
+ * @return int 0 on success, -1 on failure
+ */
+int ai_ret_register_callback(ai_ret_message_cb_t callback, void *userdata)
+{
+    if (callback == NULL) {
+        PR_ERR("Callback function is NULL");
+        return -1;
+    }
+    
+    g_ai_ret_callback = callback;
+    g_ai_ret_userdata = userdata;
+    PR_DEBUG("AI_RET callback registered");
+    
+    return 0;
+}
+
+/**
+ * @brief Unregister AI_RET callback
+ */
+void ai_ret_unregister_callback(void)
+{
+    g_ai_ret_callback = NULL;
+    g_ai_ret_userdata = NULL;
+    PR_DEBUG("AI_RET callback unregistered");
+}
+
+/**
+ * @brief Initialize and start additional MQTT client
+ */
+static void additional_mqtt_client_init(void)
+{
+    PR_DEBUG("Start additional MQTT client to broker");
+
+    /* Allocate MQTT client context */
+    g_additional_mqtt_client_ctx = mqtt_client_new();
+    if (g_additional_mqtt_client_ctx == NULL) {
+        PR_ERR("Additional MQTT client allocation failed");
+        return;
+    }
+
+    mqtt_client_status_t mqtt_status;
+    const mqtt_client_config_t mqtt_config = {
+        .cacert = NULL,
+        .cacert_len = 0,
+        .host = "192.168.100.132",
+        .port = 1883,
+        .keepalive = MQTT_KEEPALIVE_INTERVALIN,
+        .timeout_ms = MATOP_TIMEOUT_MS_DEFAULT,
+        .clientid = "tuya-open-sdk-for-device-01",
+        .username = "emqx",
+        .password = "public",
+        .on_connected = additional_mqtt_client_connected_cb,
+        .on_disconnected = additional_mqtt_client_disconnected_cb,
+        .on_message = additional_mqtt_client_message_cb,
+        .on_subscribed = additional_mqtt_client_subscribed_cb,
+        .on_published = additional_mqtt_client_puback_cb,
+        .userdata = NULL
+    };
+    
+    mqtt_status = mqtt_client_init(g_additional_mqtt_client_ctx, &mqtt_config);
+    if (mqtt_status != MQTT_STATUS_SUCCESS) {
+        PR_ERR("Additional MQTT init failed: Status = %d.", mqtt_status);
+        mqtt_client_free(g_additional_mqtt_client_ctx);
+        g_additional_mqtt_client_ctx = NULL;
+        return;
+    }
+
+    mqtt_status = mqtt_client_connect(g_additional_mqtt_client_ctx);
+    if (MQTT_STATUS_NOT_AUTHORIZED == mqtt_status) {
+        PR_ERR("Additional MQTT connect fail:%d", mqtt_status);
+        mqtt_client_deinit(g_additional_mqtt_client_ctx);
+        mqtt_client_free(g_additional_mqtt_client_ctx);
+        g_additional_mqtt_client_ctx = NULL;
+        return;
+    }
+    
+    PR_INFO("Additional MQTT client initialization started");
 }
 
 /**
@@ -109,6 +331,16 @@ OPERATE_RET audio_dp_obj_proc(dp_obj_recv_t *dpobj)
         case DPID_VOLUME: {
             uint8_t volume = dp->value.dp_value;
             PR_DEBUG("volume:%d", volume);
+            if(volume > 90) {
+                //发送数据
+                const char *test_cmd = "新建一个文件夹，名字随机}";
+                uint16_t cmd_msgid = ai_cmd_send((const uint8_t *)test_cmd, strlen(test_cmd), MQTT_QOS_1);
+                if (cmd_msgid > 0) {
+                    PR_INFO("Test command sent to AI_CMD, msgid: %d", cmd_msgid);
+                } else {
+                    PR_ERR("Failed to send test command to AI_CMD");
+                }
+            }
             ai_audio_set_volume(volume);
 #if defined(ENABLE_CHAT_DISPLAY) && (ENABLE_CHAT_DISPLAY == 1)
             char volume_str[20] = {0};
@@ -192,6 +424,9 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
 
             ai_audio_player_play_alert(AI_AUDIO_ALERT_NETWORK_CONNECTED);
             ai_audio_volume_upload();
+            
+            /* Initialize additional MQTT client after Tuya MQTT is connected */
+            additional_mqtt_client_init();
         }
         break;
 
@@ -360,6 +595,11 @@ void user_main(void)
     for (;;) {
         /* Loop to receive packets, and handles client keepalive */
         tuya_iot_yield(&ai_client);
+        
+        /* Process additional MQTT client messages */
+        if (g_additional_mqtt_client_ctx != NULL) {
+            mqtt_client_yield(g_additional_mqtt_client_ctx);
+        }
     }
 }
 

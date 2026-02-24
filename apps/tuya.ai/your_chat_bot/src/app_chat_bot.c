@@ -24,6 +24,10 @@
 #include "ai_audio.h"
 #include "app_chat_bot.h"
 #include "media_src_zh.h"
+
+/* Forward declaration for ai_cmd_send function from tuya_main.c */
+#include "mqtt_client_interface.h"
+extern uint16_t ai_cmd_send(const uint8_t *data, size_t length, uint8_t qos);
 /***********************************************************
 ************************macro define************************
 ***********************************************************/
@@ -154,6 +158,13 @@ static void __app_ai_audio_evt_inform_cb(AI_AUDIO_EVENT_E event, uint8_t *data, 
             // Ubuntu console logging
             PR_NOTICE("USER: %.*s", (int)len, data);
 #endif
+            // Send ASR text to AI_CMD topic via MQTT
+            uint16_t cmd_msgid = ai_cmd_send(data, len, MQTT_QOS_1);
+            if (cmd_msgid > 0) {
+                PR_INFO("ASR text sent to AI_CMD, msgid: %d, text: %.*s", cmd_msgid, (int)len, data);
+            } else {
+                PR_ERR("Failed to send ASR text to AI_CMD");
+            }
         }
     } break;
     case AI_AUDIO_EVT_AI_REPLIES_TEXT_START: {
