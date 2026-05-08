@@ -43,6 +43,9 @@
 #include "reset_netcfg.h"
 #include "app_servo.h"
 #include "app_gesture.h"
+#include "app_gpio_level_report.h"
+#include "app_water_stats.h"
+#include "led_pixel_breath.h"
 
 /* Tuya device handle */
 tuya_iot_client_t ai_client;
@@ -304,6 +307,8 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
         if (first) {
             first = 0;
             ai_audio_volume_upload();
+            (void)app_gpio_level_report_sync();
+            (void)app_water_stats_sync_upload_today();
         }
         break;
 
@@ -461,6 +466,20 @@ void user_main(void)
         PR_ERR("board_register_hardware failed");
     }
 
+#if defined(ENABLE_LEDS_PIXEL) && (ENABLE_LEDS_PIXEL)
+    ret = led_pixel_register_hardware();
+    if (ret != OPRT_OK) {
+        PR_ERR("led_pixel_register_hardware failed: %d", ret);
+    }
+
+    ret = led_pixel_breath_start_white();
+    if (ret != OPRT_OK) {
+        PR_ERR("led_pixel_breath_start_white failed: %d", ret);
+    } else {
+        PR_NOTICE("led_pixel_breath_start_white success");
+    }
+#endif
+
     ret = app_chat_bot_init();
     if (ret != OPRT_OK) {
         PR_ERR("app_chat_bot_init failed");
@@ -486,6 +505,16 @@ void user_main(void)
     ret = app_gesture_init(__gesture_detect_cb);
     if (ret != OPRT_OK) {
         PR_ERR("app_gesture_init failed: %d", ret);
+    }
+
+    ret = app_water_stats_init();
+    if (ret != OPRT_OK) {
+        PR_ERR("app_water_stats_init failed: %d", ret);
+    }
+
+    ret = app_gpio_level_report_init();
+    if (ret != OPRT_OK) {
+        PR_ERR("app_gpio_level_report_init failed: %d", ret);
     }
 
     for (;;) {

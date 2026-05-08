@@ -23,8 +23,10 @@
  */
 
 #ifndef TUYA_PRODUCT_ID
-#define TUYA_PRODUCT_ID "roxam5enkouvqubk"
+#define TUYA_PRODUCT_ID "rjirtch49fb98yzv"
 #endif
+
+
 
 #define TUYA_OPENSDK_UUID    "uuidxxxxxxxxxxxxxxxx"             // Please change the correct uuid
 #define TUYA_OPENSDK_AUTHKEY "keyxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" // Please change the correct authkey
@@ -37,5 +39,19 @@
  * WARNING: PINCODE is mandatory for AP provisioning
  */
 // #define TUYA_NETCFG_PINCODE   "69832860"
+
+/**
+ * @brief Tuya DP id for GPIO level (PROP_BOOL on platform)
+ */
+#ifndef APP_GPIO_LEVEL_REPORT_DPID
+#define APP_GPIO_LEVEL_REPORT_DPID 105
+#endif
+
+/**
+ * @brief Tuya DP id for today drink / water count (PROP_VALUE on platform)
+ */
+#ifndef APP_WATER_TIMES_REPORT_DPID
+#define APP_WATER_TIMES_REPORT_DPID 106
+#endif
 
 #endif
