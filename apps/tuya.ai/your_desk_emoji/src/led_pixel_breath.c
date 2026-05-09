@@ -68,6 +68,17 @@ static const PIXEL_COLOR_T s_led_peak_yellow = {.red = LED_PIXEL_COLOR_RES, .gre
 static const PIXEL_COLOR_T s_led_peak_orange = {.red = LED_PIXEL_COLOR_RES, .green = (LED_PIXEL_COLOR_RES * 45) / 100, .blue = 0};
 static const PIXEL_COLOR_T s_led_peak_pink   = {.red = LED_PIXEL_COLOR_RES, .green = (LED_PIXEL_COLOR_RES * 20) / 100, .blue = (LED_PIXEL_COLOR_RES * 35) / 100};
 
+/* 7-step warm-yellow -> white palette indexed by level 0..LED_PIXEL_WARM_LEVEL_MAX. */
+static const char *const s_led_warm_palette[LED_PIXEL_WARM_LEVEL_MAX + 1] = {
+    "FFAA00", /* 0: saturated amber yellow */
+    "FFB82B", /* 1: warm yellow */
+    "FFC655", /* 2: lighter yellow */
+    "FFD580", /* 3: lightest yellow */
+    "FFE3AA", /* 4: warm white */
+    "FFF1D5", /* 5: near white */
+    "FFFFFF", /* 6: pure white */
+};
+
 /* ---------------------------------------------------------------------------
  * Function declarations
  * --------------------------------------------------------------------------- */
@@ -460,6 +471,22 @@ OPERATE_RET led_pixel_breath_start_orange(void)
 OPERATE_RET led_pixel_breath_start_pink(void)
 {
     return __led_pixel_breath_apply_peak(&s_led_peak_pink);
+}
+
+/**
+ * @brief Apply a warm-white color level (steady on, no breath)
+ * @param[in] level color temperature level in range [0, LED_PIXEL_WARM_LEVEL_MAX]
+ * @return OPRT_OK on success, error code otherwise
+ * @note Out-of-range input is clamped to LED_PIXEL_WARM_LEVEL_MAX. Internally
+ *       this delegates to led_pixel_apply_rgb_mode() with full brightness in
+ *       steady mode.
+ */
+OPERATE_RET led_pixel_set_warm_level(uint8_t level)
+{
+    uint8_t idx = (level > LED_PIXEL_WARM_LEVEL_MAX) ? LED_PIXEL_WARM_LEVEL_MAX : level;
+
+    PR_DEBUG("led warm level: %u -> %s", idx, s_led_warm_palette[idx]);
+    return led_pixel_apply_rgb_mode(s_led_warm_palette[idx], 100, false);
 }
 
 /**

@@ -411,6 +411,28 @@ OPERATE_RET app_water_stats_sync_upload_today(void)
 }
 
 /**
+ * @brief Wipe all persisted drink stats (delete KV + clear in-memory cache)
+ * @return OPRT_OK on success, KV error code otherwise
+ * @note Idempotent. Safe to call when no record exists. Intended for
+ *       factory-reset / device-removal flows.
+ */
+OPERATE_RET app_water_stats_clear(void)
+{
+    OPERATE_RET rt;
+
+    memset(s_days, 0, sizeof(s_days));
+    s_day_n = 0;
+
+    rt = tal_kv_del(WATER_STATS_KV_KEY);
+    if (rt != OPRT_OK) {
+        PR_WARN("water_stats: KV del '%s' rt=%d (treated as cleared)", WATER_STATS_KV_KEY, rt);
+    } else {
+        PR_NOTICE("water_stats: KV '%s' cleared", WATER_STATS_KV_KEY);
+    }
+    return rt;
+}
+
+/**
  * @brief Print recent stored drink counts (KV, up to 10 days) to log
  * @return none
  */

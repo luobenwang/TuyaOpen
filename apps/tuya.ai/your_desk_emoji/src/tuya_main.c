@@ -57,8 +57,9 @@ tuya_iot_license_t license;
 #define PROJECT_VERSION "1.0.0"
 #endif
 
-#define DPID_VOLUME 3
-#define DPID_SERVO  5
+#define DPID_VOLUME      3
+#define DPID_SERVO       5
+#define DPID_LIGHT_LEVEL 102
 
 bool                  _s_servo_busy   = FALSE;
 static SERVO_ACTION_E _s_servo_action = SERVO_CENTER;
@@ -256,6 +257,23 @@ OPERATE_RET audio_dp_obj_proc(dp_obj_recv_t *dpobj)
             }
             break;
         }
+        case DPID_LIGHT_LEVEL: {
+            uint32_t level = dp->value.dp_enum;
+            PR_DEBUG("light level enum:%u", level);
+#if defined(ENABLE_LEDS_PIXEL) && (ENABLE_LEDS_PIXEL)
+            if (level > LED_PIXEL_WARM_LEVEL_MAX) {
+                PR_WARN("light level %u out of range, clamp to %u", level, LED_PIXEL_WARM_LEVEL_MAX);
+                level = LED_PIXEL_WARM_LEVEL_MAX;
+            }
+            OPERATE_RET led_rt = led_pixel_set_warm_level((uint8_t)level);
+            if (led_rt != OPRT_OK) {
+                PR_ERR("led_pixel_set_warm_level failed: %d", led_rt);
+            }
+#else
+            (void)level;
+#endif
+            break;
+        }
         default:
             break;
         }
@@ -326,8 +344,24 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
         tuya_reset_type_t reset_type = (tuya_reset_type_t)event->value.asInteger;
         PR_INFO("Device Reset:%d", reset_type);
 
-        // TUYA_RESET_TYPE_FACTORY, TUYA_RESET_TYPE_REMOTE_FACTORY, TUYA_RESET_TYPE_DATA_FACTORY
-        // Need remove the device application data from the kv store
+        /* On factory-reset / device-removal, wipe app-level persisted state so
+         * the next bind starts clean. Add other modules here as they grow.
+         */
+        switch (reset_type) {
+        case TUYA_RESET_TYPE_FACTORY:
+        case TUYA_RESET_TYPE_REMOTE_FACTORY:
+        case TUYA_RESET_TYPE_DATA_FACTORY:
+        case TUYA_RESET_TYPE_REMOTE_UNACTIVE:
+        case TUYA_RESET_TYPE_LOCAL_UNACTIVE: {
+            OPERATE_RET clr_rt = app_water_stats_clear();
+            if (clr_rt != OPRT_OK) {
+                PR_WARN("app_water_stats_clear failed: %d", clr_rt);
+            }
+            break;
+        }
+        default:
+            break;
+        }
     } break;
     case TUYA_EVENT_RESET_COMPLETE: {
         PR_INFO("Device Reset Complete!");
@@ -471,13 +505,13 @@ void user_main(void)
     if (ret != OPRT_OK) {
         PR_ERR("led_pixel_register_hardware failed: %d", ret);
     }
-
-    ret = led_pixel_breath_start_white();
-    if (ret != OPRT_OK) {
-        PR_ERR("led_pixel_breath_start_white failed: %d", ret);
-    } else {
-        PR_NOTICE("led_pixel_breath_start_white success");
-    }
+    led_pixel_set_warm_level(0);
+    // ret = led_pixel_breath_start_white();
+    // if (ret != OPRT_OK) {
+    //     PR_ERR("led_pixel_breath_start_white failed: %d", ret);
+    // } else {
+    //     PR_NOTICE("led_pixel_breath_start_white success");
+    // }
 #endif
 
     ret = app_chat_bot_init();

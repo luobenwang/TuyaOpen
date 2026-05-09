@@ -103,6 +103,26 @@ OPERATE_RET led_pixel_breath_start_pink(void);
  */
 OPERATE_RET led_pixel_breath_stop(void);
 
+/* ---------------------------------------------------------------------------
+ * Warm-white level mapping (yellow -> white, level 0..6)
+ * --------------------------------------------------------------------------- */
+/**
+ * @brief Maximum warm-white level index
+ * @note Valid level range is [0, LED_PIXEL_WARM_LEVEL_MAX], i.e. 7 steps.
+ *       Level 0 is the most saturated yellow, LED_PIXEL_WARM_LEVEL_MAX is
+ *       pure white.
+ */
+#define LED_PIXEL_WARM_LEVEL_MAX 6
+
+/**
+ * @brief Apply a warm-white color level (steady on, no breath)
+ * @param[in] level color temperature level in range [0, LED_PIXEL_WARM_LEVEL_MAX]
+ * @return OPRT_OK on success, error code otherwise
+ * @note Out-of-range input is clamped to LED_PIXEL_WARM_LEVEL_MAX. The
+ *       result is rendered in steady mode at full brightness.
+ */
+OPERATE_RET led_pixel_set_warm_level(uint8_t level);
+
 #endif /* ENABLE_LEDS_PIXEL */
 
 #ifdef __cplusplus

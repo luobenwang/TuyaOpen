@@ -53,6 +53,14 @@ OPERATE_RET app_water_stats_get_today_count(int *today_total_out);
  */
 VOID_T app_water_stats_print_recent(void);
 
+/**
+ * @brief Wipe all persisted drink stats (delete KV + clear in-memory cache)
+ * @return OPRT_OK on success, KV error code otherwise
+ * @note Intended to be called on factory-reset / device-removal events so the
+ *       Water Baby ambient ladder restarts from level 0 for the next user.
+ */
+OPERATE_RET app_water_stats_clear(void);
+
 #ifdef __cplusplus
 }
 #endif
