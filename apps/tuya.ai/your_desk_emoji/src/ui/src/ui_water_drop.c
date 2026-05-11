@@ -1,7 +1,7 @@
 /**
  * @file ui_water_drop.c
  * @brief Playful water baby GIFs (blue / yellow) roaming the whole screen
- * @version 1.5
+ * @version 1.7
  * @date 2026-05-11
  * @copyright Copyright (c) Tuya Inc.
  */
@@ -16,8 +16,9 @@ LV_IMG_DECLARE(water_baby_yellow);
 /* ---------------------------------------------------------------------------
  * Macros
  * --------------------------------------------------------------------------- */
-#define BABY_DISP_W        (LV_HOR_RES / 2)
-#define BABY_DISP_H        (LV_VER_RES / 2)
+/** Match embedded GIF pixel size (see tools/gen_water_baby_assets.py W,H) */
+#define BABY_DISP_W        80
+#define BABY_DISP_H        40
 #define BABY_BEZIER_STEPS  1024
 /** Today drink count >= this -> blue baby; below -> yellow (same ladder as water_time3) */
 #define WATER_TIME3_BLUE_MIN 3
@@ -50,6 +51,28 @@ static void baby_move_completed(lv_anim_t *a);
 static void baby_delay_cb(lv_timer_t *t);
 
 /**
+ * @brief Remove theme chrome so the GIF has no visible frame or letterbox fill
+ * @param[in] obj water baby lv_gif handle
+ * @return none
+ */
+static void baby_clear_gif_chrome(lv_obj_t *obj)
+{
+    if (obj == NULL) {
+        return;
+    }
+    lv_obj_set_style_bg_opa(obj, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(obj, 0, 0);
+    lv_obj_set_style_border_opa(obj, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_outline_width(obj, 0, 0);
+    lv_obj_set_style_outline_opa(obj, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_shadow_width(obj, 0, 0);
+    lv_obj_set_style_shadow_opa(obj, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_radius(obj, 0, 0);
+    lv_obj_set_style_pad_all(obj, 0, 0);
+    lv_obj_set_style_clip_corner(obj, false, 0);
+}
+
+/**
  * @brief Pick GIF skin from today drink count (water_time3 ladder)
  * @return none
  * @note Uses app_water_stats today total: >= WATER_TIME3_BLUE_MIN -> blue, else yellow.
@@ -71,6 +94,8 @@ static void baby_apply_skin_by_water_time3(void)
     }
 
     lv_gif_set_src(s_water_gif, skin);
+    lv_image_set_antialias(s_water_gif, false);
+    baby_clear_gif_chrome(s_water_gif);
 }
 
 /* ---------------------------------------------------------------------------
@@ -383,8 +408,7 @@ int __ui_water_drop_init(void)
 
     baby_apply_skin_by_water_time3();
     lv_obj_set_size(s_water_gif, BABY_DISP_W, BABY_DISP_H);
-    lv_obj_set_style_border_width(s_water_gif, 0, 0);
-    lv_obj_set_style_pad_all(s_water_gif, 0, 0);
+    baby_clear_gif_chrome(s_water_gif);
 
     max_x = (uint32_t)LV_MAX(0, (lv_coord_t)LV_HOR_RES - BABY_DISP_W);
     max_y = (uint32_t)LV_MAX(0, (lv_coord_t)LV_VER_RES - BABY_DISP_H);

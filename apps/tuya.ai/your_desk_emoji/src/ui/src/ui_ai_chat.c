@@ -1,7 +1,7 @@
 /**
  * @file ui_ai_chat.c
  * @brief Bottom single-line transient text for user and assistant (no prefix, no frame)
- * @version 1.2
+ * @version 1.4
  * @date 2026-05-11
  * @copyright Copyright (c) 2026 Tuya Inc. All Rights Reserved.
  */
@@ -22,6 +22,13 @@
 #define UI_AI_CHAT_AI_MAX    640
 /** Hold non-streaming assistant text before auto-clear (ms) */
 #define UI_AI_CHAT_AI_HOLD_MS 2500
+/** Text scale vs LV_SCALE_NONE (256); ~224 looks one step smaller than default UI font */
+#define UI_AI_CHAT_TEXT_SCALE 224
+#define UI_AI_CHAT_SCALE_DEN  256
+/** Horizontal slide-in from the right (px) */
+#define UI_AI_CHAT_ENTR_DX    56
+/** Slide-in duration (ms) */
+#define UI_AI_CHAT_ENTR_MS    280
 
 /* ---------------------------------------------------------------------------
  * File scope variables
@@ -31,11 +38,14 @@ static lv_timer_t *s_ai_hold_timer;
 static char        s_user[UI_AI_CHAT_USER_MAX];
 static char        s_ai[UI_AI_CHAT_AI_MAX];
 static bool        s_streaming;
+static bool        s_stream_entrance_pending;
 
 /* ---------------------------------------------------------------------------
  * Forward declarations
  * --------------------------------------------------------------------------- */
 static void __ai_hold_timer_cb(lv_timer_t *t);
+static void __ai_chat_anim_trans_x(void *var, int32_t v);
+static void __ui_ai_chat_play_entrance(void);
 
 /* ---------------------------------------------------------------------------
  * Function implementations
@@ -74,6 +84,42 @@ static void __ai_hold_timer_cb(lv_timer_t *t)
  * @param[in,out] buf mutable UTF-8 string
  * @return none
  */
+/**
+ * @brief Animation: horizontal translate for slide-in from the right
+ * @param[in] var unused (uses s_label)
+ * @param[in] v translate_x in pixels
+ * @return none
+ */
+static void __ai_chat_anim_trans_x(void *var, int32_t v)
+{
+    LV_UNUSED(var);
+    if (s_label != NULL) {
+        lv_obj_set_style_translate_x(s_label, v, 0);
+    }
+}
+
+/**
+ * @brief Play slide-in from bottom-right (translate_x from +ENTR_DX to 0)
+ * @return none
+ */
+static void __ui_ai_chat_play_entrance(void)
+{
+    lv_anim_t a;
+
+    if (s_label == NULL) {
+        return;
+    }
+
+    (void)lv_anim_delete(s_label, __ai_chat_anim_trans_x);
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, s_label);
+    lv_anim_set_exec_cb(&a, __ai_chat_anim_trans_x);
+    lv_anim_set_values(&a, UI_AI_CHAT_ENTR_DX, 0);
+    lv_anim_set_duration(&a, UI_AI_CHAT_ENTR_MS);
+    lv_anim_set_path_cb(&a, lv_anim_path_ease_out);
+    lv_anim_start(&a);
+}
+
 static void __strip_line_breaks(char *buf)
 {
     char *p;
@@ -104,20 +150,13 @@ static void __ui_ai_chat_refresh(void)
         } else {
             lv_label_set_text(s_label, "");
         }
-        return;
-    }
-
-    if (s_ai[0] != '\0') {
+    } else if (s_ai[0] != '\0') {
         lv_label_set_text(s_label, s_ai);
-        return;
-    }
-
-    if (s_user[0] != '\0') {
+    } else if (s_user[0] != '\0') {
         lv_label_set_text(s_label, s_user);
-        return;
+    } else {
+        lv_label_set_text(s_label, "");
     }
-
-    lv_label_set_text(s_label, "");
 }
 
 /**
@@ -149,6 +188,9 @@ int __ui_ai_chat_init(void)
     lv_obj_t   *scr;
     lv_font_t  *font;
     lv_coord_t  line_h;
+    lv_coord_t  w;
+    uint32_t    raw_h;
+    uint32_t    scaled_h;
 
     scr = lv_screen_active();
     if (scr == NULL) {
@@ -160,20 +202,32 @@ int __ui_ai_chat_init(void)
         return -1;
     }
 
+    w = (lv_coord_t)(LV_HOR_RES - 8);
+
     font = ai_ui_get_text_font();
     if (font != NULL) {
-        line_h = (lv_coord_t)lv_font_get_line_height(font);
         lv_obj_set_style_text_font(s_label, font, 0);
+        raw_h = (uint32_t)lv_font_get_line_height(font);
+        scaled_h = (raw_h * (uint32_t)UI_AI_CHAT_TEXT_SCALE + (uint32_t)(UI_AI_CHAT_SCALE_DEN / 2)) /
+                   (uint32_t)UI_AI_CHAT_SCALE_DEN;
+        if (scaled_h < 1u) {
+            scaled_h = 1u;
+        }
+        line_h = (lv_coord_t)scaled_h;
+        lv_obj_set_style_transform_scale(s_label, UI_AI_CHAT_TEXT_SCALE, 0);
+        lv_obj_set_style_transform_pivot_x(s_label, w, 0);
+        lv_obj_set_style_transform_pivot_y(s_label, line_h, 0);
     } else {
-        line_h = 16;
+        line_h = 14;
+        lv_obj_set_style_transform_scale(s_label, LV_SCALE_NONE, 0);
     }
 
-    lv_obj_set_width(s_label, (lv_coord_t)(LV_HOR_RES - 8));
+    lv_obj_set_width(s_label, w);
     lv_obj_set_height(s_label, line_h);
-    lv_obj_align(s_label, LV_ALIGN_BOTTOM_MID, 0, -4);
+    lv_obj_align(s_label, LV_ALIGN_BOTTOM_RIGHT, -4, 0);
     lv_label_set_long_mode(s_label, LV_LABEL_LONG_SCROLL_CIRCULAR);
     lv_obj_set_style_text_color(s_label, lv_color_hex(0xB8FFF5), 0);
-    lv_obj_set_style_text_align(s_label, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_align(s_label, LV_TEXT_ALIGN_RIGHT, 0);
     lv_obj_set_style_bg_opa(s_label, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(s_label, 0, 0);
     lv_obj_set_style_shadow_width(s_label, 0, 0);
@@ -182,8 +236,9 @@ int __ui_ai_chat_init(void)
 
     s_user[0]       = '\0';
     s_ai[0]         = '\0';
-    s_streaming     = false;
-    s_ai_hold_timer = NULL;
+    s_streaming              = false;
+    s_stream_entrance_pending = false;
+    s_ai_hold_timer           = NULL;
 
     lv_obj_move_foreground(s_label);
 
@@ -200,9 +255,13 @@ void __ui_ai_chat_set_user_msg(char *string)
     lv_vendor_disp_lock();
     __cancel_ai_hold_timer();
     __copy_cstr(s_user, sizeof(s_user), string);
-    s_ai[0]     = '\0';
-    s_streaming = false;
+    s_ai[0]                   = '\0';
+    s_streaming               = false;
+    s_stream_entrance_pending = false;
     __ui_ai_chat_refresh();
+    if (s_user[0] != '\0') {
+        __ui_ai_chat_play_entrance();
+    }
     lv_vendor_disp_unlock();
 }
 
@@ -215,10 +274,14 @@ void __ui_ai_chat_set_ai_msg(char *string)
 {
     lv_vendor_disp_lock();
     __cancel_ai_hold_timer();
-    s_user[0]   = '\0';
-    s_streaming = false;
+    s_user[0]                 = '\0';
+    s_streaming               = false;
+    s_stream_entrance_pending = false;
     __copy_cstr(s_ai, sizeof(s_ai), string);
     __ui_ai_chat_refresh();
+    if (s_ai[0] != '\0') {
+        __ui_ai_chat_play_entrance();
+    }
 
     s_ai_hold_timer = lv_timer_create(__ai_hold_timer_cb, UI_AI_CHAT_AI_HOLD_MS, NULL);
     if (s_ai_hold_timer != NULL) {
@@ -235,9 +298,10 @@ void __ui_ai_chat_ai_stream_start(void)
 {
     lv_vendor_disp_lock();
     __cancel_ai_hold_timer();
-    s_user[0]   = '\0';
-    s_ai[0]     = '\0';
-    s_streaming = true;
+    s_user[0]                 = '\0';
+    s_ai[0]                   = '\0';
+    s_streaming               = true;
+    s_stream_entrance_pending = true;
     __ui_ai_chat_refresh();
     lv_vendor_disp_unlock();
 }
@@ -266,6 +330,10 @@ void __ui_ai_chat_ai_stream_data(char *string)
     (void)snprintf(s_ai + la, rem, "%s", string);
     __strip_line_breaks(s_ai);
     __ui_ai_chat_refresh();
+    if (s_stream_entrance_pending && s_ai[0] != '\0') {
+        s_stream_entrance_pending = false;
+        __ui_ai_chat_play_entrance();
+    }
     lv_vendor_disp_unlock();
 }
 
@@ -276,8 +344,9 @@ void __ui_ai_chat_ai_stream_data(char *string)
 void __ui_ai_chat_ai_stream_end(void)
 {
     lv_vendor_disp_lock();
-    s_streaming = false;
-    s_ai[0]     = '\0';
+    s_streaming               = false;
+    s_stream_entrance_pending = false;
+    s_ai[0]                   = '\0';
     __ui_ai_chat_refresh();
     lv_vendor_disp_unlock();
 }
