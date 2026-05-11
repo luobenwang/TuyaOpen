@@ -17,6 +17,8 @@
 #include "tuya_iot.h"
 #include "tuya_iot_dp.h"
 
+#include "ai_agent.h"
+
 /* ---------------------------------------------------------------------------
  * Macros
  * --------------------------------------------------------------------------- */
@@ -24,6 +26,9 @@
 #define APP_GPIO_LEVEL_REPORT_PIN TUYA_GPIO_NUM_2
 
 #define APP_GPIO_LEVEL_REPORT_POLL_MS 50
+
+/** User text pushed to AI agent when a drink is counted (GPIO rising edge) */
+#define APP_WATER_DRINK_AI_TEXT "我开始喝水了"
 
 /* ---------------------------------------------------------------------------
  * File scope variables
@@ -104,9 +109,18 @@ STATIC VOID_T __level_report_timer_cb(TIMER_ID timer_id, void *arg)
     }
 
     if (s_has_last_level && (s_last_level == TUYA_GPIO_LEVEL_LOW) && (level == TUYA_GPIO_LEVEL_HIGH)) {
-        int today_total = 0;
-        if (app_water_stats_record_drink(&today_total) == OPRT_OK) {
+        int          today_total = 0;
+        OPERATE_RET drink_rt;
+        OPERATE_RET ai_rt;
+        char          drink_msg[] = APP_WATER_DRINK_AI_TEXT;
+
+        drink_rt = app_water_stats_record_drink(&today_total);
+        if (drink_rt == OPRT_OK) {
             (void)app_water_stats_report_dp((uint32_t)today_total);
+            ai_rt = ai_agent_send_text(drink_msg);
+            if (ai_rt != OPRT_OK) {
+                PR_DEBUG("level_report: ai_agent_send_text ret=%d (agent may not be ready yet)", ai_rt);
+            }
         }
     }
 

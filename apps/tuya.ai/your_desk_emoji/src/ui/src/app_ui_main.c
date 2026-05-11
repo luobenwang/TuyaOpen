@@ -41,6 +41,8 @@ extern void __ui_clock_hide(void);
 extern void __ui_clock_update_weather(int weather_code, int temperature);
 extern void __ui_clock_update_time(POSIX_TM_S *curr_time);
 
+extern int __ui_water_drop_init(void);
+
 /***********************************************************
 ***********************function define**********************
 ***********************************************************/
@@ -75,6 +77,8 @@ static OPERATE_RET __ui_init(void)
     __ui_clock_init();
 
     __ui_emoji_init();
+
+    (void)__ui_water_drop_init();
 
     sg_curr_emo_img    = __ui_emoji_set_emotion(EMOJI_HAPPY);
     sg_start_emo_img   = sg_curr_emo_img;
