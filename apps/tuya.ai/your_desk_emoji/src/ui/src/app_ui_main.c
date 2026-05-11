@@ -8,6 +8,7 @@
 #include "lv_vendor.h"
 #include "ai_ui_manage.h"
 #include "app_ui.h"
+#include "ui_ai_chat.h"
 
 /***********************************************************
 ************************macro define************************
@@ -46,6 +47,31 @@ extern int __ui_water_drop_init(void);
 /***********************************************************
 ***********************function define**********************
 ***********************************************************/
+static void __ui_disp_user_msg(char *string)
+{
+    __ui_ai_chat_set_user_msg(string);
+}
+
+static void __ui_disp_ai_msg(char *string)
+{
+    __ui_ai_chat_set_ai_msg(string);
+}
+
+static void __ui_disp_ai_msg_stream_start(void)
+{
+    __ui_ai_chat_ai_stream_start();
+}
+
+static void __ui_disp_ai_msg_stream_data(char *string)
+{
+    __ui_ai_chat_ai_stream_data(string);
+}
+
+static void __ui_disp_ai_msg_stream_end(void)
+{
+    __ui_ai_chat_ai_stream_end();
+}
+
 static void __lvgl_init(void)
 {
     lv_vendor_init(DISPLAY_NAME);
@@ -79,6 +105,8 @@ static OPERATE_RET __ui_init(void)
     __ui_emoji_init();
 
     (void)__ui_water_drop_init();
+
+    (void)__ui_ai_chat_init();
 
     sg_curr_emo_img    = __ui_emoji_set_emotion(EMOJI_HAPPY);
     sg_start_emo_img   = sg_curr_emo_img;
@@ -159,9 +187,14 @@ OPERATE_RET app_ai_ui_register(void)
 
     memset(&intfs, 0, sizeof(AI_UI_INTFS_T));
 
-    intfs.disp_init       = __ui_init;
-    intfs.disp_emotion    = __ui_set_emotion;
-    intfs.disp_other_msg  = __ui_handle_custom_type;
+    intfs.disp_init                 = __ui_init;
+    intfs.disp_emotion              = __ui_set_emotion;
+    intfs.disp_user_msg             = __ui_disp_user_msg;
+    intfs.disp_ai_msg               = __ui_disp_ai_msg;
+    intfs.disp_ai_msg_stream_start  = __ui_disp_ai_msg_stream_start;
+    intfs.disp_ai_msg_stream_data   = __ui_disp_ai_msg_stream_data;
+    intfs.disp_ai_msg_stream_end    = __ui_disp_ai_msg_stream_end;
+    intfs.disp_other_msg            = __ui_handle_custom_type;
 
     return ai_ui_register(&intfs);
 }

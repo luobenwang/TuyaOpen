@@ -18,6 +18,9 @@
 #include "tuya_iot_dp.h"
 
 #include "ai_agent.h"
+#if defined(ENABLE_COMP_AI_DISPLAY) && (ENABLE_COMP_AI_DISPLAY == 1)
+#include "ai_ui_manage.h"
+#endif
 
 /* ---------------------------------------------------------------------------
  * Macros
@@ -117,6 +120,9 @@ STATIC VOID_T __level_report_timer_cb(TIMER_ID timer_id, void *arg)
         drink_rt = app_water_stats_record_drink(&today_total);
         if (drink_rt == OPRT_OK) {
             (void)app_water_stats_report_dp((uint32_t)today_total);
+#if defined(ENABLE_COMP_AI_DISPLAY) && (ENABLE_COMP_AI_DISPLAY == 1)
+            (void)ai_ui_disp_msg(AI_UI_DISP_USER_MSG, (uint8_t *)drink_msg, (int)strlen(drink_msg));
+#endif
             ai_rt = ai_agent_send_text(drink_msg);
             if (ai_rt != OPRT_OK) {
                 PR_DEBUG("level_report: ai_agent_send_text ret=%d (agent may not be ready yet)", ai_rt);
