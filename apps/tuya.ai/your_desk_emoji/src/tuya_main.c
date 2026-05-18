@@ -44,6 +44,7 @@
 #include "app_servo.h"
 #include "app_gesture.h"
 #include "app_gpio_level_report.h"
+#include "app_tof.h"
 #include "app_water_stats.h"
 #include "led_pixel_breath.h"
 
@@ -144,93 +145,93 @@ static void __servo_control_wk_cb(void *data)
     _s_servo_busy = FALSE;
 }
 
-static void __gesture_detect_cb(GESTURE_TYPE_E gesture)
-{
-    PR_DEBUG("Gesture detected: %d", gesture);
+// static void __gesture_detect_cb(GESTURE_TYPE_E gesture)
+// {
+//     PR_DEBUG("Gesture detected: %d", gesture);
 
-    // Hide weather clock and show emoji mode
-#if defined(ENABLE_COMP_AI_DISPLAY) && (ENABLE_COMP_AI_DISPLAY == 1)
-    ai_ui_disp_msg(AI_UI_DISP_EMOJI_UI_SHOW, NULL, 0);
+//     // Hide weather clock and show emoji mode
+// #if defined(ENABLE_COMP_AI_DISPLAY) && (ENABLE_COMP_AI_DISPLAY == 1)
+//     ai_ui_disp_msg(AI_UI_DISP_EMOJI_UI_SHOW, NULL, 0);
 
-    // Trigger corresponding emoji expression
-    switch (gesture) {
-    case GESTURE_RIGHT:
-        ai_ui_disp_msg(AI_UI_DISP_EMOTION, (uint8_t *)EMOJI_RIGHT, strlen(EMOJI_RIGHT));
-        _s_servo_action = SERVO_RIGHT;
-        break;
-    case GESTURE_LEFT:
-        ai_ui_disp_msg(AI_UI_DISP_EMOTION, (uint8_t *)EMOJI_LEFT, strlen(EMOJI_LEFT));
-        _s_servo_action = SERVO_LEFT;
-        break;
-    case GESTURE_UP:
-        ai_ui_disp_msg(AI_UI_DISP_EMOTION, (uint8_t *)EMOJI_HAPPY, strlen(EMOJI_HAPPY));
-        _s_servo_action = SERVO_UP;
-        break;
-    case GESTURE_DOWN:
-        ai_ui_disp_msg(AI_UI_DISP_EMOTION, (uint8_t *)EMOJI_SAD, strlen(EMOJI_SAD));
-        _s_servo_action = SERVO_DOWN;
-        break;
-    case GESTURE_CLOCKWISE:
-        ai_ui_disp_msg(AI_UI_DISP_EMOTION, (uint8_t *)EMOJI_SURPRISE, strlen(EMOJI_SURPRISE));
-        _s_servo_action = SERVO_CLOCKWISE;
-        break;
-    case GESTURE_ANTICLOCKWISE:
-        ai_ui_disp_msg(AI_UI_DISP_EMOTION, (uint8_t *)EMOJI_ANGRY, strlen(EMOJI_ANGRY));
-        _s_servo_action = SERVO_ANTICLOCKWISE;
-        break;
-    case GESTURE_FORWARD:
-        ai_ui_disp_msg(AI_UI_DISP_EMOTION, (uint8_t *)EMOJI_WAKEUP, strlen(EMOJI_WAKEUP));
-        _s_servo_action = SERVO_NOD;
-        break;
-    case GESTURE_BACKWARD:
-        ai_ui_disp_msg(AI_UI_DISP_EMOTION, (uint8_t *)EMOJI_SLEEP, strlen(EMOJI_SLEEP));
-        _s_servo_action = SERVO_CENTER;
-        break;
-    // Add fun expressions for special gestures
-    case GESTURE_WAVE:
-        ai_ui_disp_msg(AI_UI_DISP_EMOTION, (uint8_t *)EMOJI_WINK, strlen(EMOJI_WINK));
-        break;
-    default:
-        return;
-    }
+//     // Trigger corresponding emoji expression
+//     switch (gesture) {
+//     case GESTURE_RIGHT:
+//         ai_ui_disp_msg(AI_UI_DISP_EMOTION, (uint8_t *)EMOJI_RIGHT, strlen(EMOJI_RIGHT));
+//         _s_servo_action = SERVO_RIGHT;
+//         break;
+//     case GESTURE_LEFT:
+//         ai_ui_disp_msg(AI_UI_DISP_EMOTION, (uint8_t *)EMOJI_LEFT, strlen(EMOJI_LEFT));
+//         _s_servo_action = SERVO_LEFT;
+//         break;
+//     case GESTURE_UP:
+//         ai_ui_disp_msg(AI_UI_DISP_EMOTION, (uint8_t *)EMOJI_HAPPY, strlen(EMOJI_HAPPY));
+//         _s_servo_action = SERVO_UP;
+//         break;
+//     case GESTURE_DOWN:
+//         ai_ui_disp_msg(AI_UI_DISP_EMOTION, (uint8_t *)EMOJI_SAD, strlen(EMOJI_SAD));
+//         _s_servo_action = SERVO_DOWN;
+//         break;
+//     case GESTURE_CLOCKWISE:
+//         ai_ui_disp_msg(AI_UI_DISP_EMOTION, (uint8_t *)EMOJI_SURPRISE, strlen(EMOJI_SURPRISE));
+//         _s_servo_action = SERVO_CLOCKWISE;
+//         break;
+//     case GESTURE_ANTICLOCKWISE:
+//         ai_ui_disp_msg(AI_UI_DISP_EMOTION, (uint8_t *)EMOJI_ANGRY, strlen(EMOJI_ANGRY));
+//         _s_servo_action = SERVO_ANTICLOCKWISE;
+//         break;
+//     case GESTURE_FORWARD:
+//         ai_ui_disp_msg(AI_UI_DISP_EMOTION, (uint8_t *)EMOJI_WAKEUP, strlen(EMOJI_WAKEUP));
+//         _s_servo_action = SERVO_NOD;
+//         break;
+//     case GESTURE_BACKWARD:
+//         ai_ui_disp_msg(AI_UI_DISP_EMOTION, (uint8_t *)EMOJI_SLEEP, strlen(EMOJI_SLEEP));
+//         _s_servo_action = SERVO_CENTER;
+//         break;
+//     // Add fun expressions for special gestures
+//     case GESTURE_WAVE:
+//         ai_ui_disp_msg(AI_UI_DISP_EMOTION, (uint8_t *)EMOJI_WINK, strlen(EMOJI_WINK));
+//         break;
+//     default:
+//         return;
+//     }
 
-    // Return to weather clock is now handled by emoji rotation counter
-    // No need for separate timer - emoji UI will send return message when all emotions are rotated
-#else
-    switch (gesture) {
-    case GESTURE_RIGHT:
-        _s_servo_action = SERVO_RIGHT;
-        break;
-    case GESTURE_LEFT:
-        _s_servo_action = SERVO_LEFT;
-        break;
-    case GESTURE_UP:
-        _s_servo_action = SERVO_UP;
-        break;
-    case GESTURE_DOWN:
-        _s_servo_action = SERVO_DOWN;
-        break;
-    case GESTURE_CLOCKWISE:
-        _s_servo_action = SERVO_CLOCKWISE;
-        break;
-    case GESTURE_ANTICLOCKWISE:
-        _s_servo_action = SERVO_ANTICLOCKWISE;
-        break;
-    case GESTURE_FORWARD:
-        _s_servo_action = SERVO_NOD;
-        break;
-    case GESTURE_BACKWARD:
-        _s_servo_action = SERVO_CENTER;
-        break;
-    default:
-        return;
-    }
-#endif
+//     // Return to weather clock is now handled by emoji rotation counter
+//     // No need for separate timer - emoji UI will send return message when all emotions are rotated
+// #else
+//     switch (gesture) {
+//     case GESTURE_RIGHT:
+//         _s_servo_action = SERVO_RIGHT;
+//         break;
+//     case GESTURE_LEFT:
+//         _s_servo_action = SERVO_LEFT;
+//         break;
+//     case GESTURE_UP:
+//         _s_servo_action = SERVO_UP;
+//         break;
+//     case GESTURE_DOWN:
+//         _s_servo_action = SERVO_DOWN;
+//         break;
+//     case GESTURE_CLOCKWISE:
+//         _s_servo_action = SERVO_CLOCKWISE;
+//         break;
+//     case GESTURE_ANTICLOCKWISE:
+//         _s_servo_action = SERVO_ANTICLOCKWISE;
+//         break;
+//     case GESTURE_FORWARD:
+//         _s_servo_action = SERVO_NOD;
+//         break;
+//     case GESTURE_BACKWARD:
+//         _s_servo_action = SERVO_CENTER;
+//         break;
+//     default:
+//         return;
+//     }
+// #endif
 
-    if (!_s_servo_busy) {
-        tal_workq_schedule(WORKQ_SYSTEM, __servo_control_wk_cb, NULL);
-    }
-}
+//     if (!_s_servo_busy) {
+//         tal_workq_schedule(WORKQ_SYSTEM, __servo_control_wk_cb, NULL);
+//     }
+// }
 
 OPERATE_RET audio_dp_obj_proc(dp_obj_recv_t *dpobj)
 {
@@ -531,19 +532,14 @@ void user_main(void)
 
     reset_netconfig_check();
 
-    ret = app_servo_init();
-    if (ret != OPRT_OK) {
-        PR_ERR("app_servo_init failed: %d", ret);
-    }
-
-    ret = app_gesture_init(__gesture_detect_cb);
-    if (ret != OPRT_OK) {
-        PR_ERR("app_gesture_init failed: %d", ret);
-    }
-
     ret = app_water_stats_init();
     if (ret != OPRT_OK) {
         PR_ERR("app_water_stats_init failed: %d", ret);
+    }
+
+    ret = app_tof_init(app_tof_default_proximity_handler);
+    if (ret != OPRT_OK) {
+        PR_WARN("app_tof_init failed: %d (VL53L0X optional)", ret);
     }
 
     ret = app_gpio_level_report_init();

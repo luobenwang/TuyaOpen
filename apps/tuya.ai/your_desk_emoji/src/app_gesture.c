@@ -8,8 +8,7 @@
 
 #include "app_gesture.h"
 
-
-
+#include "app_i2c0_lock.h"
 
 #define GESTURE_INT_PIN                 TUYA_GPIO_NUM_44 
 #define IIC0_SDA_PIN                 	TUYA_GPIO_NUM_31
@@ -55,19 +54,22 @@ static uint8_t __gesture_i2c_read_uint8(uint8_t reg)
 {
     uint8_t value = 0;
     OPERATE_RET ret;
-    
+
+    app_i2c0_lock();
     ret = tkl_i2c_master_send(TUYA_I2C_NUM_0, GESTURE_I2C_ADDR, &reg, 1, TRUE);
     if (ret != OPRT_OK) {
+        app_i2c0_unlock();
         PR_ERR("I2C send failed: %d", ret);
         return 0;
     }
-    
+
     ret = tkl_i2c_master_receive(TUYA_I2C_NUM_0, GESTURE_I2C_ADDR, &value, 1, FALSE);
+    app_i2c0_unlock();
     if (ret != OPRT_OK) {
         PR_ERR("I2C receive failed: %d", ret);
         return 0;
     }
-    
+
     PR_TRACE("read reg: %02x, value: %02x", reg, value);
     return value;
 }
@@ -76,8 +78,10 @@ static int __gesture_i2c_write_uint8(uint8_t reg, uint8_t value)
 {
     OPERATE_RET rt = OPRT_OK;
     uint8_t data[2] = {reg, value};
-    
+
+    app_i2c0_lock();
     rt = tkl_i2c_master_send(TUYA_I2C_NUM_0, GESTURE_I2C_ADDR, data, 2, FALSE);
+    app_i2c0_unlock();
     if (rt != OPRT_OK) {
         PR_ERR("I2C write failed: %d, reg: %02x, value: %02x", rt, reg, value);
     } else {
@@ -180,6 +184,8 @@ OPERATE_RET app_gesture_init(GESTURE_CB_T cb)
     thrd_param.stackDepth = 4096;  // Increase stack size to prevent overflow
 
     TUYA_CALL_ERR_RETURN(tal_semaphore_create_init(&s_gesture_sem, 0, 1));
+
+    TUYA_CALL_ERR_RETURN(app_i2c0_lock_init());
 
     PR_DEBUG("i2c0 scl pin: %d, sda pin: %d", IIC0_SCL_PIN, IIC0_SDA_PIN);
     tkl_io_pinmux_config(IIC0_SCL_PIN, TUYA_IIC0_SCL);

@@ -43,6 +43,11 @@
 #ifndef CLI_CMD_NAME_MAX
 #define CLI_CMD_NAME_MAX 20
 #endif
+
+/* Kconfig SERIAL_CLI_STACK_SIZE -> tuya_kconfig.h only when symbol is in .config */
+#ifndef SERIAL_CLI_STACK_SIZE
+#define SERIAL_CLI_STACK_SIZE 3072
+#endif
 /*============================ MACROFIED FUNCTIONS ===========================*/
 /*============================ TYPES =========================================*/
 typedef struct {

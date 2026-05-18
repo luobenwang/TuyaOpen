@@ -9,6 +9,7 @@
 #include "lv_gif.h"
 #if LV_USE_GIF
 
+#include "../../stdlib/lv_string.h"
 #include "gifdec.h"
 
 /*********************
@@ -81,10 +82,25 @@ void lv_gif_set_src(lv_obj_t * obj, const void * src)
         return;
     }
 
-    gifobj->imgdsc.data = gifobj->gif->canvas;
-    gifobj->imgdsc.header.cf = LV_COLOR_FORMAT_ARGB8888;
-    gifobj->imgdsc.header.h = gifobj->gif->height;
-    gifobj->imgdsc.header.w = gifobj->gif->width;
+    /* gifdec canvas is tightly packed ARGB8888 (w * 4 bytes per row). Fully init
+     * draw_buf header so stride/magic are never stale or random; wrong stride
+     * causes a one-pixel strip on the right/bottom when blitting. */
+    {
+        uint32_t tight_stride = (uint32_t)gifobj->gif->width * (uint32_t)sizeof(uint32_t);
+
+        lv_memzero(&gifobj->imgdsc, sizeof(gifobj->imgdsc));
+        gifobj->imgdsc.header.magic      = LV_IMAGE_HEADER_MAGIC;
+        gifobj->imgdsc.header.cf         = LV_COLOR_FORMAT_ARGB8888;
+        gifobj->imgdsc.header.flags      = LV_IMAGE_FLAGS_MODIFIABLE;
+        gifobj->imgdsc.header.w          = gifobj->gif->width;
+        gifobj->imgdsc.header.h          = gifobj->gif->height;
+        gifobj->imgdsc.header.stride     = (uint16_t)tight_stride;
+        gifobj->imgdsc.header.reserved_2 = 0;
+        gifobj->imgdsc.data              = gifobj->gif->canvas;
+        gifobj->imgdsc.unaligned_data    = gifobj->gif->canvas;
+        gifobj->imgdsc.data_size         = tight_stride * (uint32_t)gifobj->gif->height;
+    }
+
     gifobj->last_call = lv_tick_get();
 
     lv_image_set_src(obj, &gifobj->imgdsc);
@@ -139,6 +155,7 @@ static void lv_gif_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
     lv_gif_t * gifobj = (lv_gif_t *) obj;
 
     gifobj->gif = NULL;
+    lv_memzero(&gifobj->imgdsc, sizeof(gifobj->imgdsc));
     gifobj->timer = lv_timer_create(next_frame_task_cb, 10, obj);
     lv_timer_pause(gifobj->timer);
 }

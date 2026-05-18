@@ -47,11 +47,6 @@ extern int __ui_water_drop_init(void);
 /***********************************************************
 ***********************function define**********************
 ***********************************************************/
-static void __ui_disp_user_msg(char *string)
-{
-    __ui_ai_chat_set_user_msg(string);
-}
-
 static void __ui_disp_ai_msg(char *string)
 {
     __ui_ai_chat_set_ai_msg(string);
@@ -189,7 +184,6 @@ OPERATE_RET app_ai_ui_register(void)
 
     intfs.disp_init                 = __ui_init;
     intfs.disp_emotion              = __ui_set_emotion;
-    intfs.disp_user_msg             = __ui_disp_user_msg;
     intfs.disp_ai_msg               = __ui_disp_ai_msg;
     intfs.disp_ai_msg_stream_start  = __ui_disp_ai_msg_stream_start;
     intfs.disp_ai_msg_stream_data   = __ui_disp_ai_msg_stream_data;

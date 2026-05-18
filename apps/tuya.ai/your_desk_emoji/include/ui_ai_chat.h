@@ -1,7 +1,7 @@
 /**
  * @file ui_ai_chat.h
- * @brief Bottom single-line transient user/assistant text (no prefix, no frame)
- * @version 1.0
+ * @brief Bottom single-line AI reply text only (no prefix, no frame)
+ * @version 1.1
  * @date 2026-05-11
  * @copyright Copyright (c) 2026 Tuya Inc. All Rights Reserved.
  */
@@ -18,13 +18,6 @@ extern "C" {
  * @return 0 on success, -1 on failure
  */
 int __ui_ai_chat_init(void);
-
-/**
- * @brief Set the user line and clear the assistant buffer for a new exchange
- * @param[in] string UTF-8 user text, null-terminated
- * @return none
- */
-void __ui_ai_chat_set_user_msg(char *string);
 
 /**
  * @brief Set the assistant line from a complete non-streaming message

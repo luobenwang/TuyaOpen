@@ -26,7 +26,7 @@
 /***********************************************************
 ************************macro define************************
 ***********************************************************/
-#define BOARD_SPEAKER_EN_PIN TUYA_GPIO_NUM_27
+#define BOARD_SPEAKER_EN_PIN TUYA_GPIO_NUM_39
 
 #define BOARD_BUTTON_PIN       TUYA_GPIO_NUM_MAX   
 #define BOARD_BUTTON_ACTIVE_LV TUYA_GPIO_LEVEL_LOW
