@@ -19,7 +19,11 @@
 /***********************************************************
 ************************macro define************************
 ***********************************************************/
-#define BOARD_SPEAKER_EN_PIN         TUYA_GPIO_NUM_28
+#if defined(ENABLE_EYES_TWO_LCD_SAME) && (ENABLE_EYES_TWO_LCD_SAME == 1)
+#define BOARD_SPEAKER_EN_PIN         TUYA_GPIO_NUM_27
+#else
+#define BOARD_SPEAKER_EN_PIN         TUYA_GPIO_NUM_26
+#endif
 
 #define BOARD_BUTTON_PIN             TUYA_GPIO_NUM_12
 #define BOARD_BUTTON_ACTIVE_LV       TUYA_GPIO_LEVEL_LOW

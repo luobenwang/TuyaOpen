@@ -54,11 +54,21 @@ choice TUYA_T5AI_BOARD_EX_MODULE
         select ENABLE_LVGL_OS_FREERTOS if (LVGL_VERSION_9)    
 endchoice
 
-config ENABLE_EYES_TWO_LCD
+choice EYES_LCD_CONNECTION
+    prompt "choose eye LCD connection"
+    depends on TUYA_T5AI_BOARD_EX_MODULE_EYES
+    default ENABLE_EYES_LCD_SINGLE
+
+    config ENABLE_EYES_LCD_SINGLE
+        bool "with one lcd"
+
+    config ENABLE_EYES_TWO_LCD
         bool "with two lcd as two eyes" 
-        depends on TUYA_T5AI_BOARD_EX_MODULE_EYES
-        default n
         select ENABLE_DISPLAY_2
+
+    config ENABLE_EYES_TWO_LCD_SAME
+        bool "with two lcd on same SPI bus"
+endchoice
 
 if(TUYA_T5AI_BOARD_EX_MODULE_35565LCD || TUYA_T5AI_BOARD_EX_MODULE_EYES)
     config ENABLE_EX_MODULE_CAMERA

@@ -102,6 +102,8 @@ static OPERATE_RET __board_register_display(void)
 
     display_cfg.width     = BOARD_LCD_WIDTH;
     display_cfg.height    = BOARD_LCD_HEIGHT;
+    display_cfg.x_offset  = BOARD_LCD_X_OFFSET;
+    display_cfg.y_offset  = BOARD_LCD_Y_OFFSET;
     display_cfg.pixel_fmt = BOARD_LCD_PIXELS_FMT;
     display_cfg.rotation  = BOARD_LCD_ROTATION;
 
@@ -112,8 +114,9 @@ static OPERATE_RET __board_register_display(void)
     display_cfg.rst_pin   = BOARD_LCD_SPI_RST_PIN;
 
     display_cfg.power.pin          = BOARD_LCD_POWER_PIN;
+    display_cfg.power.active_level = BOARD_LCD_POWER_ACTIVE_LV;
 
-    TUYA_CALL_ERR_RETURN(tdd_disp_spi_st7735s_register(DISPLAY_NAME, &display_cfg));
+    TUYA_CALL_ERR_RETURN(tdd_disp_spi_gc9d01_register(DISPLAY_NAME, &display_cfg));
 #endif
 
 #if defined(ENABLE_EYES_TWO_LCD) && (ENABLE_EYES_TWO_LCD == 1)
@@ -127,6 +130,8 @@ static OPERATE_RET __board_register_display(void)
 
     display2_cfg.width     = BOARD_LCD_WIDTH;
     display2_cfg.height    = BOARD_LCD_HEIGHT;
+    display2_cfg.x_offset  = BOARD_LCD_X_OFFSET;
+    display2_cfg.y_offset  = BOARD_LCD_Y_OFFSET;
     display2_cfg.pixel_fmt = BOARD_LCD_PIXELS_FMT;
     display2_cfg.rotation  = BOARD_LCD_ROTATION;
 
@@ -136,9 +141,10 @@ static OPERATE_RET __board_register_display(void)
     display2_cfg.dc_pin    = BOARD_LCD_SPI2_DC_PIN;
     display2_cfg.rst_pin   = BOARD_LCD_SPI2_RST_PIN;
 
-    display2_cfg.power.pin  = BOARD_LCD_POWER_PIN;
+    display2_cfg.power.pin          = BOARD_LCD_POWER_PIN;
+    display2_cfg.power.active_level = BOARD_LCD_POWER_ACTIVE_LV;
 
-    TUYA_CALL_ERR_RETURN(tdd_disp_spi_st7735s_register(DISPLAY_NAME_2, &display2_cfg));
+    TUYA_CALL_ERR_RETURN(tdd_disp_spi_gc9d01_register(DISPLAY_NAME_2, &display2_cfg));
 #endif
 
     return rt;
