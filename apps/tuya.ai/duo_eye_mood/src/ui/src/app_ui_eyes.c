@@ -36,6 +36,19 @@ LV_IMG_DECLARE(Happy128);
 LV_IMG_DECLARE(Confused128);
 LV_IMG_DECLARE(Disappointed128);
 
+#if defined(ENABLE_DISPLAY_2) && (ENABLE_DISPLAY_2 == 1)
+LV_IMG_DECLARE(Nature128_right);
+LV_IMG_DECLARE(Touch128_right);
+LV_IMG_DECLARE(Angry128_right);
+LV_IMG_DECLARE(Fearful128_right);
+LV_IMG_DECLARE(Surprise128_right);
+LV_IMG_DECLARE(Sad128_right);
+LV_IMG_DECLARE(Think128_right);
+LV_IMG_DECLARE(Happy128_right);
+LV_IMG_DECLARE(Confused128_right);
+LV_IMG_DECLARE(Disappointed128_right);
+#endif
+
 static const UI_EYES_EMOJI_T cEYES_EMOJI_LIST[] = {
     {EMOJI_NEUTRAL, &Nature128},    {EMOJI_SURPRISE, &Surprise128},
     {EMOJI_ANGRY, &Angry128},       {EMOJI_FEARFUL, &Fearful128},
@@ -43,6 +56,16 @@ static const UI_EYES_EMOJI_T cEYES_EMOJI_LIST[] = {
     {EMOJI_THINKING, &Think128},    {EMOJI_HAPPY, &Happy128},
     {EMOJI_CONFUSED, &Confused128}, {EMOJI_DISAPPOINTED, &Disappointed128},
 };
+
+#if defined(ENABLE_DISPLAY_2) && (ENABLE_DISPLAY_2 == 1)
+static const UI_EYES_EMOJI_T cEYES_EMOJI_LIST_RIGHT[] = {
+    {EMOJI_NEUTRAL, &Nature128_right},      {EMOJI_SURPRISE, &Surprise128_right},
+    {EMOJI_ANGRY, &Angry128_right},         {EMOJI_FEARFUL, &Fearful128_right},
+    {EMOJI_TOUCH, &Touch128_right},         {EMOJI_SAD, &Sad128_right},
+    {EMOJI_THINKING, &Think128_right},      {EMOJI_HAPPY, &Happy128_right},
+    {EMOJI_CONFUSED, &Confused128_right},   {EMOJI_DISAPPOINTED, &Disappointed128_right},
+};
+#endif
 
 static lv_obj_t *sg_eyes_gif;
 
@@ -78,6 +101,21 @@ static lv_img_dsc_t *__ui_eyes_get_img(char *name)
     return NULL;
 }
 
+#if defined(ENABLE_DISPLAY_2) && (ENABLE_DISPLAY_2 == 1)
+static lv_img_dsc_t *__ui_eyes_get_img_right(char *name)
+{
+    int i = 0;
+
+    for (i = 0; i < CNTSOF(cEYES_EMOJI_LIST_RIGHT); i++) {
+        if (0 == strcasecmp(cEYES_EMOJI_LIST_RIGHT[i].name, name)) {
+            return (lv_img_dsc_t *)cEYES_EMOJI_LIST_RIGHT[i].img;
+        }
+    }
+
+    return NULL;
+}
+#endif
+
 static int __ui_init(void)
 {
     lv_img_dsc_t *img = NULL;
@@ -104,7 +142,7 @@ static int __ui_init(void)
     lv_obj_align(sg_eyes_gif, LV_ALIGN_CENTER, 0, 0);
 
 #if defined(ENABLE_DISPLAY_2) && (ENABLE_DISPLAY_2 == 1)
-    lv_disp_t * disp2 = lv_disp_get_next(disp1); 
+    lv_disp_t * disp2 = lv_disp_get_next(disp1);
     if(NULL == disp2) {
         PR_ERR("get display 2 failed");
         lv_vendor_disp_unlock();
@@ -112,7 +150,7 @@ static int __ui_init(void)
     }
 
     sg_eyes_gif_2 = lv_gif_create(lv_disp_get_scr_act(disp2));
-    lv_gif_set_src(sg_eyes_gif_2, img);
+    lv_gif_set_src(sg_eyes_gif_2, &Nature128_right);
     lv_obj_align(sg_eyes_gif_2, LV_ALIGN_CENTER, 0, 0);
 #endif
 
@@ -132,11 +170,14 @@ static void __ui_set_emotion(char *emotion)
     }
 
     lv_vendor_disp_lock();
-    
+
     lv_gif_set_src(sg_eyes_gif, img);
 
 #if defined(ENABLE_DISPLAY_2) && (ENABLE_DISPLAY_2 == 1)
-    lv_gif_set_src(sg_eyes_gif_2, img);
+    lv_img_dsc_t *img_right = __ui_eyes_get_img_right((char *)emotion);
+    if (img_right) {
+        lv_gif_set_src(sg_eyes_gif_2, img_right);
+    }
 #endif
 
     lv_vendor_disp_unlock();

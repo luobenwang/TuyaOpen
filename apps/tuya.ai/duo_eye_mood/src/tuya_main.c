@@ -43,6 +43,7 @@
 
 #include "app_chat_bot.h"
 #include "reset_netcfg.h"
+#include "app_servo.h"
 
 #if defined(ENABLE_BATTERY) && (ENABLE_BATTERY == 1)
 #include "app_battery.h"
@@ -63,6 +64,7 @@ tuya_iot_license_t license;
 #endif
 
 #define DPID_VOLUME 3
+#define DPID_DIRECTION 101
 
 /**
  * @brief user defined log output api, in this demo, it will use uart0 as log-tx
@@ -124,6 +126,12 @@ OPERATE_RET audio_dp_obj_proc(dp_obj_recv_t *dpobj)
             snprintf(volume_str, sizeof(volume_str), "%s%d", VOLUME, volume);
             ai_ui_disp_msg(AI_UI_DISP_NOTIFICATION, (uint8_t *)volume_str, strlen(volume_str));
 #endif
+            break;
+        }
+        case DPID_DIRECTION: {
+            uint8_t dir_val = dp->value.dp_enum;
+            PR_DEBUG("direction dp:%d", dir_val);
+            app_servo_cmd(dir_val);
             break;
         }
         default:
@@ -356,6 +364,12 @@ void user_main(void)
     ret = app_chat_bot_init();
     if (ret != OPRT_OK) {
         PR_ERR("tuya_audio_recorde_init failed");
+    }
+
+    // Servo init
+    ret = app_servo_init(TUYA_PWM_NUM_0);
+    if (ret != OPRT_OK) {
+        PR_ERR("servo init failed");
     }
 
 #if defined(ENABLE_BATTERY) && (ENABLE_BATTERY == 1)
