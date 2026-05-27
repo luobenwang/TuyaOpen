@@ -1,4 +1,4 @@
-menu "configure app (duo_eye_mood) "
+menu "configure app (your_minion_robot) "
 
 config APP_CONFIG
     bool

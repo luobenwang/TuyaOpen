@@ -37,8 +37,21 @@
 #define SERVO_DUTY_CCW      1000    // 逆时针(左转)
 #define SERVO_DUTY_STOP     750     // 停止
 
-// ms per degree - calibrate based on actual servo
-#define SERVO_MS_PER_DEGREE 3
+/*
+ * Motion time calibration for continuous-rotation (360°) servo.
+ * Run time is linear: ms = degrees * MS_PER_90 / 90.
+ *
+ * Tuning: send a 360° command, measure actual rotation, then update:
+ *   MS_PER_90_new = MS_PER_90_old * 360 / actual_degrees
+ *
+ * History on this hardware:
+ *   3 ms/deg          -> 360° cmd moved ~270°
+ *   360 ms/90 + 30 ms -> 360° cmd moved ~405°
+ *   327 ms/90         -> ~340° (still short ~15-20°)
+ *   344 ms/90         -> target ~360° (360/342 correction)
+ */
+#define SERVO_MS_PER_90_CW   344U
+#define SERVO_MS_PER_90_CCW  344U
 
 /***********************************************************
 ***********************variable define**********************
@@ -81,7 +94,13 @@ static void __servo_run(uint32_t duty, uint32_t ms)
 
 static void __servo_rotate_degrees(uint32_t duty, uint32_t degrees)
 {
-    uint32_t ms = degrees * SERVO_MS_PER_DEGREE;
+    uint32_t ms_per_90 = (duty == SERVO_DUTY_CW) ? SERVO_MS_PER_90_CW : SERVO_MS_PER_90_CCW;
+    uint32_t ms = (degrees * ms_per_90 + 45U) / 90U;
+
+    if (ms == 0U && degrees > 0U) {
+        ms = 1U;
+    }
+
     PR_DEBUG("servo: duty=%d, degrees=%d, ms=%d", duty, degrees, ms);
     __servo_run(duty, ms);
 }
