@@ -1,0 +1,35 @@
+#!/bin/bash
+##
+# Portable wrapper for the bundled Allwinner T113 (sunxi) OpenWrt glibc gcc.
+#
+# The bundled toolchain is an OpenWrt-style relocatable toolchain whose headers
+# live in <toolchain>/include and libraries in <toolchain>/lib (no usr/ layout),
+# and whose driver calls the bare `as`/`ld`. This wrapper makes it self-contained
+# and location-independent so it can be used as CMAKE_C_COMPILER directly.
+#
+# It:
+#   - resolves the toolchain path relative to this script (portable, no abs path)
+#   - exports STAGING_DIR (silences the OpenWrt gcc relocation warning)
+#   - injects -B for the bundled assembler/linker and crt objects
+#   - injects -isystem / -L for the bundled sysroot headers and libraries
+#   - supplies compat-include for UAPI headers missing from the old sunxi
+#     kernel headers (e.g. linux/gpio.h)
+#   - passes -Ulinux so that __has_include(<linux/...>) is not broken by the
+#     legacy predefined `linux` object-like macro (gcc 6.4 expands it to 1)
+##
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TC="$(cd "${SCRIPT_DIR}/../toolchain-sunxi-glibc/toolchain" && pwd)"
+COMPAT_INC="$(cd "${SCRIPT_DIR}/../compat-include" && pwd)"
+
+export STAGING_DIR="${TC}"
+
+exec "${TC}/bin/arm-openwrt-linux-gcc" \
+    -Ulinux \
+    -B"${TC}/bin/arm-openwrt-linux-gnueabi-" \
+    -B"${TC}/lib/" \
+    -isystem "${TC}/include" \
+    -isystem "${COMPAT_INC}" \
+    -L"${TC}/lib" \
+    "$@"

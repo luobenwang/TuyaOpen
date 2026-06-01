@@ -39,6 +39,12 @@ choice
             rsource "./DshanPi_A1/Kconfig"
         endif
 
+    config BOARD_CHOICE_T113_GLIBC
+        bool "Allwinner T113 (glibc)"
+        if (BOARD_CHOICE_T113_GLIBC)
+            rsource "./t113_glibc/Kconfig"
+        endif
+
 # <new-board-add: This line cannot be deleted or modified>
 
 endchoice

@@ -1,0 +1,21 @@
+#!/bin/bash
+##
+# Portable wrapper for the bundled Allwinner T113 (sunxi) OpenWrt glibc g++.
+# See t113-gcc for details.
+##
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TC="$(cd "${SCRIPT_DIR}/../toolchain-sunxi-glibc/toolchain" && pwd)"
+COMPAT_INC="$(cd "${SCRIPT_DIR}/../compat-include" && pwd)"
+
+export STAGING_DIR="${TC}"
+
+exec "${TC}/bin/arm-openwrt-linux-g++" \
+    -Ulinux \
+    -B"${TC}/bin/arm-openwrt-linux-gnueabi-" \
+    -B"${TC}/lib/" \
+    -isystem "${TC}/include" \
+    -isystem "${COMPAT_INC}" \
+    -L"${TC}/lib" \
+    "$@"

@@ -1,0 +1,29 @@
+menu "Allwinner T113 (glibc) Board Configuration"
+    config CHIP_CHOICE
+        string
+        default "t113_glibc"
+
+    config BOARD_CHOICE
+        string
+        default "t113_glibc"
+
+    config BOARD_CONFIG
+        bool
+        default y
+        select ENABLE_QRCODE
+
+    config ENABLE_KEYBOARD_INPUT
+        bool "Enable keyboard input for T113"
+        default n
+        ---help---
+            Enable keyboard input handling. Press the configured key on the
+            serial/stdin console to trigger a conversation. Useful when the
+            board has no physical button wired.
+
+    config BUTTON_NAME
+        string "Keyboard button device value"
+        depends on ENABLE_KEYBOARD_INPUT
+        default "s"
+        ---help---
+            Specify the keyboard button character used for input handling.
+endmenu
