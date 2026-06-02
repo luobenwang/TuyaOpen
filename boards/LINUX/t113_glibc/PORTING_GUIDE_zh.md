@@ -37,7 +37,24 @@
 
 ---
 
-## 2. 快速编译
+## 2. 从 GitHub 克隆后必看
+
+`platform/LINUX` 由 `tos.py build` 时**自动从上游仓库下载**，不在主仓库里。
+T113 对 `platform_prepare.py`、`compiler_setup.cmake` 等的修改放在：
+
+`boards/LINUX/t113_glibc/platform_overlay/`
+
+构建前会通过 `apply_platform_overlay.py` 自动覆盖到 `platform/LINUX/`。
+**推送到 GitHub 时务必包含：**
+
+- `boards/LINUX/t113_glibc/platform_overlay/` 与 `apply_platform_overlay.py`
+- `tools/cli_command/cli_build.py`（含 overlay 调用逻辑）
+- `boards/LINUX/Kconfig`、`boards/LINUX/TKL_Kconfig`
+- 工具链：`t113_glibc.tar.gz` 或已解压的 `toolchain-sunxi-glibc/`
+
+若他人克隆后报 `Unsupported platform 't113_glibc'`，说明上述文件未提交完整。
+
+## 3. 快速编译
 
 ```bash
 cd /path/to/TuyaOpen
@@ -71,7 +88,7 @@ file dist/your_chat_bot_1.0.1/your_chat_bot_1.0.1.elf
 
 ---
 
-## 3. 工具链：移植中最关键的部分
+## 4. 工具链：移植中最关键的部分
 
 T113 用的是厂商的 **sunxi OpenWrt glibc** 工具链（`arm-openwrt-linux-gnueabi-gcc` 6.4.1，armv7‑a，硬浮点）。它和 SDK 里其它板子用的 ARM GNU 工具链不同，有 3 个“坑”，都通过板内的**包装脚本** `toolchain_wrapper/t113-gcc` 解决：
 
@@ -102,7 +119,7 @@ chmod +x boards/LINUX/t113_glibc/toolchain_wrapper/*
 
 ---
 
-## 4. 部署到真实 T113 板子
+## 5. 部署到真实 T113 板子
 
 1. 把 ELF 拷贝到板子（NFS / scp / U 盘）：
    ```bash
@@ -120,7 +137,7 @@ chmod +x boards/LINUX/t113_glibc/toolchain_wrapper/*
 
 ---
 
-## 5. 已知限制（重要）
+## 6. 已知限制（重要）
 
 当前 `t113_glibc.config` 是一个**可编译、可联网运行的最小骨架**，受限于 armv7 没有现成的厂商预编译库：
 
@@ -136,7 +153,7 @@ chmod +x boards/LINUX/t113_glibc/toolchain_wrapper/*
 
 ---
 
-## 6. 把 Demo 完整移植到你自己的 T113 板
+## 7. 把 Demo 完整移植到你自己的 T113 板
 
 ### 6.1 打开音频（ALSA）
 
@@ -182,15 +199,18 @@ chmod +x boards/LINUX/t113_glibc/toolchain_wrapper/*
 
 ---
 
-## 7. 新增一块基于本工具链的 T113 衍生板
+## 8. 新增一块基于本工具链的 T113 衍生板
 
 复制 `boards/LINUX/t113_glibc/` 为新目录，改名 `Kconfig` 里的 `CHIP_CHOICE`/`BOARD_CHOICE`，在 `boards/LINUX/Kconfig` 注册新的 `BOARD_CHOICE_xxx`，并在 `platform/LINUX/compiler_setup.cmake` 增加对应分支（或让新板复用 `t113_glibc` 的工具链路径）。
 
 ---
 
-## 8. 排错速查
+## 9. 排错速查
 
 | 现象 | 原因 | 处理 |
+| `Unsupported platform 't113_glibc'` | 未提交 `platform_overlay` 或 `cli_build.py` 补丁 | 见上文「从 GitHub 克隆后必看」 |
+| `T113 toolchain not found` | 未解压工具链 | `cd boards/LINUX && tar xzf t113_glibc.tar.gz` |
+| `heap init size:536870912 addr:(nil)` 后 Segfault | 旧版预分配 512MB 自定义堆池 | 使用 `CONFIG_LINUX_USE_LIBC_MALLOC=y`（默认已开），直接走系统 **malloc/free** |
 |------|------|------|
 | `invalid -march= option: 'armv7-a'` | gcc 调用了宿主机 `as` | 确认走的是 `toolchain_wrapper/t113-gcc`（含 `-B.../bin/arm-openwrt-linux-gnueabi-`） |
 | `linux/gpio.h: No such file` | 老内核头缺 GPIO UAPI | 确认 `compat-include` 已被包装脚本 `-isystem` 引入 |

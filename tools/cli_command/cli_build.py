@@ -111,6 +111,31 @@ def download_platform(platform):
         if code == "China":
             set_repo_mirro(unset=True)
 
+def apply_board_platform_overlay(platform, chip):
+    '''
+    Copy board-specific files into the downloaded platform tree when present.
+    Example: boards/LINUX/t113_glibc/platform_overlay/ -> platform/LINUX/
+    '''
+    logger = get_logger()
+    if not chip:
+        return True
+
+    params = get_global_params()
+    open_root = params["open_root"]
+    overlay_script = os.path.join(
+        params["boards_root"], platform, chip, "apply_platform_overlay.py")
+    if not os.path.isfile(overlay_script):
+        return True
+
+    logger.info(f"Applying board overlay for [{platform}/{chip}] ...")
+    cmd = f'"{params["python"]}" "{overlay_script}" "{open_root}" {platform} {chip}'
+    ret = do_subprocess(cmd)
+    if 0 != ret:
+        logger.error("Apply board platform overlay error.")
+        return False
+    return True
+
+
 def prepare_platform(platform, chip=""):
     '''
     Execute:
@@ -329,6 +354,9 @@ def build_project(verbose=False, log_file=None, log_file_append=False):
         logger.info(f"Platform [{platform_name}] downloaded successfully.")
 
         chip_name = using_data.get("CONFIG_CHIP_CHOICE", "")
+        if not apply_board_platform_overlay(platform_name, chip_name):
+            logger.error("Apply board platform overlay error.")
+            return False
         if not prepare_platform(platform_name, chip_name):
             logger.error("Prepare platform error.")
             return False

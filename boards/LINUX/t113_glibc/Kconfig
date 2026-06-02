@@ -12,6 +12,12 @@ menu "Allwinner T113 (glibc) Board Configuration"
         default y
         select ENABLE_QRCODE
 
+    config ENABLE_EXT_RAM
+        default n
+
+    config LINUX_USE_LIBC_MALLOC
+        default y
+
     config ENABLE_KEYBOARD_INPUT
         bool "Enable keyboard input for T113"
         default n

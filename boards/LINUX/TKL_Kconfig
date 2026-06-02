@@ -76,6 +76,24 @@ menu "TKL Board Configuration"
         bool
         default y
 
+    config LINUX_USE_LIBC_MALLOC
+        bool "Use system libc malloc/free (recommended)"
+        default y
+        ---help---
+            When enabled, tal_malloc uses the OS heap (malloc/free) directly.
+            Disable only if you need the legacy pre-allocated tuya_mem_heap pool.
+
+    config LINUX_MEM_HEAP_SIZE_MB
+        int "Custom heap pool size (MB)"
+        depends on !LINUX_USE_LIBC_MALLOC
+        default 512 if BOARD_CHOICE_UBUNTU
+        default 64 if BOARD_CHOICE_RASPBERRY_PI
+        default 16 if BOARD_CHOICE_T113_GLIBC
+        default 64 if BOARD_CHOICE_DshanPI_A1
+        default 32
+        ---help---
+            Used only when LINUX_USE_LIBC_MALLOC is disabled.
+
     config KWS_MODEL_PATH
         string "KWS model file path"
         depends on ENABLE_AUDIO

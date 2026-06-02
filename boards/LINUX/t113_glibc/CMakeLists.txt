@@ -15,6 +15,7 @@ file(GLOB_RECURSE LIB_SRCS "${MODULE_PATH}/*.c")
 # Exclude the bundled toolchain tree (no board C sources live there, but the
 # GLOB above is recursive, so guard against accidental matches).
 list(FILTER LIB_SRCS EXCLUDE REGEX "toolchain-sunxi-glibc")
+list(FILTER LIB_SRCS EXCLUDE REGEX "hello_test")
 
 # LIB_PUBLIC_INC
 set(LIB_PUBLIC_INC ${MODULE_PATH})
