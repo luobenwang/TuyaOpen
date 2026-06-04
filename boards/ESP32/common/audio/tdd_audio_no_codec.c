@@ -5,6 +5,7 @@
  * @date 2025-04-08
  */
 #include "math.h"
+#include <string.h>
 
 #include "tdl_audio_driver.h"
 #include "tdd_audio_no_codec.h"
@@ -16,6 +17,7 @@
 #include "tal_mutex.h"
 
 #include "tkl_i2s.h"
+#include "sdkconfig.h"
 
 #include "audio_afe.h"
 
@@ -77,18 +79,22 @@ static void esp32_i2s_read_task(void *args)
             continue;
         }
 
+#if defined(CONFIG_BOARD_AUDIO_PDM_MIC) && CONFIG_BOARD_AUDIO_PDM_MIC
+        uint32_t samples = bytes_read / sizeof(int16_t);
+        memcpy(hdl->data_buf, hdl->raw_data_buf, samples * sizeof(int16_t));
+#else
         uint32_t samples = bytes_read / sizeof(int32_t);
 
         // 32bit to 16bit
         int32_t *p_raw_data = (int32_t *)(hdl->raw_data_buf);
         int16_t *p_data = (int16_t *)(hdl->data_buf);
         for (int i = 0; i < samples; i++) {
-            // Convert 32bit to 16bit
             int32_t tmp_value = p_raw_data[i] >> 14;
             p_data[i] = (tmp_value > INT16_MAX)    ? INT16_MAX
                         : (tmp_value < -INT16_MAX) ? -INT16_MAX
                                                    : (int16_t)tmp_value;
         }
+#endif
 
         if (hdl->mic_cb) {
             // Call the callback function with the read data
@@ -123,16 +129,24 @@ static OPERATE_RET __tdd_audio_no_codec_open(TDD_AUDIO_HANDLE_T handle, TDL_AUDI
     TUYA_I2S_BASE_CFG_T i2s_rx_cfg = {0};
     i2s_rx_cfg.mode = TUYA_I2S_MODE_MASTER | TUYA_I2S_MODE_RX;
     i2s_rx_cfg.sample_rate = 16000;
+#if defined(CONFIG_BOARD_AUDIO_PDM_MIC) && CONFIG_BOARD_AUDIO_PDM_MIC
+    i2s_rx_cfg.bits_per_sample = TUYA_I2S_BITS_PER_SAMPLE_16BIT;
+    PR_NOTICE("Audio RX: XIAO Sense PDM mic (GPIO41/42)");
+#else
     i2s_rx_cfg.bits_per_sample = TUYA_I2S_BITS_PER_SAMPLE_32BIT;
+#endif
     tkl_i2s_init(hdl->i2s_rx_id, &i2s_rx_cfg);
 
+#if !defined(CONFIG_BOARD_AUDIO_PDM_MIC) || !CONFIG_BOARD_AUDIO_PDM_MIC
     TUYA_I2S_BASE_CFG_T i2s_tx_cfg = {0};
     i2s_tx_cfg.mode = TUYA_I2S_MODE_MASTER | TUYA_I2S_MODE_TX;
     i2s_tx_cfg.sample_rate = 16000;
     i2s_tx_cfg.bits_per_sample = TUYA_I2S_BITS_PER_SAMPLE_32BIT;
     tkl_i2s_init(hdl->i2s_tx_id, &i2s_tx_cfg);
-
-    PR_NOTICE("I2S channels created");
+    PR_NOTICE("I2S RX/TX channels created");
+#else
+    PR_NOTICE("I2S RX (PDM) only; speaker TX disabled on Sense");
+#endif
 
     // data buffer
     hdl->data_buf_len = I2S_READ_TIME_MS * tdd_i2s_cfg->mic_sample_rate / 1000;
@@ -144,7 +158,11 @@ static OPERATE_RET __tdd_audio_no_codec_open(TDD_AUDIO_HANDLE_T handle, TDL_AUDI
 
     // raw data buffer
     hdl->raw_data_buf_len = I2S_READ_TIME_MS * tdd_i2s_cfg->mic_sample_rate / 1000;
+#if defined(CONFIG_BOARD_AUDIO_PDM_MIC) && CONFIG_BOARD_AUDIO_PDM_MIC
+    hdl->raw_data_buf_len = hdl->raw_data_buf_len * sizeof(int16_t);
+#else
     hdl->raw_data_buf_len = hdl->raw_data_buf_len * sizeof(int32_t);
+#endif
     PR_DEBUG("I2S raw data buffer len: %d", hdl->raw_data_buf_len);
     hdl->raw_data_buf = (uint8_t *)tal_malloc(hdl->raw_data_buf_len);
     TUYA_CHECK_NULL_RETURN(hdl->raw_data_buf, OPRT_MALLOC_FAILED);
@@ -157,9 +175,8 @@ static OPERATE_RET __tdd_audio_no_codec_open(TDD_AUDIO_HANDLE_T handle, TDL_AUDI
     }
 
     rt = audio_afe_processor_init();
-    if(rt != OPRT_OK) {
-        PR_ERR("audio_afe_processor_init err:%d",  rt);
-        return rt;
+    if (rt != OPRT_OK) {
+        PR_WARN("audio_afe_processor_init err:%d, continue without AFE", rt);
     }
 
     const THREAD_CFG_T thread_cfg = {
@@ -181,6 +198,13 @@ static OPERATE_RET __tdd_audio_no_codec_play(TDD_AUDIO_HANDLE_T handle, uint8_t 
     OPERATE_RET rt = OPRT_OK;
 
     ESP_I2S_HANDLE_T *hdl = (ESP_I2S_HANDLE_T *)handle;
+
+#if defined(CONFIG_BOARD_AUDIO_PDM_MIC) && CONFIG_BOARD_AUDIO_PDM_MIC
+    (void)hdl;
+    (void)data;
+    (void)len;
+    return OPRT_OK;
+#endif
 
     TUYA_CHECK_NULL_RETURN(hdl, OPRT_COM_ERROR);
     // TUYA_CHECK_NULL_RETURN(hdl->tx_hdl, OPRT_COM_ERROR);

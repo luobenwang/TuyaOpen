@@ -12,6 +12,11 @@
 #include "ai_chat_main.h"
 #include "app_chat_bot.h"
 
+#if defined(ENABLE_COMP_AI_DISPLAY) && (ENABLE_COMP_AI_DISPLAY == 1) && \
+    defined(ENABLE_AI_CHAT_CUSTOM_UI) && (ENABLE_AI_CHAT_CUSTOM_UI == 1)
+#include "xiao_ssd1306_ui.h"
+#endif
+
 #if defined(ENABLE_WIFI) && (ENABLE_WIFI == 1)
 #include "tkl_wifi.h"
 #endif
@@ -161,6 +166,11 @@ static void __ai_chat_handle_event(AI_NOTIFY_EVENT_T *event)
 OPERATE_RET app_chat_bot_init(void)
 {
     OPERATE_RET rt = OPRT_OK;
+
+#if defined(ENABLE_COMP_AI_DISPLAY) && (ENABLE_COMP_AI_DISPLAY == 1) && \
+    defined(ENABLE_AI_CHAT_CUSTOM_UI) && (ENABLE_AI_CHAT_CUSTOM_UI == 1)
+    TUYA_CALL_ERR_RETURN(xiao_ssd1306_ui_register());
+#endif
 
     AI_CHAT_MODE_CFG_T ai_chat_cfg = {
         .default_mode = AI_CHAT_MODE_WAKEUP,

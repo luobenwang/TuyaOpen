@@ -419,7 +419,7 @@ static void tuya_app_thread(void *arg)
 void tuya_app_main(void)
 {
     THREAD_CFG_T thrd_param = {0};
-    thrd_param.stackDepth   = 4096;
+    thrd_param.stackDepth   = 8192;
     thrd_param.priority     = 4;
     thrd_param.thrdname     = "tuya_app_main";
     tal_thread_create_and_start(&ty_app_thread, NULL, NULL, tuya_app_thread, NULL, &thrd_param);

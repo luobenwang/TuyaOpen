@@ -37,6 +37,7 @@ typedef struct {
 static AI_UI_INTFS_T sg_ui_intfs;
 static QUEUE_HANDLE  sg_ui_queue_hdl;
 static THREAD_HANDLE sg_ui_thrd_hdl;
+static bool          sg_disp_init_done = false;
 /***********************************************************
 ***********************function define**********************
 ***********************************************************/
@@ -161,6 +162,14 @@ static void __ai_chat_ui_task(void *args)
 
     (void)args;
 
+    if (!sg_disp_init_done && sg_ui_intfs.disp_init) {
+        if (OPRT_OK == sg_ui_intfs.disp_init()) {
+            sg_disp_init_done = true;
+        } else {
+            PR_ERR("disp_init failed");
+        }
+    }
+
     for (;;) {
         memset(&msg_data, 0, sizeof(AI_UI_MSG_T));
         tal_queue_fetch(sg_ui_queue_hdl, &msg_data, SEM_WAIT_FOREVER);
@@ -217,10 +226,6 @@ OPERATE_RET ai_ui_init(void)
     TUYA_CALL_ERR_RETURN(ai_ui_stream_text_init(__ai_chat_ui_stream_text_disp));
 #endif
 
-    if(sg_ui_intfs.disp_init) {
-        TUYA_CALL_ERR_RETURN(sg_ui_intfs.disp_init());
-    }
-    
     PR_DEBUG("ai chat ui init success");   
 
     return OPRT_OK;

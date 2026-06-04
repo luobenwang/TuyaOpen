@@ -108,7 +108,8 @@ void lv_port_disp_init(char *device)
         ESP_LOGE(TAG, "Failed to add display");
         return;
     }
-    ESP_LOGI(TAG, "LVGL display added successfully");
+    ESP_LOGI(TAG, "LVGL display added cf=%d mono=%d dma=%d",
+             (int)disp_cfg.color_format, disp_cfg.monochrome ? 1 : 0, disp_cfg.flags.buff_dma ? 1 : 0);
 }
 
 static void disp_deinit(void)

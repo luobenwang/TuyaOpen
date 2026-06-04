@@ -1,0 +1,41 @@
+config CHIP_CHOICE
+    string
+    default "esp32s3"
+
+config BOARD_CHOICE
+    string
+    default "XIAO_ESP32S3"
+
+config BOARD_CONFIG
+    bool
+    default y
+    select ENABLE_AUDIO
+    select ENABLE_AUDIO_CODECS
+    select ENABLE_BUTTON
+    select ENABLE_LED
+    select ENABLE_ESP_DISPLAY
+    select PLATFORM_FLASHSIZE_8M
+    select ENABLE_ESP32S3_USB_JTAG_ONLY
+    select BOARD_AUDIO_PDM_MIC
+
+config BOARD_AUDIO_PDM_MIC
+    bool "Use XIAO Sense onboard PDM microphone (GPIO41/42)"
+    default y
+    ---help---
+        XIAO ESP32S3 Sense expansion board wires the digital mic to
+        PDM DATA=GPIO41 and CLK=GPIO42. Disable only when using an
+        external I2S mic on D3/D4/D5 instead.
+
+config UART_NUM0_TX_PIN
+    int "UART_NUM0_TX_PIN"
+    range 0 44
+    default 43
+    ---help---
+        XIAO ESP32S3 USB CDC TX (D6)
+
+config UART_NUM0_RX_PIN
+    int "UART_NUM0_RX_PIN"
+    range 0 44
+    default 44
+    ---help---
+        XIAO ESP32S3 USB CDC RX (D7)
