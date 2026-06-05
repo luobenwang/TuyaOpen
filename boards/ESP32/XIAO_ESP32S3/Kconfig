@@ -17,6 +17,7 @@ config BOARD_CONFIG
     select PLATFORM_FLASHSIZE_8M
     select ENABLE_ESP32S3_USB_JTAG_ONLY
     select BOARD_AUDIO_PDM_MIC
+    select BOARD_AUDIO_I2S_SPEAKER
 
 config BOARD_AUDIO_PDM_MIC
     bool "Use XIAO Sense onboard PDM microphone (GPIO41/42)"
@@ -25,6 +26,14 @@ config BOARD_AUDIO_PDM_MIC
         XIAO ESP32S3 Sense expansion board wires the digital mic to
         PDM DATA=GPIO41 and CLK=GPIO42. Disable only when using an
         external I2S mic on D3/D4/D5 instead.
+
+config BOARD_AUDIO_I2S_SPEAKER
+    bool "Enable MAX98357A I2S speaker on D3/D4/D5 (GPIO4/5/6)"
+    default y
+    depends on BOARD_AUDIO_PDM_MIC
+    ---help---
+        Use I2S1 TX to drive an external MAX98357A (or similar) amp:
+        BCLK=D4/GPIO5, LRC=D3/GPIO4, DIN=D5/GPIO6, SD=3V3.
 
 config UART_NUM0_TX_PIN
     int "UART_NUM0_TX_PIN"

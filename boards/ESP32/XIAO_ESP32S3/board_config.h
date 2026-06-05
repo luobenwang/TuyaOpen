@@ -43,6 +43,14 @@ extern "C" {
 #define BOARD_PDM_MIC_DIN_GPIO 41
 
 /*
+ * MAX98357A I2S speaker on D3/D4/D5 (I2S1 TX):
+ * BCLK=GPIO5 (D4), LRC=GPIO4 (D3), DIN=GPIO6 (D5). SD tied to 3V3.
+ */
+#define BOARD_I2S_SPK_BCLK_GPIO 5
+#define BOARD_I2S_SPK_LRC_GPIO  4
+#define BOARD_I2S_SPK_DIN_GPIO  6
+
+/*
  * 0.96" SSD1306 OLED on I2C: SDA=GPIO1 (D0), SCL=GPIO2 (D1), addr 0x3C.
  */
 #define OLED_I2C_PORT (0)

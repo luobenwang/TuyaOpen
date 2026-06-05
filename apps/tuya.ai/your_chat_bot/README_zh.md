@@ -30,6 +30,7 @@
 | ESP32S3 面包板 | ESP32S3_BREAD_COMPACT_WIFI.config |  | 重启(按 RST 按钮) 3 次重置 |
 | waveshare ESP32S3 1.8 英寸触摸 AMOLED 开发板 | WAVESHARE_ESP32S3_TOUCH_AMOLED_1_8.config | [https://www.waveshare.net/shop/ESP32-S3-Touch-AMOLED-1.8.htm](https://www.waveshare.net/shop/ESP32-S3-Touch-AMOLED-1.8.htm) | 重启(按 RST 按钮) 3 次重置 |
 | ESP32S3 星智 0.96 OLED 开发板 | XINGZHI_Cube_0_96OLED_WIFI.config | [https://www.nologo.tech/product/esp32/esp32s3/esp32s3ai/esp32s3ai.html](https://www.nologo.tech/product/esp32/esp32s3/esp32s3ai/esp32s3ai.html) | 重启(按 RST 按钮) 3 次重置 |
+| Seeed XIAO ESP32S3 Sense + SSD1306 + MAX98357A | XIAO_ESP32S3.config | [XIAO 完整适配文档](./docs/XIAO_ESP32S3_ADAPTATION_zh.md) | 重启(按 RST 按钮) 3 次重置 |
 
 
 ## 编译

@@ -137,13 +137,19 @@ static OPERATE_RET __tdd_audio_no_codec_open(TDD_AUDIO_HANDLE_T handle, TDL_AUDI
 #endif
     tkl_i2s_init(hdl->i2s_rx_id, &i2s_rx_cfg);
 
-#if !defined(CONFIG_BOARD_AUDIO_PDM_MIC) || !CONFIG_BOARD_AUDIO_PDM_MIC
+#if !defined(CONFIG_BOARD_AUDIO_PDM_MIC) || !CONFIG_BOARD_AUDIO_PDM_MIC || \
+    (defined(CONFIG_BOARD_AUDIO_I2S_SPEAKER) && CONFIG_BOARD_AUDIO_I2S_SPEAKER)
     TUYA_I2S_BASE_CFG_T i2s_tx_cfg = {0};
     i2s_tx_cfg.mode = TUYA_I2S_MODE_MASTER | TUYA_I2S_MODE_TX;
     i2s_tx_cfg.sample_rate = 16000;
     i2s_tx_cfg.bits_per_sample = TUYA_I2S_BITS_PER_SAMPLE_32BIT;
     tkl_i2s_init(hdl->i2s_tx_id, &i2s_tx_cfg);
+#if defined(CONFIG_BOARD_AUDIO_PDM_MIC) && CONFIG_BOARD_AUDIO_PDM_MIC && \
+    defined(CONFIG_BOARD_AUDIO_I2S_SPEAKER) && CONFIG_BOARD_AUDIO_I2S_SPEAKER
+    PR_NOTICE("I2S RX (PDM) + TX (MAX98357 D3/D4/D5)");
+#else
     PR_NOTICE("I2S RX/TX channels created");
+#endif
 #else
     PR_NOTICE("I2S RX (PDM) only; speaker TX disabled on Sense");
 #endif
@@ -199,7 +205,8 @@ static OPERATE_RET __tdd_audio_no_codec_play(TDD_AUDIO_HANDLE_T handle, uint8_t 
 
     ESP_I2S_HANDLE_T *hdl = (ESP_I2S_HANDLE_T *)handle;
 
-#if defined(CONFIG_BOARD_AUDIO_PDM_MIC) && CONFIG_BOARD_AUDIO_PDM_MIC
+#if defined(CONFIG_BOARD_AUDIO_PDM_MIC) && CONFIG_BOARD_AUDIO_PDM_MIC && \
+    (!defined(CONFIG_BOARD_AUDIO_I2S_SPEAKER) || !CONFIG_BOARD_AUDIO_I2S_SPEAKER)
     (void)hdl;
     (void)data;
     (void)len;
