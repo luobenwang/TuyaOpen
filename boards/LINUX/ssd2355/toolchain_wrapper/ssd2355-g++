@@ -1,0 +1,19 @@
+#!/bin/bash
+##
+# Portable wrapper for the bundled SigmaStar SSD2355 OpenWrt glibc g++.
+# See ssd2355-gcc for details.
+##
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TC="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+export STAGING_DIR="${TC}"
+
+exec "${TC}/bin/arm-openwrt-linux-g++" \
+    -Ulinux \
+    -B"${TC}/bin/arm-openwrt-linux-gnueabi-" \
+    -B"${TC}/lib/" \
+    -isystem "${TC}/include" \
+    -L"${TC}/lib" \
+    "$@"

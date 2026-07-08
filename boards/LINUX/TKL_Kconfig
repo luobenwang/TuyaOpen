@@ -89,6 +89,7 @@ menu "TKL Board Configuration"
         default 512 if BOARD_CHOICE_UBUNTU
         default 64 if BOARD_CHOICE_RASPBERRY_PI
         default 16 if BOARD_CHOICE_T113_GLIBC
+        default 16 if BOARD_CHOICE_SSD2355
         default 64 if BOARD_CHOICE_DshanPI_A1
         default 32
         ---help---

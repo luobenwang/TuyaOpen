@@ -1,0 +1,35 @@
+menu "SigmaStar SSD2355 (glibc) Board Configuration"
+    config CHIP_CHOICE
+        string
+        default "ssd2355"
+
+    config BOARD_CHOICE
+        string
+        default "ssd2355"
+
+    config BOARD_CONFIG
+        bool
+        default y
+        select ENABLE_QRCODE
+
+    config ENABLE_EXT_RAM
+        default n
+
+    config LINUX_USE_LIBC_MALLOC
+        default y
+
+    config ENABLE_KEYBOARD_INPUT
+        bool "Enable keyboard input for SSD2355"
+        default n
+        ---help---
+            Enable keyboard input handling. Press the configured key on the
+            serial/stdin console to trigger a conversation. Useful when the
+            board has no physical button wired.
+
+    config BUTTON_NAME
+        string "Keyboard button device value"
+        depends on ENABLE_KEYBOARD_INPUT
+        default "s"
+        ---help---
+            Specify the keyboard button character used for input handling.
+endmenu

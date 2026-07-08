@@ -45,6 +45,12 @@ choice
             rsource "./t113_glibc/Kconfig"
         endif
 
+    config BOARD_CHOICE_SSD2355
+        bool "SigmaStar SSD2355 (glibc)"
+        if (BOARD_CHOICE_SSD2355)
+            rsource "./ssd2355/Kconfig"
+        endif
+
 # <new-board-add: This line cannot be deleted or modified>
 
 endchoice
