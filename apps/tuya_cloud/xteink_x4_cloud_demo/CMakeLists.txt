@@ -7,12 +7,26 @@ if (NOT CONFIG_BOARD_CHOICE_XTEINK_X4 STREQUAL "y")
     message(FATAL_ERROR "xteink_x4_cloud_demo requires BOARD_CHOICE_XTEINK_X4")
 endif()
 
-# Build mode (pick one):
-#   LVGL only:  ENABLE_LVGL=ON,  ENABLE_CLOUD=OFF
-#   Cloud only: ENABLE_LVGL=OFF, ENABLE_CLOUD=ON
-#   Both:       ENABLE_LVGL=ON,  ENABLE_CLOUD=ON
-set(XTEINK_X4_ENABLE_LVGL OFF)
-set(XTEINK_X4_ENABLE_CLOUD ON)
+# Feature switches are defined in src/tuya_config.h:
+#   XTEINK_X4_ENABLE_CLOUD   0/1
+#   XTEINK_X4_ENABLE_DISPLAY 0/1
+set(_X4_CFG_H "${CMAKE_CURRENT_LIST_DIR}/src/tuya_config.h")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_X4_CFG_H}")
+file(READ "${_X4_CFG_H}" _X4_CFG_CONTENT)
+
+string(REGEX MATCH "#define[ \t]+XTEINK_X4_ENABLE_CLOUD[ \t]+([01])" _ ${_X4_CFG_CONTENT})
+if (NOT CMAKE_MATCH_1 STREQUAL "")
+    set(XTEINK_X4_ENABLE_CLOUD ${CMAKE_MATCH_1})
+else()
+    set(XTEINK_X4_ENABLE_CLOUD 1)
+endif()
+
+string(REGEX MATCH "#define[ \t]+XTEINK_X4_ENABLE_DISPLAY[ \t]+([01])" _ ${_X4_CFG_CONTENT})
+if (NOT CMAKE_MATCH_1 STREQUAL "")
+    set(XTEINK_X4_ENABLE_DISPLAY ${CMAKE_MATCH_1})
+else()
+    set(XTEINK_X4_ENABLE_DISPLAY 0)
+endif()
 
 set(APP_PATH ${CMAKE_CURRENT_LIST_DIR})
 get_filename_component(APP_NAME ${APP_PATH} NAME)
@@ -20,26 +34,26 @@ get_filename_component(APP_NAME ${APP_PATH} NAME)
 set(APP_SRCS ${APP_PATH}/src/tuya_main.c)
 set(APP_OPTIONS "-Wall")
 
-if (XTEINK_X4_ENABLE_LVGL)
+if (XTEINK_X4_ENABLE_DISPLAY STREQUAL "1")
     list(APPEND APP_SRCS ${APP_PATH}/src/xteink_x4_display.c)
     list(APPEND APP_OPTIONS "-DLV_LVGL_H_INCLUDE_SIMPLE")
 endif()
 
-if (XTEINK_X4_ENABLE_CLOUD)
+if (XTEINK_X4_ENABLE_CLOUD STREQUAL "1")
     list(APPEND APP_SRCS
         ${APP_PATH}/src/reset_netcfg.c
         ${APP_PATH}/src/cli_cmd.c
     )
 endif()
 
-if (XTEINK_X4_ENABLE_LVGL AND XTEINK_X4_ENABLE_CLOUD)
-    message(STATUS "xteink_x4_cloud_demo: LVGL + cloud")
-elseif (XTEINK_X4_ENABLE_LVGL)
-    message(STATUS "xteink_x4_cloud_demo: LVGL-only mode (cloud disabled)")
-elseif (XTEINK_X4_ENABLE_CLOUD)
-    message(STATUS "xteink_x4_cloud_demo: cloud-only mode (LVGL disabled)")
+if (XTEINK_X4_ENABLE_DISPLAY STREQUAL "1" AND XTEINK_X4_ENABLE_CLOUD STREQUAL "1")
+    message(STATUS "xteink_x4_cloud_demo: display + cloud (from tuya_config.h)")
+elseif (XTEINK_X4_ENABLE_DISPLAY STREQUAL "1")
+    message(STATUS "xteink_x4_cloud_demo: display-only (from tuya_config.h)")
+elseif (XTEINK_X4_ENABLE_CLOUD STREQUAL "1")
+    message(STATUS "xteink_x4_cloud_demo: cloud-only (from tuya_config.h)")
 else()
-    message(FATAL_ERROR "xteink_x4_cloud_demo: enable LVGL and/or cloud")
+    message(FATAL_ERROR "xteink_x4_cloud_demo: set XTEINK_X4_ENABLE_CLOUD and/or XTEINK_X4_ENABLE_DISPLAY to 1 in tuya_config.h")
 endif()
 
 set(APP_INC ${APP_PATH}/src)
@@ -59,22 +73,4 @@ target_include_directories(${EXAMPLE_LIB}
 target_compile_options(${EXAMPLE_LIB}
     PRIVATE
         ${APP_OPTIONS}
-    )
-
-if (XTEINK_X4_ENABLE_LVGL)
-    set(_DISABLE_LVGL 0)
-else()
-    set(_DISABLE_LVGL 1)
-endif()
-
-if (XTEINK_X4_ENABLE_CLOUD)
-    set(_DISABLE_CLOUD 0)
-else()
-    set(_DISABLE_CLOUD 1)
-endif()
-
-target_compile_definitions(${EXAMPLE_LIB}
-    PRIVATE
-        XTEINK_X4_DISABLE_LVGL=${_DISABLE_LVGL}
-        XTEINK_X4_DISABLE_CLOUD=${_DISABLE_CLOUD}
     )

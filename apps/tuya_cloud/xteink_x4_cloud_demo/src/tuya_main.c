@@ -15,11 +15,11 @@
 #define PROJECT_VERSION "1.0.0"
 #endif
 
-#if !XTEINK_X4_DISABLE_LVGL
+#if XTEINK_X4_ENABLE_DISPLAY
 #include "xteink_x4_display.h"
 #endif
 
-#if !XTEINK_X4_DISABLE_CLOUD
+#if XTEINK_X4_ENABLE_CLOUD
 #include "board_com_api.h"
 #include "cJSON.h"
 #include "netmgr.h"
@@ -63,7 +63,7 @@ static void __log_heap(const char *tag)
     PR_NOTICE("[heap] %s: free=%d", tag, tal_system_get_free_heap_size());
 }
 
-#if XTEINK_X4_DISABLE_LVGL
+#if !XTEINK_X4_ENABLE_DISPLAY
 /**
  * @brief Report cloud status on serial when LVGL UI is disabled.
  * @param[in] msg status text
@@ -86,11 +86,13 @@ static void __log_heap(const char *tag)
  */
 static void __x4_board_bootstrap(void)
 {
-#if XTEINK_X4_DISABLE_LVGL
+#if XTEINK_X4_ENABLE_DISPLAY
+    PR_NOTICE("X4 cloud bootstrap: deferred to LVGL display thread");
+#elif X4_ENABLE_POWER_WAKE_GATE
     X4_WAKEUP_CLASS_E cls;
     OPERATE_RET       rt = OPRT_OK;
 
-    PR_NOTICE("X4 cloud bootstrap: board_register_hardware");
+    PR_NOTICE("X4 cloud bootstrap: board_register_hardware (power gate on)");
     TUYA_CALL_ERR_LOG(board_register_hardware());
 
     if (OPRT_OK == board_x4_sleep_classify_wakeup(&cls)) {
@@ -107,7 +109,7 @@ static void __x4_board_bootstrap(void)
     (void)board_x4_epd_sleep();
     PR_NOTICE("X4 cloud bootstrap done (EPD sleep)");
 #else
-    PR_NOTICE("X4 cloud bootstrap: deferred to LVGL display thread");
+    PR_NOTICE("X4 cloud bootstrap: skipped (power gate off, USB/cloud debug OK)");
 #endif
 }
 
@@ -295,7 +297,7 @@ static void __user_main_cloud(void)
     __x4_board_bootstrap();
     __log_heap("after board bootstrap");
 
-#if !XTEINK_X4_DISABLE_LVGL
+#if XTEINK_X4_ENABLE_DISPLAY
     TUYA_CALL_ERR_LOG(xteink_x4_display_start());
     x4_cloud_status("Cloud init...");
     __log_heap("after display start");
@@ -397,9 +399,9 @@ static void __user_main_cloud(void)
         }
     }
 }
-#endif /* !XTEINK_X4_DISABLE_CLOUD */
+#endif /* XTEINK_X4_ENABLE_CLOUD */
 
-#if !XTEINK_X4_DISABLE_LVGL
+#if XTEINK_X4_ENABLE_DISPLAY
 /**
  * @brief Run LVGL/EPD UI only (same flow as lvgl_demo).
  * @return none
@@ -421,7 +423,7 @@ static void __user_main_lvgl(void)
         tal_system_sleep(1000);
     }
 }
-#endif /* !XTEINK_X4_DISABLE_LVGL */
+#endif /* XTEINK_X4_ENABLE_DISPLAY */
 
 /**
  * @brief Application entry
@@ -433,14 +435,14 @@ void user_main(void)
     /* Debug: wait for USB Serial JTAG COM to enumerate after reset. */
     tal_system_sleep(X4_BOOT_DEBUG_DELAY_MS);
 #endif
-#if XTEINK_X4_DISABLE_LVGL && !XTEINK_X4_DISABLE_CLOUD
+#if !XTEINK_X4_ENABLE_DISPLAY && XTEINK_X4_ENABLE_CLOUD
     __user_main_cloud();
-#elif !XTEINK_X4_DISABLE_LVGL && XTEINK_X4_DISABLE_CLOUD
+#elif XTEINK_X4_ENABLE_DISPLAY && !XTEINK_X4_ENABLE_CLOUD
     __user_main_lvgl();
-#elif !XTEINK_X4_DISABLE_LVGL && !XTEINK_X4_DISABLE_CLOUD
+#elif XTEINK_X4_ENABLE_DISPLAY && XTEINK_X4_ENABLE_CLOUD
     __user_main_cloud();
 #else
-#error "Enable LVGL and/or cloud in CMakeLists.txt"
+#error "Enable display and/or cloud in tuya_config.h"
 #endif
 }
 
@@ -478,7 +480,7 @@ void tuya_app_main(void)
     THREAD_CFG_T thrd_param;
 
     (void)memset(&thrd_param, 0, sizeof(thrd_param));
-#if XTEINK_X4_DISABLE_CLOUD
+#if !XTEINK_X4_ENABLE_CLOUD
     thrd_param.stackDepth = 1024 * 4;
 #else
     thrd_param.stackDepth = 1024 * 8;

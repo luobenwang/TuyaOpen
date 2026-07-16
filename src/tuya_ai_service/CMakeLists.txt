@@ -34,25 +34,25 @@ list(APPEND LIB_PUBLIC_INC ${AI_BASIC_INC})
 # svc_ai_basic end
 
 # svc_ai_codec start
+# Agent always includes tuya_ai_encoder.h; keep registry + headers even when
+# codec backends (opus/speex) are disabled via CONFIG_ENABLE_TUYA_CODEC.
+set(AI_CODEC_INC ${MODULE_PATH}/svc_ai_codec/include)
+list(APPEND LIB_PUBLIC_INC ${AI_CODEC_INC})
+list(APPEND LIB_SRCS ${MODULE_PATH}/svc_ai_codec/src/tuya_ai_encoder.c)
+
 if (CONFIG_ENABLE_TUYA_CODEC)
-    set(AI_CODEC_INC ${MODULE_PATH}/svc_ai_codec/include)
-    list(APPEND LIB_PUBLIC_INC ${AI_CODEC_INC})
-    
-    # 基础编码器
-    list(APPEND LIB_SRCS ${MODULE_PATH}/svc_ai_codec/src/tuya_ai_encoder.c)
-    
-    # OPUS 编码器
+    # OPUS encoder
     if (CONFIG_ENABLE_TUYA_CODEC_OPUS)
         list(APPEND LIB_SRCS ${MODULE_PATH}/svc_ai_codec/src/tuya_ai_encoder_opus.c)
     endif()
-    
-    # OPUS IPC 编码器
+
+    # OPUS IPC encoder
     if (CONFIG_ENABLE_TUYA_CODEC_OPUS_IPC)
         list(APPEND LIB_SRCS ${MODULE_PATH}/svc_ai_codec/src/tuya_ai_encoder_opus_ipc.c)
         list(APPEND LIB_SRCS ${MODULE_PATH}/svc_ai_codec/src/tuya_ai_encoder_opus_ipc_server.c)
     endif()
-    
-    # SPEEX 编码器
+
+    # SPEEX encoder
     if (CONFIG_ENABLE_TUYA_CODEC_SPEEX)
         list(APPEND LIB_SRCS ${MODULE_PATH}/svc_ai_codec/src/tuya_ai_encoder_speex.c)
     endif()

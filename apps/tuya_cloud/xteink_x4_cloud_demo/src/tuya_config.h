@@ -52,13 +52,30 @@
 // clang-format on
 
 /**
- * @brief Build-time flags (set from CMakeLists.txt).
+ * @brief Feature switches — edit 0/1 here, then rebuild (`tos.py build`).
+ *        At least one must be 1.
+ * @note Display=1 needs LVGL enabled in app_default.config
+ *       (cp config/XTEINK_X4.config app_default.config).
+ *       Cloud-only: DISPLAY=0 + XTEINK_X4_cloud_only.config.
  */
-#ifndef XTEINK_X4_DISABLE_LVGL
-#define XTEINK_X4_DISABLE_LVGL 0
+#define XTEINK_X4_ENABLE_CLOUD   1
+#define XTEINK_X4_ENABLE_DISPLAY 1
+
+#if (XTEINK_X4_ENABLE_CLOUD == 0) && (XTEINK_X4_ENABLE_DISPLAY == 0)
+#error "Enable cloud and/or display in tuya_config.h (set to 1)"
 #endif
-#ifndef XTEINK_X4_DISABLE_CLOUD
-#define XTEINK_X4_DISABLE_CLOUD 0
+
+/**
+ * @brief X4 product power/wake gate (long-press PWR, USB-only boot -> sleep).
+ *        0 = allow USB-powered boot (recommended for cloud provisioning / serial debug).
+ *        1 = CrossPoint product policy (hold PWR 3s; USB-only boot enters deep sleep).
+ */
+#ifndef X4_ENABLE_POWER_WAKE_GATE
+#if XTEINK_X4_ENABLE_DISPLAY
+#define X4_ENABLE_POWER_WAKE_GATE 1
+#else
+#define X4_ENABLE_POWER_WAKE_GATE 0
+#endif
 #endif
 
 /**

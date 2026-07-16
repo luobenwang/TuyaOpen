@@ -23,6 +23,10 @@ tos.py flash monitor
 **Cloud-only preset** (`XTEINK_X4_cloud_only.config`) disables LVGL/AI and applies ESP32-C3
 WiFi/mbedTLS buffer trims so IoT DNS HTTPS (device activation) has enough heap.
 
+By default, cloud-only also sets `X4_ENABLE_POWER_WAKE_GATE` to `0` in `tuya_config.h` so
+USB-powered serial debugging can boot without the X4 deep-sleep power policy. Set it to `1`
+for product-style behavior (long PWR hold, USB-only boot -> sleep).
+
 4. Use Tuya Smart App to provision the device (BLE + AP). Footer on the EPD dashboard shows cloud status (`Netcfg BLE/AP`, `MQTT connected`, etc.).
 
 ## CLI (serial)
