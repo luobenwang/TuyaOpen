@@ -143,6 +143,12 @@ OPERATE_RET board_x4_epd_display_full_refresh(uint8_t *image)
     return xteink_x4_epd_display_full_refresh(image);
 }
 
+OPERATE_RET board_x4_epd_display_partial(const uint8_t *new_image, const uint8_t *old_region, uint16_t x, uint16_t y,
+                                         uint16_t w, uint16_t h)
+{
+    return xteink_x4_epd_display_partial(new_image, old_region, x, y, w, h);
+}
+
 OPERATE_RET board_x4_epd_sleep(void)
 {
     return xteink_x4_epd_sleep();

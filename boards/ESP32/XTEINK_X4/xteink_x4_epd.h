@@ -41,6 +41,20 @@ OPERATE_RET xteink_x4_epd_display(uint8_t *image);
 OPERATE_RET xteink_x4_epd_display_full_refresh(uint8_t *image);
 
 /**
+ * @brief Fast differential refresh of one rectangle (x aligned to 8 px).
+ * @param[in] new_image full framebuffer with new pixels
+ * @param[in] old_region previous pixels of the same window, tightly packed (h * (w/8) bytes), or NULL
+ * @param[in] x region left in pixels (will be aligned down to multiple of 8)
+ * @param[in] y region top in pixels
+ * @param[in] w region width in pixels (will be aligned up to multiple of 8)
+ * @param[in] h region height in pixels
+ * @return OPRT_OK on success, error code on failure
+ * @note Does not allocate a second full-frame buffer; only the window is transferred.
+ */
+OPERATE_RET xteink_x4_epd_display_partial(const uint8_t *new_image, const uint8_t *old_region, uint16_t x, uint16_t y,
+                                          uint16_t w, uint16_t h);
+
+/**
  * @brief Put the SSD1677 controller into deep sleep.
  * @return OPRT_OK on success, error code on failure.
  */

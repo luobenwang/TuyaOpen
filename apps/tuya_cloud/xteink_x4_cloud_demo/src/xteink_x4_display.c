@@ -54,6 +54,22 @@
 #define X4_EPD_PUSH_MS   100U
 #define X4_HUB_SLOW_N    5U
 
+#if XTEINK_X4_ENABLE_CLOUD
+/* Scheme E: equal-diameter circles, top 4 / bottom 3, shared pitch module. */
+#define X4_KEY_D         96
+#define X4_KEY_R         (X4_KEY_D / 2)
+#define X4_KEY_PITCH     124
+#define X4_KEY_ROW_GAP   40
+#define X4_KEY_STROKE    2
+#define X4_KEY_TITLE_H   64
+#define X4_KEY_HINT_H    48
+#define X4_KEY_GRID_W    (X4_KEY_D + 3 * X4_KEY_PITCH)
+#define X4_KEY_GRID_H    (X4_KEY_D + X4_KEY_ROW_GAP + X4_KEY_D)
+#define X4_KEY_PAD       8
+#define X4_KEYS_MAX_H    (X4_KEY_GRID_H + 2 * X4_KEY_PAD)
+#define X4_KEYS_OLD_MAX  (X4_EPD_STRIDE * (X4_KEYS_MAX_H + 16))
+#endif
+
 /* ---------------------------------------------------------------------------
  * File scope variables
  * --------------------------------------------------------------------------- */
@@ -65,6 +81,10 @@ static BOOL_T          s_sd_mounted;
 static BOOL_T          s_power_off_started;
 static uint32_t        s_pwr_hold_ms;
 static uint8_t         s_hub_slow_tick;
+static uint8_t         s_last_key_st = 0xFFU; /* force first key paint */
+#if XTEINK_X4_ENABLE_CLOUD
+static uint8_t         s_keys_old_region[X4_KEYS_OLD_MAX];
+#endif
 static char            s_sd_smoke_msg[192];
 static char            s_cloud_status[96] = "Cloud: idle";
 static THREAD_HANDLE   s_display_thread   = NULL;
@@ -88,11 +108,16 @@ static void __signal_display_ready(void)
  * --------------------------------------------------------------------------- */
 static void __epd_push_if_dirty(BOOL_T full_refresh);
 static void __build_dashboard(void);
+static void __build_keys_test_screen(void);
 static void __build_splash_screen(void);
 static void __dashboard_refresh_slow(void);
 static void __draw_quad_frame(int32_t x, int32_t y, const char *title);
 static void __draw_key_chip(int32_t x, int32_t y, const char *label, BOOL_T pressed);
 static void __refresh_keys_quadrant(uint8_t st);
+#if XTEINK_X4_ENABLE_CLOUD
+static void __keys_grid_origin(int32_t *ox, int32_t *oy);
+static void __keys_region_get(uint16_t *x, uint16_t *y, uint16_t *w, uint16_t *h);
+#endif
 
 /**
  * @brief Mark framebuffer dirty for next EPD push.
@@ -353,10 +378,49 @@ static void __draw_key_chip(int32_t x, int32_t y, const char *label, BOOL_T pres
 static void __refresh_keys_quadrant(uint8_t st)
 {
     static const char *key_names[7] = {"Back", "OK", "Left", "Right", "Up", "Down", "PWR"};
-    int32_t            base_x       = X4_ORIGIN_X + 12;
-    int32_t            base_y       = X4_ORIGIN_Y + X4_BAR_H + X4_QUAD_H + X4_QUAD_GAP + 28;
-    int32_t            i;
+#if XTEINK_X4_ENABLE_CLOUD
+    /* Top row 4 + bottom row 3 (scheme E). Bit order matches ADC ladder. */
+    static const uint8_t s_key_row[7] = {0, 0, 0, 0, 1, 1, 1};
+    static const uint8_t s_key_col[7] = {0, 1, 2, 3, 0, 1, 2};
+    int32_t ox = 0;
+    int32_t oy = 0;
+    int32_t i;
+#else
+    int32_t base_x = X4_ORIGIN_X + 12;
+    int32_t base_y = X4_ORIGIN_Y + X4_BAR_H + X4_QUAD_H + X4_QUAD_GAP + 28;
+    int32_t i;
+#endif
 
+#if XTEINK_X4_ENABLE_CLOUD
+    __keys_grid_origin(&ox, &oy);
+    x4_gfx_fill_rect(&s_gfx, ox - X4_KEY_PAD, oy - X4_KEY_PAD, X4_KEY_GRID_W + 2 * X4_KEY_PAD,
+                     X4_KEY_GRID_H + 2 * X4_KEY_PAD, TRUE);
+
+    for (i = 0; i < 7; i++) {
+        int32_t cx;
+        int32_t cy;
+        int32_t tw;
+        BOOL_T  pressed = (0U != (st & (1U << (unsigned)i))) ? TRUE : FALSE;
+
+        cx = ox + X4_KEY_R + ((int32_t)s_key_col[i] * X4_KEY_PITCH);
+        if (0U != s_key_row[i]) {
+            cx += X4_KEY_PITCH / 2;
+        }
+        cy = oy + X4_KEY_R + ((int32_t)s_key_row[i] * (X4_KEY_D + X4_KEY_ROW_GAP));
+
+        if (pressed) {
+            x4_gfx_fill_circle(&s_gfx, cx, cy, X4_KEY_R, FALSE);
+            x4_gfx_draw_circle(&s_gfx, cx, cy, X4_KEY_R, X4_KEY_STROKE, FALSE);
+        } else {
+            x4_gfx_fill_circle(&s_gfx, cx, cy, X4_KEY_R, TRUE);
+            x4_gfx_draw_circle(&s_gfx, cx, cy, X4_KEY_R, X4_KEY_STROKE, FALSE);
+        }
+
+        tw = x4_gfx_text_width(key_names[i]);
+        x4_gfx_draw_text(&s_gfx, cx - tw / 2, cy - x4_gfx_line_height() / 2, key_names[i],
+                         pressed ? TRUE : FALSE);
+    }
+#else
     for (i = 0; i < 7; i++) {
         int32_t col = i % 2;
         int32_t row = i / 2;
@@ -366,6 +430,167 @@ static void __refresh_keys_quadrant(uint8_t st)
         snprintf(line, sizeof(line), "%u %s", (unsigned)i, key_names[i]);
         __draw_key_chip(base_x + col * ((X4_QUAD_W - 28) / 2 + 4), base_y + row * 22, line, pressed);
     }
+#endif
+}
+
+#if XTEINK_X4_ENABLE_CLOUD
+/**
+ * @brief Compute top-left of the scheme-E key grid (centered in content area).
+ * @param[out] ox grid left (first circle bbox left)
+ * @param[out] oy grid top
+ * @return none
+ */
+static void __keys_grid_origin(int32_t *ox, int32_t *oy)
+{
+    int32_t top;
+    int32_t bot;
+    int32_t avail;
+
+    if (NULL != ox) {
+        *ox = X4_ORIGIN_X + (X4_RENDER_W - X4_KEY_GRID_W) / 2;
+    }
+
+    top   = X4_ORIGIN_Y + X4_KEY_TITLE_H + X4_KEY_HINT_H;
+    bot   = X4_ORIGIN_Y + X4_RENDER_H - 16;
+    avail = bot - top;
+    if (avail < X4_KEY_GRID_H) {
+        avail = X4_KEY_GRID_H;
+    }
+    if (NULL != oy) {
+        *oy = top + (avail - X4_KEY_GRID_H) / 2;
+    }
+}
+
+/**
+ * @brief Compute byte-aligned keys window in panel coordinates.
+ * @param[out] x left
+ * @param[out] y top
+ * @param[out] w width
+ * @param[out] h height
+ * @return none
+ */
+static void __keys_region_get(uint16_t *x, uint16_t *y, uint16_t *w, uint16_t *h)
+{
+    int32_t  ox = 0;
+    int32_t  oy = 0;
+    int32_t  x0;
+    int32_t  y0;
+    int32_t  x1;
+    int32_t  y1;
+    uint16_t ax;
+    uint16_t aw;
+
+    __keys_grid_origin(&ox, &oy);
+    x0 = ox - X4_KEY_PAD;
+    y0 = oy - X4_KEY_PAD;
+    x1 = ox + X4_KEY_GRID_W + X4_KEY_PAD;
+    y1 = oy + X4_KEY_GRID_H + X4_KEY_PAD;
+    if (x0 < 0) {
+        x0 = 0;
+    }
+    if (y0 < 0) {
+        y0 = 0;
+    }
+    if (x1 > X4_EPD_W) {
+        x1 = X4_EPD_W;
+    }
+    if (y1 > X4_EPD_H) {
+        y1 = X4_EPD_H;
+    }
+
+    ax = (uint16_t)((uint16_t)x0 & (uint16_t)~0x7U);
+    aw = (uint16_t)(((uint16_t)x1 + 7U) & (uint16_t)~0x7U);
+    if (aw > (uint16_t)X4_EPD_W) {
+        aw = (uint16_t)X4_EPD_W;
+    }
+    aw = (uint16_t)(aw - ax);
+
+    if (NULL != x) {
+        *x = ax;
+    }
+    if (NULL != y) {
+        *y = (uint16_t)y0;
+    }
+    if (NULL != w) {
+        *w = aw;
+    }
+    if (NULL != h) {
+        *h = (uint16_t)(y1 - y0);
+    }
+}
+
+/**
+ * @brief Pack one framebuffer rectangle into a tight row buffer.
+ * @param[out] dst packed destination (h * (w/8) bytes)
+ * @param[in] fb full framebuffer
+ * @param[in] x left (byte-aligned)
+ * @param[in] y top
+ * @param[in] w width (multiple of 8)
+ * @param[in] h height
+ * @return none
+ */
+static void __pack_fb_region(uint8_t *dst, const uint8_t *fb, uint16_t x, uint16_t y, uint16_t w, uint16_t h)
+{
+    uint16_t x_bytes = (uint16_t)(x / 8U);
+    uint16_t w_bytes = (uint16_t)(w / 8U);
+    uint16_t row;
+
+    if (NULL == dst || NULL == fb || 0U == w_bytes || 0U == h) {
+        return;
+    }
+    if ((uint32_t)w_bytes * (uint32_t)h > (uint32_t)X4_KEYS_OLD_MAX) {
+        return;
+    }
+
+    for (row = 0; row < h; row++) {
+        (void)memcpy(dst + ((uint32_t)row * (uint32_t)w_bytes),
+                     fb + (((uint32_t)y + (uint32_t)row) * X4_EPD_STRIDE) + x_bytes, w_bytes);
+    }
+}
+
+/**
+ * @brief Redraw keys and push only the keys window (fast partial refresh).
+ * @param[in] st button bitmask
+ * @return none
+ */
+static void __keys_partial_update(uint8_t st)
+{
+    uint16_t x = 0;
+    uint16_t y = 0;
+    uint16_t w = 0;
+    uint16_t h = 0;
+
+    __keys_region_get(&x, &y, &w, &h);
+    __pack_fb_region(s_keys_old_region, s_epd_fb, x, y, w, h);
+    __refresh_keys_quadrant(st);
+    (void)board_x4_epd_display_partial(s_epd_fb, s_keys_old_region, x, y, w, h);
+}
+#endif
+
+/**
+ * @brief Cloud-mode UI: keys test only (no battery/uptime live updates).
+ * @return none
+ */
+static void __build_keys_test_screen(void)
+{
+    uint8_t st0 = 0;
+
+    x4_gfx_clear(&s_gfx, TRUE);
+    x4_gfx_fill_rect(&s_gfx, X4_ORIGIN_X, X4_ORIGIN_Y, X4_RENDER_W, 64, FALSE);
+    x4_gfx_fill_rect(&s_gfx, X4_ORIGIN_X + 2, X4_ORIGIN_Y + 2, X4_RENDER_W - 4, 60, TRUE);
+    x4_gfx_draw_text(&s_gfx, X4_ORIGIN_X + 24, X4_ORIGIN_Y + 24, "Keys test (ADC ladder)", FALSE);
+    x4_gfx_draw_text_wrap(&s_gfx, X4_ORIGIN_X + 24, X4_ORIGIN_Y + 72, X4_RENDER_W - 48,
+                          "Top 4 / bottom 3 circles. Press to highlight. Long PWR 3s -> sleep", FALSE);
+
+    s_last_key_st = 0xFFU;
+    if (OPRT_OK == board_x4_buttons_get_state(&st0)) {
+        __refresh_keys_quadrant(st0);
+        s_last_key_st = st0;
+    } else {
+        __refresh_keys_quadrant(0);
+        s_last_key_st = 0;
+    }
+    __mark_dirty();
 }
 
 /**
@@ -540,9 +765,11 @@ static void __poll_input(void)
 
     rt_btn = board_x4_buttons_get_state(&st);
     if (OPRT_OK != rt_btn) {
-        s_pwr_hold_ms   = 0U;
+        s_pwr_hold_ms = 0U;
+#if !XTEINK_X4_ENABLE_CLOUD
         s_hub_slow_tick = 0U;
         __dashboard_refresh_slow();
+#endif
         return;
     }
 
@@ -556,12 +783,20 @@ static void __poll_input(void)
         return;
     }
 
+#if XTEINK_X4_ENABLE_CLOUD
+    /* Keys-only UI: partial window refresh (not full panel). */
+    if (st != s_last_key_st) {
+        __keys_partial_update(st);
+        s_last_key_st = st;
+    }
+#else
     __refresh_keys_quadrant(st);
     s_hub_slow_tick++;
     if (s_hub_slow_tick >= X4_HUB_SLOW_N) {
         s_hub_slow_tick = 0U;
         __dashboard_refresh_slow();
     }
+#endif
 }
 
 /**
@@ -627,17 +862,15 @@ static void __display_thread(void *arg)
     __epd_push_if_dirty(TRUE);
     tal_system_sleep((uint32_t)X4_BULLSEYE_HOLD_MS);
 #else
-    /* Cloud: splash first so main thread can start WiFi/BLE after first frame. */
-    __build_splash_screen();
+    /* Cloud: keys-test screen only; ready after first frame so WiFi/BLE can start. */
+    __build_keys_test_screen();
     __epd_push_if_dirty(TRUE);
     __signal_display_ready();
-    tal_system_sleep(600);
 #endif
 
+#if !XTEINK_X4_ENABLE_CLOUD
     __build_dashboard();
     __epd_push_if_dirty(FALSE);
-#if XTEINK_X4_ENABLE_CLOUD
-    __signal_display_ready();
 #endif
 
     last_poll_ms = tal_system_get_millisecond();

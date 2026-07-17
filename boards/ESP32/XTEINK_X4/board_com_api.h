@@ -219,6 +219,19 @@ OPERATE_RET board_x4_epd_display(uint8_t *image);
 OPERATE_RET board_x4_epd_display_full_refresh(uint8_t *image);
 
 /**
+ * @brief Fast partial refresh of one rectangle (pixel x aligned to 8).
+ * @param[in] new_image full framebuffer after update
+ * @param[in] old_region previous window pixels packed as h*(w/8) bytes (NULL = use new for both)
+ * @param[in] x left px
+ * @param[in] y top px
+ * @param[in] w width px
+ * @param[in] h height px
+ * @return OPRT_OK on success
+ */
+OPERATE_RET board_x4_epd_display_partial(const uint8_t *new_image, const uint8_t *old_region, uint16_t x, uint16_t y,
+                                         uint16_t w, uint16_t h);
+
+/**
  * @brief Deep sleep panel to save power.
  * @return OPRT_OK on success.
  */

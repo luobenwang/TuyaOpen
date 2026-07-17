@@ -81,6 +81,29 @@ void x4_gfx_fill_rect(X4_GFX_T *gfx, int32_t x, int32_t y, int32_t w, int32_t h,
 void x4_gfx_draw_rect(X4_GFX_T *gfx, int32_t x, int32_t y, int32_t w, int32_t h, int32_t line_w, BOOL_T white);
 
 /**
+ * @brief Fill a circle.
+ * @param[in] gfx renderer context
+ * @param[in] cx center x
+ * @param[in] cy center y
+ * @param[in] r radius in pixels
+ * @param[in] white fill color
+ * @return none
+ */
+void x4_gfx_fill_circle(X4_GFX_T *gfx, int32_t cx, int32_t cy, int32_t r, BOOL_T white);
+
+/**
+ * @brief Draw circle outline.
+ * @param[in] gfx renderer context
+ * @param[in] cx center x
+ * @param[in] cy center y
+ * @param[in] r radius in pixels
+ * @param[in] line_w stroke width in pixels
+ * @param[in] white line color
+ * @return none
+ */
+void x4_gfx_draw_circle(X4_GFX_T *gfx, int32_t cx, int32_t cy, int32_t r, int32_t line_w, BOOL_T white);
+
+/**
  * @brief Draw 8x16 ASCII text (printable 32..126).
  * @param[in] gfx renderer context
  * @param[in] x left baseline origin

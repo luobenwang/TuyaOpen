@@ -452,6 +452,134 @@ OPERATE_RET xteink_x4_epd_display_full_refresh(uint8_t *image)
     return OPRT_OK;
 }
 
+/**
+ * @brief Align partial window X to byte boundary (SSD1677 RAM is 1bpp).
+ * @param[in,out] x left
+ * @param[in,out] w width
+ * @return none
+ */
+static void __align_partial_x(uint16_t *x, uint16_t *w)
+{
+    uint16_t x0;
+    uint16_t x1;
+
+    if (NULL == x || NULL == w || 0U == *w) {
+        return;
+    }
+    x0 = (uint16_t)(*x & ~0x7U);
+    x1 = (uint16_t)((*x + *w + 7U) & ~0x7U);
+    if (x1 > X4_EPD_WIDTH) {
+        x1 = (uint16_t)X4_EPD_WIDTH;
+    }
+    *x = x0;
+    *w = (uint16_t)(x1 - x0);
+}
+
+/**
+ * @brief Write one rectangle from a full framebuffer into controller RAM.
+ * @param[in] ram_cmd BW or RED write command
+ * @param[in] fb full framebuffer
+ * @param[in] x left (byte-aligned)
+ * @param[in] y top
+ * @param[in] w width (multiple of 8)
+ * @param[in] h height
+ * @return OPRT_OK on success
+ */
+static OPERATE_RET __write_ram_region(uint8_t ram_cmd, const uint8_t *fb, uint16_t x, uint16_t y, uint16_t w,
+                                      uint16_t h)
+{
+    OPERATE_RET rt      = OPRT_OK;
+    uint16_t    x_bytes = (uint16_t)(x / 8U);
+    uint16_t    w_bytes = (uint16_t)(w / 8U);
+    uint16_t    row;
+
+    if (NULL == fb || 0U == w || 0U == h) {
+        return OPRT_INVALID_PARM;
+    }
+    if ((uint32_t)y + (uint32_t)h > X4_EPD_HEIGHT || (uint32_t)x + (uint32_t)w > X4_EPD_WIDTH) {
+        return OPRT_INVALID_PARM;
+    }
+
+    TUYA_CALL_ERR_RETURN(__set_ram_area(x, y, w, h));
+    TUYA_CALL_ERR_RETURN(__send_cmd(ram_cmd));
+    for (row = 0; row < h; row++) {
+        const uint8_t *src = fb + (((uint32_t)y + (uint32_t)row) * X4_EPD_WIDTH_BYTES) + x_bytes;
+
+        TUYA_CALL_ERR_RETURN(__send_data_buf(src, w_bytes));
+    }
+
+    return OPRT_OK;
+}
+
+/**
+ * @brief Write one rectangle from tightly packed rows into controller RAM.
+ * @param[in] ram_cmd BW or RED write command
+ * @param[in] packed h rows of (w/8) bytes each
+ * @param[in] x left (byte-aligned)
+ * @param[in] y top
+ * @param[in] w width (multiple of 8)
+ * @param[in] h height
+ * @return OPRT_OK on success
+ */
+static OPERATE_RET __write_ram_region_packed(uint8_t ram_cmd, const uint8_t *packed, uint16_t x, uint16_t y, uint16_t w,
+                                             uint16_t h)
+{
+    OPERATE_RET rt      = OPRT_OK;
+    uint16_t    w_bytes = (uint16_t)(w / 8U);
+    uint16_t    row;
+
+    if (NULL == packed || 0U == w || 0U == h) {
+        return OPRT_INVALID_PARM;
+    }
+
+    TUYA_CALL_ERR_RETURN(__set_ram_area(x, y, w, h));
+    TUYA_CALL_ERR_RETURN(__send_cmd(ram_cmd));
+    for (row = 0; row < h; row++) {
+        TUYA_CALL_ERR_RETURN(__send_data_buf(packed + ((uint32_t)row * (uint32_t)w_bytes), w_bytes));
+    }
+
+    return OPRT_OK;
+}
+
+/**
+ * @brief Fast differential refresh of one rectangle.
+ * @param[in] new_image new full framebuffer
+ * @param[in] old_region previous window packed as h*(w/8) (NULL uses new for RED)
+ * @param[in] x left
+ * @param[in] y top
+ * @param[in] w width
+ * @param[in] h height
+ * @return OPRT_OK on success
+ */
+OPERATE_RET xteink_x4_epd_display_partial(const uint8_t *new_image, const uint8_t *old_region, uint16_t x, uint16_t y,
+                                          uint16_t w, uint16_t h)
+{
+    OPERATE_RET rt = OPRT_OK;
+
+    if (!s_epd_inited || NULL == new_image || 0U == w || 0U == h) {
+        return OPRT_COM_ERROR;
+    }
+
+    __align_partial_x(&x, &w);
+    if (0U == w) {
+        return OPRT_INVALID_PARM;
+    }
+    if ((uint32_t)y + (uint32_t)h > X4_EPD_HEIGHT) {
+        return OPRT_INVALID_PARM;
+    }
+
+    /* New → BW, old → RED (same scheme as original full-frame differential). */
+    TUYA_CALL_ERR_RETURN(__write_ram_region(CMD_WRITE_RAM_BW, new_image, x, y, w, h));
+    if (NULL != old_region) {
+        TUYA_CALL_ERR_RETURN(__write_ram_region_packed(CMD_WRITE_RAM_RED, old_region, x, y, w, h));
+    } else {
+        TUYA_CALL_ERR_RETURN(__write_ram_region(CMD_WRITE_RAM_RED, new_image, x, y, w, h));
+    }
+    TUYA_CALL_ERR_RETURN(__refresh(false));
+
+    return OPRT_OK;
+}
+
 OPERATE_RET xteink_x4_epd_sleep(void)
 {
     OPERATE_RET rt = OPRT_OK;

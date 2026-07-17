@@ -146,6 +146,75 @@ void x4_gfx_draw_rect(X4_GFX_T *gfx, int32_t x, int32_t y, int32_t w, int32_t h,
 }
 
 /**
+ * @brief Fill a circle (midpoint scan).
+ * @param[in] gfx renderer context
+ * @param[in] cx center x
+ * @param[in] cy center y
+ * @param[in] r radius in pixels
+ * @param[in] white fill color
+ * @return none
+ */
+void x4_gfx_fill_circle(X4_GFX_T *gfx, int32_t cx, int32_t cy, int32_t r, BOOL_T white)
+{
+    int32_t x;
+    int32_t y;
+    int32_t r2;
+
+    if ((gfx == NULL) || (r <= 0)) {
+        return;
+    }
+
+    r2 = r * r;
+    for (y = -r; y <= r; y++) {
+        for (x = -r; x <= r; x++) {
+            if ((x * x + y * y) <= r2) {
+                x4_gfx_set_pixel(gfx, cx + x, cy + y, white);
+            }
+        }
+    }
+}
+
+/**
+ * @brief Draw circle outline as a ring between r and r-line_w.
+ * @param[in] gfx renderer context
+ * @param[in] cx center x
+ * @param[in] cy center y
+ * @param[in] r outer radius
+ * @param[in] line_w stroke width
+ * @param[in] white line color
+ * @return none
+ */
+void x4_gfx_draw_circle(X4_GFX_T *gfx, int32_t cx, int32_t cy, int32_t r, int32_t line_w, BOOL_T white)
+{
+    int32_t x;
+    int32_t y;
+    int32_t r_out2;
+    int32_t r_in;
+    int32_t r_in2;
+
+    if ((gfx == NULL) || (r <= 0) || (line_w <= 0)) {
+        return;
+    }
+
+    r_out2 = r * r;
+    r_in   = r - line_w;
+    if (r_in < 0) {
+        r_in = 0;
+    }
+    r_in2 = r_in * r_in;
+
+    for (y = -r; y <= r; y++) {
+        for (x = -r; x <= r; x++) {
+            int32_t d2 = x * x + y * y;
+
+            if ((d2 <= r_out2) && (d2 >= r_in2)) {
+                x4_gfx_set_pixel(gfx, cx + x, cy + y, white);
+            }
+        }
+    }
+}
+
+/**
  * @brief Get line height for the built-in font.
  * @return line height in pixels
  */
