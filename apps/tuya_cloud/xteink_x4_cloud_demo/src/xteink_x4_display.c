@@ -67,7 +67,9 @@
 #define X4_KEY_GRID_H    (X4_KEY_D + X4_KEY_ROW_GAP + X4_KEY_D)
 #define X4_KEY_PAD       8
 #define X4_KEYS_MAX_H    (X4_KEY_GRID_H + 2 * X4_KEY_PAD)
-#define X4_KEYS_OLD_MAX  (X4_EPD_STRIDE * (X4_KEYS_MAX_H + 16))
+/* Packed old-frame for partial refresh (keys window only, not full panel stride). */
+#define X4_KEYS_OLD_W_BYTES ((((X4_KEY_GRID_W + 2 * X4_KEY_PAD) + 15) / 8) + 1)
+#define X4_KEYS_OLD_MAX     (X4_KEYS_OLD_W_BYTES * (X4_KEYS_MAX_H + 8))
 #endif
 
 /* ---------------------------------------------------------------------------
@@ -79,6 +81,7 @@ static volatile BOOL_T   s_epd_dirty;
 static uint32_t        s_boot_ms;
 static BOOL_T          s_sd_mounted;
 static BOOL_T          s_power_off_started;
+static BOOL_T          s_pwr_action_locked;
 static uint32_t        s_pwr_hold_ms;
 static uint8_t         s_hub_slow_tick;
 static uint8_t         s_last_key_st = 0xFFU; /* force first key paint */
@@ -580,7 +583,7 @@ static void __build_keys_test_screen(void)
     x4_gfx_fill_rect(&s_gfx, X4_ORIGIN_X + 2, X4_ORIGIN_Y + 2, X4_RENDER_W - 4, 60, TRUE);
     x4_gfx_draw_text(&s_gfx, X4_ORIGIN_X + 24, X4_ORIGIN_Y + 24, "Keys test (ADC ladder)", FALSE);
     x4_gfx_draw_text_wrap(&s_gfx, X4_ORIGIN_X + 24, X4_ORIGIN_Y + 72, X4_RENDER_W - 48,
-                          "Top 4 / bottom 3 circles. Press to highlight. Long PWR 3s -> sleep", FALSE);
+                          "Top 4 / bottom 3 circles. Press to highlight. Long PWR 3s -> reset+sleep", FALSE);
 
     s_last_key_st = 0xFFU;
     if (OPRT_OK == board_x4_buttons_get_state(&st0)) {
@@ -680,7 +683,7 @@ static void __dashboard_refresh_slow(void)
     x4_gfx_draw_text_wrap(&s_gfx, X4_ORIGIN_X + X4_QUAD_W + X4_QUAD_GAP + 6, X4_ORIGIN_Y + X4_BAR_H + 24,
                           X4_QUAD_W - 12, line, FALSE);
 
-    snprintf(line, sizeof(line), "SSD1677 soft-SPI\nBuilt " __DATE__ "\nLong PWR 3s -> sleep");
+    snprintf(line, sizeof(line), "SSD1677 soft-SPI\nBuilt " __DATE__ "\nLong PWR 3s -> reset+sleep");
     x4_gfx_fill_rect(&s_gfx, X4_ORIGIN_X + X4_QUAD_W + X4_QUAD_GAP + 6,
                      X4_ORIGIN_Y + X4_BAR_H + X4_QUAD_H + X4_QUAD_GAP + 80, X4_QUAD_W - 12, 56, TRUE);
     x4_gfx_draw_text_wrap(&s_gfx, X4_ORIGIN_X + X4_QUAD_W + X4_QUAD_GAP + 6,
@@ -718,7 +721,7 @@ static void __draw_power_off_screen(BOOL_T invert)
  * @brief Flash power-off screen then enter deep sleep.
  * @return none
  */
-static void __user_power_off_sequence(void)
+void xteink_x4_display_enter_deep_sleep(void)
 {
     uint32_t pass;
 
@@ -726,6 +729,7 @@ static void __user_power_off_sequence(void)
         return;
     }
     s_power_off_started = TRUE;
+    s_pwr_action_locked = TRUE;
 
     __draw_power_off_screen(FALSE);
     __epd_push_if_dirty(FALSE);
@@ -759,7 +763,7 @@ static void __poll_input(void)
     OPERATE_RET rt_btn = OPRT_OK;
     uint8_t     st     = 0;
 
-    if (s_power_off_started) {
+    if (s_power_off_started || s_pwr_action_locked) {
         return;
     }
 
@@ -779,7 +783,9 @@ static void __poll_input(void)
         s_pwr_hold_ms = 0U;
     }
     if (s_pwr_hold_ms >= X4_PWR_HOLD_MS) {
-        __user_power_off_sequence();
+        s_pwr_action_locked = TRUE;
+        PR_NOTICE("PWR hold %ums -> app long-press hook", (unsigned)s_pwr_hold_ms);
+        xteink_x4_app_on_pwr_long_press();
         return;
     }
 
@@ -820,6 +826,7 @@ static void __display_thread(void *arg)
     s_boot_ms           = tal_system_get_millisecond();
     s_pwr_hold_ms       = 0U;
     s_power_off_started = FALSE;
+    s_pwr_action_locked = FALSE;
     s_hub_slow_tick     = 0U;
 
     TUYA_CALL_ERR_LOG(board_register_hardware());

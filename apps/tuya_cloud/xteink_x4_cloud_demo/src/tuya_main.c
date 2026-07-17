@@ -68,41 +68,33 @@ static void __log_heap(const char *tag)
 }
 
 #if defined(ENABLE_BLUETOOTH) && (ENABLE_BLUETOOTH == 1)
-/** Set on BIND_TOKEN_ON; BLE freed once WiFi link is up. */
-static volatile BOOL_T s_x4_ble_release_pending = FALSE;
+/** One-shot: free BLE after first WiFi link-up (activated or netcfg). */
+static volatile BOOL_T s_x4_ble_freed = FALSE;
 
 /**
- * @brief Deferred BLE teardown after WiFi is up (work queue context).
- * @param[in] arg unused
- * @return none
- * @note Must not run while STA mode is first enabling; that races coexist and
- *       panics with Load access fault on ESP32-C3.
- */
-static void __x4_ble_deinit_on_workq(void *arg)
-{
-    (void)arg;
-    (void)tuya_ble_deinit();
-    __log_heap("after ble deinit (wifi up)");
-}
-
-/**
- * @brief On WiFi link-up after token, free BLE RAM for TLS/activate.
+ * @brief On WiFi link-up, free BLE RAM so MQTT TLS can allocate.
  * @param[in] data pointer to netmgr_status_e
  * @return OPRT_OK
+ * @note Already-activated devices never get BIND_TOKEN_ON; always free once here.
+ *       WiFi is already linked, so tearing BLE down here is safe (unlike during STA enable).
  */
 static OPERATE_RET __x4_on_link_status(void *data)
 {
     netmgr_status_e status;
 
-    if (FALSE == s_x4_ble_release_pending || NULL == data) {
+    if (TRUE == s_x4_ble_freed || NULL == data) {
         return OPRT_OK;
     }
     status = *(netmgr_status_e *)data;
     if (NETMGR_LINK_UP != status && NETMGR_LINK_UP_SWITH != status) {
         return OPRT_OK;
     }
-    s_x4_ble_release_pending = FALSE;
-    (void)tal_workq_schedule(WORKQ_SYSTEM, __x4_ble_deinit_on_workq, NULL);
+    s_x4_ble_freed = TRUE;
+    /* Sync free before LAN/MQTT continue — TLS needs the RAM now. */
+    (void)tuya_ble_deinit();
+    /* Host BLE thread teardown is async; give it a beat before iotdns TLS. */
+    tal_system_sleep(300);
+    __log_heap("after ble deinit (wifi up)");
     return OPRT_OK;
 }
 #endif
@@ -121,6 +113,38 @@ static OPERATE_RET __x4_on_link_status(void *data)
  * @return none
  */
 #define x4_cloud_status(msg) xteink_x4_display_set_cloud_status(msg)
+#endif
+
+#if XTEINK_X4_ENABLE_DISPLAY
+/** PWR long-press requested factory reset; sleep on RESET_COMPLETE instead of reboot. */
+static volatile BOOL_T s_pwr_reset_then_sleep = FALSE;
+
+/**
+ * @brief App hook: PWR hold >= 3s -> factory reset then deep sleep.
+ * @return none
+ */
+void xteink_x4_app_on_pwr_long_press(void)
+{
+#if XTEINK_X4_ENABLE_CLOUD
+    tuya_iot_client_t *iot = tuya_iot_client_get();
+
+    if (iot == NULL) {
+        PR_ERR("PWR long-press: no IoT client, sleep only");
+        xteink_x4_display_enter_deep_sleep();
+        return;
+    }
+    if (s_pwr_reset_then_sleep) {
+        return;
+    }
+    s_pwr_reset_then_sleep = TRUE;
+    x4_cloud_status("Factory reset...");
+    PR_NOTICE("PWR long-press: tuya_iot_reset(), then sleep on RESET_COMPLETE");
+    (void)tuya_iot_reset(iot);
+#else
+    PR_NOTICE("PWR long-press: deep sleep (cloud disabled)");
+    xteink_x4_display_enter_deep_sleep();
+#endif
+}
 #endif
 
 /**
@@ -240,10 +264,6 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
     case TUYA_EVENT_BIND_TOKEN_ON:
         PR_INFO("Bind token received");
         x4_cloud_status("Token OK, connecting...");
-#if defined(ENABLE_BLUETOOTH) && (ENABLE_BLUETOOTH == 1)
-        /* Defer BLE free until WiFi LINK_UP (see __x4_on_link_status). */
-        s_x4_ble_release_pending = TRUE;
-#endif
         break;
 
     case TUYA_EVENT_DIRECT_MQTT_CONNECTED: {
@@ -268,6 +288,14 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
 
     case TUYA_EVENT_RESET_COMPLETE: {
         PR_INFO("Device Reset Complete!");
+#if XTEINK_X4_ENABLE_DISPLAY
+        if (s_pwr_reset_then_sleep) {
+            x4_cloud_status("Reset done, sleep...");
+            PR_NOTICE("PWR factory reset done -> deep sleep");
+            xteink_x4_display_enter_deep_sleep();
+            break;
+        }
+#endif
         x4_cloud_status("Rebooting...");
         tal_system_reset();
     } break;

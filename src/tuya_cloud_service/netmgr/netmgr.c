@@ -103,6 +103,11 @@ static netmgr_type_e __get_active_conn()
 
 void __tuya_lan_init_tm_cb(TIMER_ID timer_id, void *arg)
 {
+#if defined(ENABLE_TUYA_LAN) && (ENABLE_TUYA_LAN == 0)
+    (void)timer_id;
+    (void)arg;
+    return;
+#else
     if (s_netmgr.status != NETMGR_LINK_UP) {
         return;
     }
@@ -120,6 +125,7 @@ void __tuya_lan_init_tm_cb(TIMER_ID timer_id, void *arg)
     }
 
     return;
+#endif
 }
 
 static netmgr_conn_base_t *__get_conn_by_type(netmgr_type_e type)
@@ -345,8 +351,12 @@ OPERATE_RET netmgr_init(netmgr_type_e type)
 
     // Cellular not support LAN
 #if !defined(ENABLE_CELLULAR) || (ENABLE_CELLULAR == 0)
+#if !defined(ENABLE_TUYA_LAN) || (ENABLE_TUYA_LAN == 1)
     tal_sw_timer_create(__tuya_lan_init_tm_cb, NULL, &sg_lan_init_timer);
     tal_sw_timer_start(sg_lan_init_timer, 500, TAL_TIMER_CYCLE);
+#else
+    PR_NOTICE("Tuya LAN disabled (ENABLE_TUYA_LAN=0)");
+#endif
 #endif
 
 #ifdef ENABLE_BLUETOOTH

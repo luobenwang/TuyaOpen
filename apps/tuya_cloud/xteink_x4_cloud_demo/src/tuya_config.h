@@ -53,13 +53,22 @@
 
 /**
  * @brief Feature switches — edit 0/1 here, then rebuild (`tos.py build`).
- *        At least one must be 1.
+ *        At least one of CLOUD/DISPLAY must be 1.
  * @note Display=1 uses lightweight 1bpp gfx (no LVGL). Copy
  *       config/XTEINK_X4.config -> app_default.config for display+cloud.
  *       Cloud-only: DISPLAY=0 + XTEINK_X4_cloud_only.config.
  */
 #define XTEINK_X4_ENABLE_CLOUD   1
 #define XTEINK_X4_ENABLE_DISPLAY 1
+
+/**
+ * @brief Tuya LAN (local control / lan_sock_loop).
+ *        0 = disable (saves heap for MQTT TLS on ESP32-C3; recommended with display+cloud).
+ *        1 = enable LAN after WiFi link-up (default TuyaOpen behavior).
+ */
+#ifndef XTEINK_X4_ENABLE_LAN
+#define XTEINK_X4_ENABLE_LAN 0
+#endif
 
 #if (XTEINK_X4_ENABLE_CLOUD == 0) && (XTEINK_X4_ENABLE_DISPLAY == 0)
 #error "Enable cloud and/or display in tuya_config.h (set to 1)"

@@ -1296,6 +1296,11 @@ static int lan_tcp_create_serv_socket(lan_mgr_t *lan)
  */
 int tuya_lan_init(tuya_iot_client_t *iot_client)
 {
+#if defined(ENABLE_TUYA_LAN) && (ENABLE_TUYA_LAN == 0)
+    (void)iot_client;
+    PR_NOTICE("tuya LAN disabled (ENABLE_TUYA_LAN=0)");
+    return OPRT_OK;
+#else
     if (iot_client == NULL) {
         return OPRT_INVALID_PARM;
     }
@@ -1359,6 +1364,7 @@ __exit:
     tuya_lan_exit();
 
     return op_ret;
+#endif /* ENABLE_TUYA_LAN */
 }
 
 /**

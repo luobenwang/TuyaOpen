@@ -59,6 +59,18 @@ if(CONFIG_ENABLE_BLUETOOTH STREQUAL "y")
     list(APPEND  LIB_PUBLIC_INC ${MODULE_PATH}/ble) 
 endif()
 
+# Optional: apps set XTEINK_X4_ENABLE_LAN in tuya_config.h (0 = save heap for MQTT TLS)
+if(NOT DEFINED ENABLE_TUYA_LAN)
+    set(ENABLE_TUYA_LAN 1)
+    if(DEFINED TOS_PROJECT_ROOT AND EXISTS "${TOS_PROJECT_ROOT}/src/tuya_config.h")
+        file(READ "${TOS_PROJECT_ROOT}/src/tuya_config.h" _X4_LAN_CFG)
+        string(REGEX MATCH "#define[ \t]+XTEINK_X4_ENABLE_LAN[ \t]+([01])" _ "${_X4_LAN_CFG}")
+        if(NOT "${CMAKE_MATCH_1}" STREQUAL "")
+            set(ENABLE_TUYA_LAN ${CMAKE_MATCH_1})
+        endif()
+    endif()
+endif()
+message(STATUS "tuya_cloud_service: ENABLE_TUYA_LAN=${ENABLE_TUYA_LAN}")
 
 ########################################
 # Target Configure
@@ -81,6 +93,11 @@ target_include_directories(${MODULE_NAME}
 
     )
 
+target_compile_definitions(${MODULE_NAME}
+    PUBLIC
+        ENABLE_TUYA_LAN=${ENABLE_TUYA_LAN}
+    )
+
 
 ########################################
 # Layer Configure
@@ -89,4 +106,3 @@ list(APPEND COMPONENT_LIBS ${MODULE_NAME})
 set(COMPONENT_LIBS "${COMPONENT_LIBS}" PARENT_SCOPE)
 list(APPEND COMPONENT_PUBINC ${LIB_PUBLIC_INC})
 set(COMPONENT_PUBINC "${COMPONENT_PUBINC}" PARENT_SCOPE)
-

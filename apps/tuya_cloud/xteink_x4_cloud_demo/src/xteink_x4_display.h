@@ -36,6 +36,20 @@ void xteink_x4_display_set_cloud_status(const char *status);
  */
 OPERATE_RET xteink_x4_display_wait_ready(uint32_t timeout_ms);
 
+/**
+ * @brief Flash power-off screen then enter deep sleep (EXT1 wake on PWR).
+ * @return none
+ * @note Safe to call from IoT event callback after factory reset completes.
+ */
+void xteink_x4_display_enter_deep_sleep(void);
+
+/**
+ * @brief App hook for PWR hold >= 3s (implemented in tuya_main.c).
+ * @return none
+ * @note Cloud build: tuya_iot_reset() then sleep on RESET_COMPLETE. Display-only: sleep now.
+ */
+void xteink_x4_app_on_pwr_long_press(void);
+
 #ifdef __cplusplus
 }
 #endif
