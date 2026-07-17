@@ -81,6 +81,10 @@ typedef struct {
 static tuya_ble_mgr_t *s_ble_mgr = NULL;
 static bool s_ble_debug = false;
 
+/* Encode scratch (replaces per-packet tal_malloc on low-RAM targets). */
+static uint8_t s_ble_encode_frame[TUYA_BLE_AIR_FRAME_MAX];
+static uint8_t s_ble_encode_enc[TUYA_BLE_AIR_FRAME_MAX];
+
 /**
  * @brief Prints the raw data in hexadecimal format.
  *
@@ -493,15 +497,9 @@ int tuya_ble_session_del(ble_seesion_type_t type)
 
 static int ble_packet_encode(tuya_ble_mgr_t *ble, ble_packet_t *packet, uint8_t **outbuf, uint32_t *outlen)
 {
-    uint8_t *ble_frame = NULL;
-    uint8_t *enc_buf = NULL;
+    uint8_t *ble_frame = s_ble_encode_frame;
+    uint8_t *enc_buf   = s_ble_encode_enc;
 
-    ble_frame = tal_malloc(TUYA_BLE_AIR_FRAME_MAX);
-    enc_buf = tal_malloc(TUYA_BLE_AIR_FRAME_MAX);
-    if (NULL == enc_buf || NULL == ble_frame) {
-        PR_ERR("ble enc_buf malloc err");
-        goto __exit;
-    }
     uint32_t send_sn = ble->send_sn++;
     uint32_t frame_len = 0;
     //! SN offset = 0
@@ -537,7 +535,7 @@ static int ble_packet_encode(tuya_ble_mgr_t *ble, ble_packet_t *packet, uint8_t 
     }
     if ((frame_len + padding_len) > TUYA_BLE_AIR_FRAME_MAX) {
         PR_ERR("ble packet len exceed");
-        goto __exit;
+        return OPRT_COM_ERROR;
     }
     uint32_t enc_len = 0;
     uint8_t iv[16];
@@ -549,20 +547,9 @@ static int ble_packet_encode(tuya_ble_mgr_t *ble, ble_packet_t *packet, uint8_t 
         *outlen = enc_len + 17;
     } else {
         PR_ERR("ble frame encrypt err");
-        goto __exit;
+        return OPRT_COM_ERROR;
     }
-    tal_free(ble_frame);
     return OPRT_OK;
-
-__exit:
-    if (ble_frame) {
-        tal_free(ble_frame);
-    }
-    if (enc_buf) {
-        tal_free(enc_buf);
-    }
-
-    return OPRT_COM_ERROR;
 }
 
 static int ble_packet_resp(tuya_ble_mgr_t *ble, ble_packet_t *resp)
@@ -600,9 +587,6 @@ static int ble_packet_resp(tuya_ble_mgr_t *ble, ble_packet_t *resp)
     PR_DEBUG("ble resp finish. len:%d, rt:0x%x", outlen, rt);
 
 __exit:
-    if (outbuf) {
-        tal_free(outbuf);
-    }
     if (pbuf) {
         tal_free(pbuf);
     }

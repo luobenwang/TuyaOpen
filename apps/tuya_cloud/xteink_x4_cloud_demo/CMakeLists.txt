@@ -35,8 +35,10 @@ set(APP_SRCS ${APP_PATH}/src/tuya_main.c)
 set(APP_OPTIONS "-Wall")
 
 if (XTEINK_X4_ENABLE_DISPLAY STREQUAL "1")
-    list(APPEND APP_SRCS ${APP_PATH}/src/xteink_x4_display.c)
-    list(APPEND APP_OPTIONS "-DLV_LVGL_H_INCLUDE_SIMPLE")
+    list(APPEND APP_SRCS
+        ${APP_PATH}/src/xteink_x4_display.c
+        ${APP_PATH}/src/x4_gfx.c
+    )
 endif()
 
 if (XTEINK_X4_ENABLE_CLOUD STREQUAL "1")

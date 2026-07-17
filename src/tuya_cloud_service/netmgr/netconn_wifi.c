@@ -251,6 +251,8 @@ OPERATE_RET __netconn_wifi_netcfg_finish(int type, netcfg_info_t *info)
 
     // stop all netcfg
     netcfg_stop(NETCFG_STOP_ALL_CFG_MODULE);
+    /* Do NOT tuya_ble_deinit() here: tearing BLE down while STA starts
+     * (wifi:enable tsf) causes Load access fault on ESP32-C3 coexist. */
 
     tuya_binding_info_t binding;
     memset(&binding, 0, sizeof(tuya_binding_info_t));

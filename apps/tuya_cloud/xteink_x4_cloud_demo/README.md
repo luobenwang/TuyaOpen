@@ -3,7 +3,7 @@
 XTEINK X4 (ESP32-C3 e-paper) Tuya cloud switch demo.
 
 - **Cloud**: based on [switch_demo](../switch_demo) (Wi-Fi/BLE provisioning, MQTT, DP receive/report)
-- **Display**: same LVGL + EPD UI as [boards/ESP32/XTEINK_X4/example/lvgl_demo](../../../boards/ESP32/XTEINK_X4/example/lvgl_demo)
+- **Display**: lightweight 1bpp EPD UI (GfxRenderer-style, no LVGL heap; ~48 KB static FB only)
 - **Flash**: 16 MB partition layout
 
 ## Quick start
@@ -15,7 +15,7 @@ XTEINK X4 (ESP32-C3 e-paper) Tuya cloud switch demo.
 ```bash
 cd apps/tuya_cloud/xteink_x4_cloud_demo
 cp config/XTEINK_X4_cloud_only.config app_default.config   # cloud-only (recommended)
-# or: cp config/XTEINK_X4.config app_default.config          # cloud + LVGL UI
+# or: cp config/XTEINK_X4.config app_default.config          # cloud + lightweight EPD UI
 tos.py build
 tos.py flash monitor
 ```
@@ -38,5 +38,6 @@ Same as switch_demo: `switch on/off`, `netmgr`, `reset`, `mem`, ...
 | File | Description |
 |------|-------------|
 | `src/tuya_main.c` | Cloud stack + display start |
-| `src/xteink_x4_display.c` | LVGL/EPD UI (from lvgl_demo) |
-| `config/XTEINK_X4.config` | Board + LVGL + 16M flash preset |
+| `src/xteink_x4_display.c` | Lightweight 1bpp EPD dashboard |
+| `src/x4_gfx.c` | Direct framebuffer renderer (no LVGL) |
+| `config/XTEINK_X4.config` | Board + lightweight display + cloud preset |

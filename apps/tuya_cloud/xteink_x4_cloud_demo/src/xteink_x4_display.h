@@ -1,8 +1,8 @@
 /**
  * @file xteink_x4_display.h
- * @brief LVGL-on-EPD display for XTEINK X4 (from lvgl_demo UI).
- * @version 1.0
- * @date 2026-07-08
+ * @brief Lightweight 1bpp EPD display for XTEINK X4 (no LVGL).
+ * @version 2.0
+ * @date 2026-07-16
  * @copyright Copyright (c) 2026 Tuya Inc. All Rights Reserved.
  */
 #ifndef __XTEINK_X4_DISPLAY_H__
@@ -15,9 +15,9 @@ extern "C" {
 #endif
 
 /**
- * @brief Start LVGL + EPD UI in a background thread.
+ * @brief Start lightweight EPD UI in a background thread.
  * @return OPRT_OK on success
- * @note Runs the same boot sequence and dashboard as boards/.../lvgl_demo.
+ * @note Uses direct 1bpp rendering (~48 KB static FB only, no LVGL heap).
  */
 OPERATE_RET xteink_x4_display_start(void);
 
@@ -27,6 +27,14 @@ OPERATE_RET xteink_x4_display_start(void);
  * @return none
  */
 void xteink_x4_display_set_cloud_status(const char *status);
+
+/**
+ * @brief Block until EPD hardware init and first splash frame are done.
+ * @param[in] timeout_ms Max wait in milliseconds (0 = no wait, returns immediately)
+ * @return OPRT_OK when ready, OPRT_TIMEOUT on timeout, OPRT_COM_ERROR if display not started
+ * @note Call after xteink_x4_display_start(). Use before WiFi/BLE init so EPD init runs with full heap.
+ */
+OPERATE_RET xteink_x4_display_wait_ready(uint32_t timeout_ms);
 
 #ifdef __cplusplus
 }

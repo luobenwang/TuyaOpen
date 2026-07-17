@@ -1,8 +1,8 @@
 /**
  * @file xteink_x4_display.c
- * @brief X4 LVGL lab UI (from lvgl_demo): splash, dashboard, deep sleep.
- * @version 1.0
- * @date 2026-07-08
+ * @brief X4 lightweight 1bpp EPD UI (GfxRenderer-style, no LVGL heap).
+ * @version 2.0
+ * @date 2026-07-16
  * @copyright Copyright (c) 2026 Tuya Inc. All Rights Reserved.
  */
 #include "tuya_cloud_types.h"
@@ -11,29 +11,19 @@
 #include "tal_system.h"
 #include "tkl_output.h"
 
-#include "lvgl.h"
-
 #include "board_com_api.h"
 #include "board_config.h"
+#include "tuya_config.h"
+#include "x4_gfx.h"
 #include "xteink_x4_buttons.h"
 #include "xteink_x4_display.h"
 
 #include <stdio.h>
 #include <string.h>
 
-#if LV_FONT_MONTSERRAT_48
-LV_FONT_DECLARE(lv_font_montserrat_48);
-#endif
-#if LV_FONT_MONTSERRAT_36
-LV_FONT_DECLARE(lv_font_montserrat_36);
-#endif
-#if LV_FONT_MONTSERRAT_24
-LV_FONT_DECLARE(lv_font_montserrat_24);
-#endif
-#if LV_FONT_MONTSERRAT_14
-LV_FONT_DECLARE(lv_font_montserrat_14);
-#endif
-
+/* ---------------------------------------------------------------------------
+ * Macros
+ * --------------------------------------------------------------------------- */
 #define X4_PWR_HOLD_MS 3000U
 
 #define X4_PWR_OFF_FLASH_UPDATES  5U
@@ -44,17 +34,14 @@ LV_FONT_DECLARE(lv_font_montserrat_14);
 #define X4_EPD_STRIDE   (X4_EPD_W / 8U)
 #define X4_EPD_BUF_SIZE (X4_EPD_STRIDE * X4_EPD_H)
 
-#define X4_LV_DRAW_LINES 24
-#define X4_LV_BUF_PIXELS (X4_EPD_W * X4_LV_DRAW_LINES)
-#define X4_LV_BUF_BYTES  (X4_LV_BUF_PIXELS * (int)sizeof(lv_color16_t))
-
 #define X4_SPLASH_HOLD_MS    2800U
 #define X4_GRAY16_HOLD_MS    1000U
 #define X4_BULLSEYE_HOLD_MS  800U
 
-/** Drawable region inside panel (CrossPoint viewable margins; board_config.h). */
 #define X4_RENDER_W ((int32_t)X4_PANEL_VIEWABLE_WIDTH)
 #define X4_RENDER_H ((int32_t)X4_PANEL_VIEWABLE_HEIGHT)
+#define X4_ORIGIN_X ((int32_t)X4_PANEL_VIEWABLE_LEFT_PX)
+#define X4_ORIGIN_Y ((int32_t)X4_PANEL_VIEWABLE_TOP_PX)
 
 #define X4_BAR_H   84
 #define X4_FOOT_H  64
@@ -63,187 +50,82 @@ LV_FONT_DECLARE(lv_font_montserrat_14);
 #define X4_QUAD_H  ((X4_MID_H - X4_QUAD_GAP) / 2)
 #define X4_QUAD_W  ((X4_RENDER_W - X4_QUAD_GAP) / 2)
 
-/* Input / display cadence (example-only; avoids slow 500 ms + 350 ms loops). */
 #define X4_INPUT_POLL_MS 40U
 #define X4_EPD_PUSH_MS   100U
-/* On hub, refresh battery/SD/uptime every N polls; key bitmask updates every poll. */
-#define X4_HUB_SLOW_N 5U
+#define X4_HUB_SLOW_N    5U
 
+/* ---------------------------------------------------------------------------
+ * File scope variables
+ * --------------------------------------------------------------------------- */
 static uint8_t         s_epd_fb[X4_EPD_BUF_SIZE];
-static lv_display_t   *s_disp;
-static volatile BOOL_T s_epd_dirty;
+static X4_GFX_T        s_gfx;
+static volatile BOOL_T   s_epd_dirty;
 static uint32_t        s_boot_ms;
+static BOOL_T          s_sd_mounted;
+static BOOL_T          s_power_off_started;
+static uint32_t        s_pwr_hold_ms;
+static uint8_t         s_hub_slow_tick;
+static char            s_sd_smoke_msg[192];
+static char            s_cloud_status[96] = "Cloud: idle";
+static THREAD_HANDLE   s_display_thread   = NULL;
+static SEM_HANDLE      s_display_ready_sem = NULL;
+static volatile BOOL_T s_display_ready     = FALSE;
 
-static lv_obj_t *s_bar_title;
-static lv_obj_t *s_bar_sub;
-static lv_obj_t *s_bar_time;
-static lv_obj_t *s_q_bat;
-static lv_obj_t *s_q_sd;
-static lv_obj_t *s_key_lbl[7];
-static lv_obj_t *s_q_about;
-static lv_obj_t *s_foot_lbl;
+/**
+ * @brief Signal that EPD init and first frame are complete.
+ * @return none
+ */
+static void __signal_display_ready(void)
+{
+    s_display_ready = TRUE;
+    if (s_display_ready_sem != NULL) {
+        (void)tal_semaphore_post(s_display_ready_sem);
+    }
+}
 
-static BOOL_T        s_sd_mounted;
-static THREAD_HANDLE s_lvgl_thread;
-
-static lv_timer_t *s_status_timer;
-static uint32_t    s_pwr_hold_ms;
-static BOOL_T      s_power_off_started;
-
-static int8_t    s_pwroff_cd = -1;
-static uint16_t  s_pwroff_cd_ms_acc;
-static lv_obj_t *s_lbl_cd_num;
-
-static uint8_t s_hub_slow_tick;
-
-static char s_sd_smoke_msg[192];
-static char s_cloud_status[96] = "Cloud: idle";
-
+/* ---------------------------------------------------------------------------
+ * Forward declarations
+ * --------------------------------------------------------------------------- */
+static void __epd_push_if_dirty(BOOL_T full_refresh);
 static void __build_dashboard(void);
 static void __build_splash_screen(void);
 static void __dashboard_refresh_slow(void);
-static void __scr_pad_viewable(lv_obj_t *scr);
-static void __dashboard_bar_keys(uint8_t st);
+static void __draw_quad_frame(int32_t x, int32_t y, const char *title);
+static void __draw_key_chip(int32_t x, int32_t y, const char *label, BOOL_T pressed);
+static void __refresh_keys_quadrant(uint8_t st);
 
-static void __apply_title_font(lv_obj_t *obj)
+/**
+ * @brief Mark framebuffer dirty for next EPD push.
+ * @return none
+ */
+static void __mark_dirty(void)
 {
-#if LV_FONT_MONTSERRAT_24
-    lv_obj_set_style_text_font(obj, &lv_font_montserrat_24, LV_PART_MAIN);
-#endif
-    lv_obj_set_style_text_align(obj, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN);
-    lv_label_set_long_mode(obj, LV_LABEL_LONG_WRAP);
-}
-
-static void __apply_body_font(lv_obj_t *obj)
-{
-#if LV_FONT_MONTSERRAT_14
-    lv_obj_set_style_text_font(obj, &lv_font_montserrat_14, LV_PART_MAIN);
-#endif
-    lv_obj_set_style_text_align(obj, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN);
-    lv_label_set_long_mode(obj, LV_LABEL_LONG_WRAP);
+    s_epd_dirty = TRUE;
 }
 
 /**
- * @brief Apply CrossPoint-style viewable-area padding to a screen (asymmetric bezel inset).
- * @param[in] scr screen object.
+ * @brief Push framebuffer to EPD when dirty.
+ * @param[in] full_refresh use full refresh mode
  * @return none
  */
-static void __scr_pad_viewable(lv_obj_t *scr)
+static void __epd_push_if_dirty(BOOL_T full_refresh)
 {
-    lv_obj_set_style_pad_left(scr, (int32_t)X4_PANEL_VIEWABLE_LEFT_PX, LV_PART_MAIN);
-    lv_obj_set_style_pad_right(scr, (int32_t)X4_PANEL_VIEWABLE_RIGHT_PX, LV_PART_MAIN);
-    lv_obj_set_style_pad_top(scr, (int32_t)X4_PANEL_VIEWABLE_TOP_PX, LV_PART_MAIN);
-    lv_obj_set_style_pad_bottom(scr, (int32_t)X4_PANEL_VIEWABLE_BOTTOM_PX, LV_PART_MAIN);
-}
-
-static void __style_quad_frame(lv_obj_t *q)
-{
-    lv_obj_set_style_bg_color(q, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-    lv_obj_set_style_border_color(q, lv_color_hex(0x000000), LV_PART_MAIN);
-    lv_obj_set_style_border_width(q, 2, LV_PART_MAIN);
-    lv_obj_set_style_pad_all(q, 6, LV_PART_MAIN);
-    lv_obj_remove_flag(q, LV_OBJ_FLAG_SCROLLABLE);
-}
-
-static void __epd_set_pixel(int32_t x, int32_t y, bool white)
-{
-    uint32_t off;
-    uint8_t  mask;
-
-    if (x < 0 || x >= X4_EPD_W || y < 0 || y >= X4_EPD_H) {
+    if (!s_epd_dirty) {
         return;
     }
 
-    off  = (uint32_t)y * X4_EPD_STRIDE + (uint32_t)x / 8U;
-    mask = (uint8_t)(0x80U >> (unsigned)(x % 8));
-    if (white) {
-        s_epd_fb[off] |= mask;
+    if (full_refresh) {
+        (void)board_x4_epd_display_full_refresh(s_epd_fb);
     } else {
-        s_epd_fb[off] = (uint8_t)(s_epd_fb[off] & (uint8_t)~mask);
-    }
-}
-
-static bool __rgb565_is_white(lv_color16_t c)
-{
-    uint32_t r = c.red;
-    uint32_t g = c.green;
-    uint32_t b = c.blue;
-
-    r = (r * 255U) / 31U;
-    g = (g * 255U) / 63U;
-    b = (b * 255U) / 31U;
-    {
-        uint32_t y = (77U * r + 150U * g + 29U * b) >> 8;
-        return (y > 140U) ? true : false;
-    }
-}
-
-static void __x4_flush_cb(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
-{
-    int32_t       w  = lv_area_get_width(area);
-    int32_t       h  = lv_area_get_height(area);
-    lv_color16_t *px = (lv_color16_t *)(void *)px_map;
-    int32_t       row;
-    int32_t       col;
-
-    for (row = 0; row < h; row++) {
-        for (col = 0; col < w; col++) {
-            lv_color16_t c     = px[(uint32_t)row * (uint32_t)w + (uint32_t)col];
-            bool         white = __rgb565_is_white(c);
-
-            __epd_set_pixel(area->x1 + col, area->y1 + row, white);
-        }
-    }
-
-    s_epd_dirty = TRUE;
-    lv_display_flush_ready(disp);
-    (void)disp;
-}
-
-static void __epd_push_timer_cb(lv_timer_t *t)
-{
-    (void)t;
-    if (s_epd_dirty) {
         (void)board_x4_epd_display(s_epd_fb);
-        s_epd_dirty = FALSE;
     }
+    s_epd_dirty = FALSE;
 }
 
-static void __build_checker_screen(void)
-{
-    int32_t cols = 16;
-    int32_t rows = 10;
-    int32_t tw   = X4_RENDER_W / cols;
-    int32_t th   = X4_RENDER_H / rows;
-    int32_t cx;
-    int32_t cy;
-
-    lv_obj_t *scr = lv_screen_active();
-
-    lv_obj_set_style_bg_color(scr, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-    lv_obj_remove_flag(scr, LV_OBJ_FLAG_SCROLLABLE);
-    __scr_pad_viewable(scr);
-
-    for (cy = 0; cy < rows; cy++) {
-        for (cx = 0; cx < cols; cx++) {
-            lv_obj_t *tile = lv_obj_create(scr);
-
-            lv_obj_set_size(tile, tw, th);
-            lv_obj_set_pos(tile, cx * tw, cy * th);
-            lv_obj_remove_flag(tile, LV_OBJ_FLAG_SCROLLABLE);
-            if (((cx + cy) & 1) == 0) {
-                lv_obj_set_style_bg_color(tile, lv_color_hex(0x000000), LV_PART_MAIN);
-            } else {
-                lv_obj_set_style_bg_color(tile, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-            }
-            lv_obj_set_style_border_width(tile, 0, LV_PART_MAIN);
-            lv_obj_set_style_pad_all(tile, 0, LV_PART_MAIN);
-        }
-    }
-
-    lv_obj_invalidate(scr);
-}
-
+/**
+ * @brief Fill gray16 Bayer pattern into framebuffer.
+ * @return none
+ */
 static void __fill_gray16_pattern_fb(void)
 {
     static const uint8_t s_bayer4[4][4] = {
@@ -257,9 +139,9 @@ static void __fill_gray16_pattern_fb(void)
     int32_t  band;
     uint32_t thr;
     uint8_t  m;
-    bool     white;
+    BOOL_T   white;
 
-    (void)memset(s_epd_fb, 0xFF, sizeof(s_epd_fb));
+    x4_gfx_clear(&s_gfx, TRUE);
 
     for (y = 0; y < X4_EPD_H; y++) {
         for (x = 0; x < X4_EPD_W; x++) {
@@ -267,17 +149,21 @@ static void __fill_gray16_pattern_fb(void)
             if (band > 15) {
                 band = 15;
             }
-            thr = (uint32_t)band * 16U + 16U;
+            thr   = (uint32_t)band * 16U + 16U;
             if (thr > 256U) {
                 thr = 256U;
             }
             m     = s_bayer4[(unsigned)x % 4U][(unsigned)y % 4U];
-            white = (((uint32_t)m * 16U + 8U) >= thr) ? true : false;
-            __epd_set_pixel(x, y, white);
+            white = (((uint32_t)m * 16U + 8U) >= thr) ? TRUE : FALSE;
+            x4_gfx_set_pixel(&s_gfx, x, y, white);
         }
     }
 }
 
+/**
+ * @brief Fill bullseye test pattern into framebuffer.
+ * @return none
+ */
 static void __fill_fb_bullseye(void)
 {
     int32_t cx = X4_EPD_W / 2;
@@ -285,21 +171,48 @@ static void __fill_fb_bullseye(void)
     int32_t x;
     int32_t y;
 
-    (void)memset(s_epd_fb, 0xFF, sizeof(s_epd_fb));
+    x4_gfx_clear(&s_gfx, TRUE);
 
     for (y = 0; y < X4_EPD_H; y++) {
         for (x = 0; x < X4_EPD_W; x++) {
-            int32_t  dx   = x - cx;
-            int32_t  dy   = y - cy;
-            uint32_t d2   = (uint32_t)(dx * dx + dy * dy);
-            uint32_t ring = d2 / (uint32_t)(38 * 38);
-            bool     white  = ((ring & 1U) == 0U) ? true : false;
+            int32_t  dx    = x - cx;
+            int32_t  dy    = y - cy;
+            uint32_t d2    = (uint32_t)(dx * dx + dy * dy);
+            uint32_t ring  = d2 / (uint32_t)(38 * 38);
+            BOOL_T   white = ((ring & 1U) == 0U) ? TRUE : FALSE;
 
-            __epd_set_pixel(x, y, white);
+            x4_gfx_set_pixel(&s_gfx, x, y, white);
         }
     }
 }
 
+/**
+ * @brief Draw checkerboard boot test pattern.
+ * @return none
+ */
+static void __draw_checker_screen(void)
+{
+    int32_t cols = 16;
+    int32_t rows = 10;
+    int32_t tw   = X4_RENDER_W / cols;
+    int32_t th   = X4_RENDER_H / rows;
+    int32_t cx;
+    int32_t cy;
+
+    x4_gfx_clear(&s_gfx, TRUE);
+
+    for (cy = 0; cy < rows; cy++) {
+        for (cx = 0; cx < cols; cx++) {
+            BOOL_T white = (((cx + cy) & 1) == 0) ? FALSE : TRUE;
+            x4_gfx_fill_rect(&s_gfx, X4_ORIGIN_X + cx * tw, X4_ORIGIN_Y + cy * th, tw, th, white);
+        }
+    }
+}
+
+/**
+ * @brief Mount SD card when available.
+ * @return none
+ */
 static void __mount_sd_if_possible(void)
 {
     OPERATE_RET rt = OPRT_OK;
@@ -311,6 +224,12 @@ static void __mount_sd_if_possible(void)
     }
 }
 
+/**
+ * @brief Format SD usage line for dashboard.
+ * @param[out] buf output buffer
+ * @param[in] len buffer size
+ * @return none
+ */
 static void __format_sd_line(char *buf, size_t len)
 {
     uint64_t     total_bytes = 0;
@@ -341,18 +260,10 @@ static void __format_sd_line(char *buf, size_t len)
     snprintf(buf, len, "SD: used %.2f / free %.2f (%.2f GB tot)", used_gb, free_gb, total_gb);
 }
 
-static void __dashboard_bar_keys(uint8_t st)
-{
-    char line[64];
-
-    if (NULL == s_bar_sub) {
-        return;
-    }
-
-    snprintf(line, sizeof(line), "Keys 0x%02X  (single-screen lab)", (unsigned)st);
-    lv_label_set_text(s_bar_sub, line);
-}
-
+/**
+ * @brief Run one-shot SD read/write smoke test.
+ * @return none
+ */
 static void __sd_smoke_once(void)
 {
     OPERATE_RET rt;
@@ -379,519 +290,231 @@ static void __sd_smoke_once(void)
     snprintf(s_sd_smoke_msg, sizeof(s_sd_smoke_msg), "Write+read OK (%u bytes). Path /x4lab/smoke.txt", (unsigned)br);
 }
 
-static void __dashboard_refresh_slow(void)
+/**
+ * @brief Draw one dashboard quadrant frame and title.
+ * @param[in] x left coordinate in viewable area
+ * @param[in] y top coordinate in viewable area
+ * @param[in] title quadrant title
+ * @return none
+ */
+static void __draw_quad_frame(int32_t x, int32_t y, const char *title)
 {
-    char        line[288];
-    uint32_t    mv   = 0;
-    uint8_t     pct  = 0;
-    OPERATE_RET rt   = OPRT_OK;
-    bool        chg  = false;
-    SYS_TIME_T  now  = tal_system_get_millisecond();
-    uint32_t    up_s = (uint32_t)((now - s_boot_ms) / 1000U);
+    int32_t px = X4_ORIGIN_X + x;
+    int32_t py = X4_ORIGIN_Y + X4_BAR_H + y;
 
-    if (NULL != s_bar_time) {
-        snprintf(line, sizeof(line), "up %lu s", (unsigned long)up_s);
-        lv_label_set_text(s_bar_time, line);
-    }
-
-    if (NULL != s_q_bat) {
-        rt = board_x4_battery_read(&mv, &pct);
-        if (OPRT_OK == rt) {
-            (void)board_x4_charge_sense_get(&chg);
-            snprintf(line, sizeof(line), "Battery / ADC\n%s %u%%\n%lu mV\nCharge GPIO: %s", chg ? "Charging" : "Idle",
-                     (unsigned)pct, (unsigned long)mv, chg ? "HIGH" : "LOW");
-        } else {
-            snprintf(line, sizeof(line), "Battery / ADC\nread err %d", rt);
-        }
-        lv_label_set_text(s_q_bat, line);
-    }
-
-    if (NULL != s_q_sd) {
-        __format_sd_line(line, sizeof(line));
-        {
-            size_t n = strlen(line);
-            if (n < sizeof(line) - 4U) {
-                line[n++] = '\n';
-                (void)strncpy(line + n, s_sd_smoke_msg, sizeof(line) - n);
-                line[sizeof(line) - 1] = '\0';
-            }
-        }
-        lv_label_set_text(s_q_sd, line);
-    }
-
-    if (NULL != s_foot_lbl) {
-        snprintf(line, sizeof(line), "%s | %s | %s", PLATFORM_BOARD, PROJECT_NAME, s_cloud_status);
-        lv_label_set_text(s_foot_lbl, line);
-    }
+    x4_gfx_fill_rect(&s_gfx, px, py, X4_QUAD_W, X4_QUAD_H, TRUE);
+    x4_gfx_draw_rect(&s_gfx, px, py, X4_QUAD_W, X4_QUAD_H, 2, FALSE);
+    x4_gfx_draw_text(&s_gfx, px + 6, py + 4, title, FALSE);
 }
 
-static void __refresh_keys_quadrant(uint8_t st)
-{
-    int i;
-
-    if (NULL == s_key_lbl[0]) {
-        return;
-    }
-
-    for (i = 0; i < 7; i++) {
-        if (NULL == s_key_lbl[i]) {
-            continue;
-        }
-        if (0U != (st & (1U << (unsigned)i))) {
-            lv_obj_set_style_bg_color(s_key_lbl[i], lv_color_hex(0x000000), LV_PART_MAIN);
-            lv_obj_set_style_text_color(s_key_lbl[i], lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-        } else {
-            lv_obj_set_style_bg_color(s_key_lbl[i], lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-            lv_obj_set_style_text_color(s_key_lbl[i], lv_color_hex(0x000000), LV_PART_MAIN);
-        }
-    }
-}
-
-static void __clear_screen_ptrs(void)
-{
-    int i;
-
-    s_bar_title = NULL;
-    s_bar_sub   = NULL;
-    s_bar_time  = NULL;
-    s_q_bat     = NULL;
-    s_q_sd      = NULL;
-    s_q_about   = NULL;
-    s_foot_lbl  = NULL;
-    for (i = 0; i < 7; i++) {
-        s_key_lbl[i] = NULL;
-    }
-}
-
-static lv_obj_t *__quad_title(lv_obj_t *parent, const char *title)
-{
-    lv_obj_t *lbl = lv_label_create(parent);
-    lv_label_set_text(lbl, title);
-    lv_obj_set_style_text_color(lbl, lv_color_hex(0x000000), LV_PART_MAIN);
-    __apply_title_font(lbl);
-    lv_obj_set_width(lbl, X4_QUAD_W - 24);
-    return lbl;
-}
-
+/**
+ * @brief Draw splash screen into framebuffer.
+ * @return none
+ */
 static void __build_splash_screen(void)
 {
-    lv_obj_t *scr = lv_screen_active();
-    lv_obj_t *hello;
-    lv_obj_t *brand;
-    lv_obj_t *sub;
+    int32_t y = X4_ORIGIN_Y + X4_RENDER_H / 2 - 48;
 
-    lv_obj_clean(scr);
-    lv_obj_set_style_bg_color(scr, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-    lv_obj_remove_flag(scr, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_layout(scr, LV_LAYOUT_FLEX, LV_PART_MAIN);
-    lv_obj_set_style_flex_flow(scr, LV_FLEX_FLOW_COLUMN, LV_PART_MAIN);
-    lv_obj_set_style_flex_main_place(scr, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_set_style_flex_cross_place(scr, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_set_style_pad_row(scr, 20, LV_PART_MAIN);
-    __scr_pad_viewable(scr);
-
-    hello = lv_label_create(scr);
-    lv_label_set_text(hello, "Hello World");
-    lv_obj_set_style_text_color(hello, lv_color_hex(0x000000), LV_PART_MAIN);
-    lv_obj_set_style_text_align(hello, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-#if LV_FONT_MONTSERRAT_48
-    lv_obj_set_style_text_font(hello, &lv_font_montserrat_48, LV_PART_MAIN);
-#elif LV_FONT_MONTSERRAT_36
-    lv_obj_set_style_text_font(hello, &lv_font_montserrat_36, LV_PART_MAIN);
-#else
-    __apply_title_font(hello);
-#endif
-
-    brand = lv_label_create(scr);
-    lv_label_set_text(brand, "TuyaOpen");
-    lv_obj_set_style_text_color(brand, lv_color_hex(0x000000), LV_PART_MAIN);
-    lv_obj_set_style_text_align(brand, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-#if LV_FONT_MONTSERRAT_36
-    lv_obj_set_style_text_font(brand, &lv_font_montserrat_36, LV_PART_MAIN);
-#elif LV_FONT_MONTSERRAT_24
-    lv_obj_set_style_text_font(brand, &lv_font_montserrat_24, LV_PART_MAIN);
-#else
-    __apply_title_font(brand);
-#endif
-
-    sub = lv_label_create(scr);
-    lv_label_set_text(sub, "XTEINK X4 | ESP32-C3 | SSD1677 800x480");
-    lv_obj_set_style_text_color(sub, lv_color_hex(0x202020), LV_PART_MAIN);
-    lv_obj_set_style_text_align(sub, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-    __apply_body_font(sub);
-    lv_obj_set_style_text_align(sub, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_set_width(sub, X4_RENDER_W - 32);
-
-    lv_obj_invalidate(scr);
+    x4_gfx_clear(&s_gfx, TRUE);
+    x4_gfx_draw_text(&s_gfx, X4_ORIGIN_X + 220, y, "Hello World", FALSE);
+    x4_gfx_draw_text(&s_gfx, X4_ORIGIN_X + 280, y + 28, "TuyaOpen", FALSE);
+    x4_gfx_draw_text_wrap(&s_gfx, X4_ORIGIN_X + 120, y + 56, X4_RENDER_W - 240, "XTEINK X4 | ESP32-C3 | SSD1677 800x480", FALSE);
+    __mark_dirty();
 }
 
-static void __build_dashboard(void)
+/**
+ * @brief Draw key chip in keys quadrant.
+ * @param[in] x chip left
+ * @param[in] y chip top
+ * @param[in] label chip label
+ * @param[in] pressed highlight when pressed
+ * @return none
+ */
+static void __draw_key_chip(int32_t x, int32_t y, const char *label, BOOL_T pressed)
+{
+    int32_t w = (X4_QUAD_W - 28) / 2;
+
+    if (pressed) {
+        x4_gfx_fill_rect(&s_gfx, x, y, w, 18, FALSE);
+        x4_gfx_draw_rect(&s_gfx, x, y, w, 18, 1, FALSE);
+        x4_gfx_draw_text(&s_gfx, x + 4, y + 2, label, TRUE);
+    } else {
+        x4_gfx_fill_rect(&s_gfx, x, y, w, 18, TRUE);
+        x4_gfx_draw_rect(&s_gfx, x, y, w, 18, 1, FALSE);
+        x4_gfx_draw_text(&s_gfx, x + 4, y + 2, label, FALSE);
+    }
+}
+
+/**
+ * @brief Refresh key quadrant highlight from button state.
+ * @param[in] st button bitmask
+ * @return none
+ */
+static void __refresh_keys_quadrant(uint8_t st)
 {
     static const char *key_names[7] = {"Back", "OK", "Left", "Right", "Up", "Down", "PWR"};
-    lv_obj_t          *scr;
-    lv_obj_t          *bar;
-    lv_obj_t          *bar_row;
-    lv_obj_t          *mid;
-    lv_obj_t          *row1;
-    lv_obj_t          *row2;
-    lv_obj_t          *q_tl;
-    lv_obj_t          *q_tr;
-    lv_obj_t          *q_bl;
-    lv_obj_t          *q_br;
-    lv_obj_t          *stripe_row;
-    lv_obj_t          *key_grid;
-    lv_obj_t          *foot;
+    int32_t            base_x       = X4_ORIGIN_X + 12;
+    int32_t            base_y       = X4_ORIGIN_Y + X4_BAR_H + X4_QUAD_H + X4_QUAD_GAP + 28;
     int32_t            i;
-    int32_t            bar_w;
-    uint8_t            st0 = 0;
-
-    __sd_smoke_once();
-
-    scr = lv_screen_active();
-    __clear_screen_ptrs();
-    lv_obj_clean(scr);
-    lv_obj_set_style_bg_color(scr, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-    lv_obj_remove_flag(scr, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_layout(scr, LV_LAYOUT_FLEX, LV_PART_MAIN);
-    lv_obj_set_style_flex_flow(scr, LV_FLEX_FLOW_COLUMN, LV_PART_MAIN);
-    __scr_pad_viewable(scr);
-
-    bar = lv_obj_create(scr);
-    lv_obj_set_size(bar, X4_RENDER_W, X4_BAR_H);
-    lv_obj_set_style_layout(bar, LV_LAYOUT_FLEX, LV_PART_MAIN);
-    lv_obj_set_style_flex_flow(bar, LV_FLEX_FLOW_COLUMN, LV_PART_MAIN);
-    lv_obj_set_style_pad_row(bar, 4, LV_PART_MAIN);
-    lv_obj_set_style_pad_all(bar, 8, LV_PART_MAIN);
-    lv_obj_set_style_border_width(bar, 0, LV_PART_MAIN);
-    lv_obj_set_style_bg_color(bar, lv_color_hex(0xE8E8E8), LV_PART_MAIN);
-    lv_obj_remove_flag(bar, LV_OBJ_FLAG_SCROLLABLE);
-
-    bar_row = lv_obj_create(bar);
-    lv_obj_set_width(bar_row, X4_RENDER_W - 16);
-    lv_obj_set_height(bar_row, LV_SIZE_CONTENT);
-    lv_obj_set_style_layout(bar_row, LV_LAYOUT_FLEX, LV_PART_MAIN);
-    lv_obj_set_style_flex_flow(bar_row, LV_FLEX_FLOW_ROW, LV_PART_MAIN);
-    lv_obj_set_style_flex_main_place(bar_row, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_PART_MAIN);
-    lv_obj_set_style_flex_cross_place(bar_row, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(bar_row, LV_OPA_TRANSP, LV_PART_MAIN);
-    lv_obj_set_style_border_width(bar_row, 0, LV_PART_MAIN);
-    lv_obj_remove_flag(bar_row, LV_OBJ_FLAG_SCROLLABLE);
-
-    s_bar_title = lv_label_create(bar_row);
-    lv_label_set_text(s_bar_title, "TuyaOpen + XTEInk X4 | Demo App Hardware Func Test");
-    lv_obj_set_style_text_color(s_bar_title, lv_color_hex(0x000000), LV_PART_MAIN);
-    __apply_title_font(s_bar_title);
-
-    s_bar_time = lv_label_create(bar_row);
-    lv_label_set_text(s_bar_time, "up 0 s");
-    lv_obj_set_style_text_color(s_bar_time, lv_color_hex(0x000000), LV_PART_MAIN);
-    __apply_body_font(s_bar_time);
-
-    // s_bar_sub = lv_label_create(bar);
-    // lv_label_set_text(s_bar_sub, "Keys -");
-    // lv_obj_set_width(s_bar_sub, X4_RENDER_W - 16);
-    // lv_obj_set_style_text_color(s_bar_sub, lv_color_hex(0x101010), LV_PART_MAIN);
-    // __apply_body_font(s_bar_sub);
-
-    mid = lv_obj_create(scr);
-    lv_obj_set_size(mid, X4_RENDER_W, X4_MID_H);
-    lv_obj_set_style_layout(mid, LV_LAYOUT_FLEX, LV_PART_MAIN);
-    lv_obj_set_style_flex_flow(mid, LV_FLEX_FLOW_COLUMN, LV_PART_MAIN);
-    lv_obj_set_style_pad_row(mid, X4_QUAD_GAP, LV_PART_MAIN);
-    lv_obj_set_style_pad_all(mid, 0, LV_PART_MAIN);
-    lv_obj_set_style_border_width(mid, 0, LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(mid, LV_OPA_TRANSP, LV_PART_MAIN);
-    lv_obj_remove_flag(mid, LV_OBJ_FLAG_SCROLLABLE);
-
-    row1 = lv_obj_create(mid);
-    lv_obj_set_size(row1, X4_RENDER_W, X4_QUAD_H);
-    lv_obj_set_style_layout(row1, LV_LAYOUT_FLEX, LV_PART_MAIN);
-    lv_obj_set_style_flex_flow(row1, LV_FLEX_FLOW_ROW, LV_PART_MAIN);
-    lv_obj_set_style_pad_column(row1, X4_QUAD_GAP, LV_PART_MAIN);
-    lv_obj_set_style_pad_all(row1, 0, LV_PART_MAIN);
-    lv_obj_set_style_border_width(row1, 0, LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(row1, LV_OPA_TRANSP, LV_PART_MAIN);
-    lv_obj_remove_flag(row1, LV_OBJ_FLAG_SCROLLABLE);
-
-    row2 = lv_obj_create(mid);
-    lv_obj_set_size(row2, X4_RENDER_W, X4_QUAD_H);
-    lv_obj_set_style_layout(row2, LV_LAYOUT_FLEX, LV_PART_MAIN);
-    lv_obj_set_style_flex_flow(row2, LV_FLEX_FLOW_ROW, LV_PART_MAIN);
-    lv_obj_set_style_pad_column(row2, X4_QUAD_GAP, LV_PART_MAIN);
-    lv_obj_set_style_pad_all(row2, 0, LV_PART_MAIN);
-    lv_obj_set_style_border_width(row2, 0, LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(row2, LV_OPA_TRANSP, LV_PART_MAIN);
-    lv_obj_remove_flag(row2, LV_OBJ_FLAG_SCROLLABLE);
-
-    q_tl = lv_obj_create(row1);
-    lv_obj_set_size(q_tl, X4_QUAD_W, X4_QUAD_H);
-    __style_quad_frame(q_tl);
-    lv_obj_set_style_layout(q_tl, LV_LAYOUT_FLEX, LV_PART_MAIN);
-    lv_obj_set_style_flex_flow(q_tl, LV_FLEX_FLOW_COLUMN, LV_PART_MAIN);
-    lv_obj_set_style_pad_row(q_tl, 4, LV_PART_MAIN);
-    (void)__quad_title(q_tl, "Power / battery");
-    s_q_bat = lv_label_create(q_tl);
-    lv_label_set_text(s_q_bat, "-");
-    lv_obj_set_style_text_color(s_q_bat, lv_color_hex(0x000000), LV_PART_MAIN);
-    __apply_body_font(s_q_bat);
-    lv_obj_set_width(s_q_bat, X4_QUAD_W - 16);
-
-    q_tr = lv_obj_create(row1);
-    lv_obj_set_size(q_tr, X4_QUAD_W, X4_QUAD_H);
-    __style_quad_frame(q_tr);
-    lv_obj_set_style_layout(q_tr, LV_LAYOUT_FLEX, LV_PART_MAIN);
-    lv_obj_set_style_flex_flow(q_tr, LV_FLEX_FLOW_COLUMN, LV_PART_MAIN);
-    lv_obj_set_style_pad_row(q_tr, 4, LV_PART_MAIN);
-    (void)__quad_title(q_tr, "microSD / FATFS");
-    s_q_sd = lv_label_create(q_tr);
-    lv_label_set_text(s_q_sd, "-");
-    lv_obj_set_style_text_color(s_q_sd, lv_color_hex(0x000000), LV_PART_MAIN);
-    __apply_body_font(s_q_sd);
-    lv_obj_set_width(s_q_sd, X4_QUAD_W - 16);
-
-    q_bl = lv_obj_create(row2);
-    lv_obj_set_size(q_bl, X4_QUAD_W, X4_QUAD_H);
-    __style_quad_frame(q_bl);
-    lv_obj_set_style_layout(q_bl, LV_LAYOUT_FLEX, LV_PART_MAIN);
-    lv_obj_set_style_flex_flow(q_bl, LV_FLEX_FLOW_COLUMN, LV_PART_MAIN);
-    lv_obj_set_style_pad_row(q_bl, 2, LV_PART_MAIN);
-    (void)__quad_title(q_bl, "Keys (ADC ladder)");
-
-    key_grid = lv_obj_create(q_bl);
-    lv_obj_remove_flag(key_grid, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_width(key_grid, X4_QUAD_W - 16);
-    lv_obj_set_style_layout(key_grid, LV_LAYOUT_FLEX, LV_PART_MAIN);
-    lv_obj_set_style_flex_flow(key_grid, LV_FLEX_FLOW_ROW_WRAP, LV_PART_MAIN);
-    lv_obj_set_style_pad_row(key_grid, 4, LV_PART_MAIN);
-    lv_obj_set_style_pad_column(key_grid, 4, LV_PART_MAIN);
-    lv_obj_set_style_pad_all(key_grid, 0, LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(key_grid, LV_OPA_TRANSP, LV_PART_MAIN);
-    lv_obj_set_style_border_width(key_grid, 0, LV_PART_MAIN);
 
     for (i = 0; i < 7; i++) {
-        char line[40];
-        snprintf(line, sizeof(line), "%u %s", (unsigned)i, key_names[i]);
-        s_key_lbl[i] = lv_label_create(key_grid);
-        lv_label_set_text(s_key_lbl[i], line);
-        lv_obj_set_width(s_key_lbl[i], (X4_QUAD_W - 28) / 2);
-        __apply_body_font(s_key_lbl[i]);
-        lv_obj_set_style_pad_ver(s_key_lbl[i], 2, LV_PART_MAIN);
-        lv_obj_set_style_pad_hor(s_key_lbl[i], 4, LV_PART_MAIN);
-        lv_obj_set_style_border_width(s_key_lbl[i], 1, LV_PART_MAIN);
-        lv_obj_set_style_border_color(s_key_lbl[i], lv_color_hex(0x000000), LV_PART_MAIN);
-    }
+        int32_t col = i % 2;
+        int32_t row = i / 2;
+        char    line[40];
+        BOOL_T  pressed = (0U != (st & (1U << (unsigned)i))) ? TRUE : FALSE;
 
-    q_br = lv_obj_create(row2);
-    lv_obj_set_size(q_br, X4_QUAD_W, X4_QUAD_H);
-    __style_quad_frame(q_br);
-    lv_obj_set_style_layout(q_br, LV_LAYOUT_FLEX, LV_PART_MAIN);
-    lv_obj_set_style_flex_flow(q_br, LV_FLEX_FLOW_COLUMN, LV_PART_MAIN);
-    lv_obj_set_style_pad_row(q_br, 4, LV_PART_MAIN);
-    (void)__quad_title(q_br, "EPD / SPI + about");
-    stripe_row = lv_obj_create(q_br);
-    lv_obj_remove_flag(stripe_row, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_size(stripe_row, X4_QUAD_W - 16, 56);
-    lv_obj_set_style_layout(stripe_row, LV_LAYOUT_FLEX, LV_PART_MAIN);
-    lv_obj_set_style_flex_flow(stripe_row, LV_FLEX_FLOW_ROW, LV_PART_MAIN);
-    lv_obj_set_style_flex_main_place(stripe_row, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_set_style_pad_column(stripe_row, 4, LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(stripe_row, LV_OPA_TRANSP, LV_PART_MAIN);
-    lv_obj_set_style_border_width(stripe_row, 0, LV_PART_MAIN);
+        snprintf(line, sizeof(line), "%u %s", (unsigned)i, key_names[i]);
+        __draw_key_chip(base_x + col * ((X4_QUAD_W - 28) / 2 + 4), base_y + row * 22, line, pressed);
+    }
+}
+
+/**
+ * @brief Draw full dashboard into framebuffer.
+ * @return none
+ */
+static void __build_dashboard(void)
+{
+    char line[288];
+    int32_t i;
+    int32_t bar_w;
+    uint8_t st0 = 0;
+
+    __sd_smoke_once();
+    x4_gfx_clear(&s_gfx, TRUE);
+
+    x4_gfx_fill_rect(&s_gfx, X4_ORIGIN_X, X4_ORIGIN_Y, X4_RENDER_W, X4_BAR_H, FALSE);
+    x4_gfx_fill_rect(&s_gfx, X4_ORIGIN_X + 2, X4_ORIGIN_Y + 2, X4_RENDER_W - 4, X4_BAR_H - 4, TRUE);
+    x4_gfx_draw_text_wrap(&s_gfx, X4_ORIGIN_X + 8, X4_ORIGIN_Y + 8, X4_RENDER_W - 160,
+                          "TuyaOpen + XTEInk X4 | Demo App Hardware Func Test", FALSE);
+    snprintf(line, sizeof(line), "up 0 s");
+    x4_gfx_draw_text(&s_gfx, X4_ORIGIN_X + X4_RENDER_W - 120, X4_ORIGIN_Y + 12, line, FALSE);
+
+    __draw_quad_frame(0, 0, "Power / battery");
+    __draw_quad_frame(X4_QUAD_W + X4_QUAD_GAP, 0, "microSD / FATFS");
+    __draw_quad_frame(0, X4_QUAD_H + X4_QUAD_GAP, "Keys (ADC ladder)");
+    __draw_quad_frame(X4_QUAD_W + X4_QUAD_GAP, X4_QUAD_H + X4_QUAD_GAP, "EPD / SPI + about");
+
+    x4_gfx_fill_rect(&s_gfx, X4_ORIGIN_X, X4_ORIGIN_Y + X4_RENDER_H - X4_FOOT_H, X4_RENDER_W, X4_FOOT_H, FALSE);
+    x4_gfx_fill_rect(&s_gfx, X4_ORIGIN_X + 2, X4_ORIGIN_Y + X4_RENDER_H - X4_FOOT_H + 2, X4_RENDER_W - 4,
+                     X4_FOOT_H - 4, TRUE);
+
     bar_w = (X4_QUAD_W - 40) / 10;
     if (bar_w < 8) {
         bar_w = 8;
     }
     for (i = 0; i < 10; i++) {
-        lv_obj_t *b = lv_obj_create(stripe_row);
-        lv_obj_set_size(b, bar_w, 44);
-        lv_obj_set_style_bg_color(b, lv_color_hex((i & 1) ? 0x000000 : 0xFFFFFF), LV_PART_MAIN);
-        lv_obj_set_style_border_width(b, 1, LV_PART_MAIN);
-        lv_obj_set_style_border_color(b, lv_color_hex(0x000000), LV_PART_MAIN);
-        lv_obj_remove_flag(b, LV_OBJ_FLAG_SCROLLABLE);
+        int32_t bx = X4_ORIGIN_X + X4_QUAD_W + X4_QUAD_GAP + 12 + i * (bar_w + 4);
+        int32_t by = X4_ORIGIN_Y + X4_BAR_H + X4_QUAD_H + X4_QUAD_GAP + 28;
+        BOOL_T  black = ((i & 1) != 0) ? TRUE : FALSE;
+
+        x4_gfx_fill_rect(&s_gfx, bx, by, bar_w, 44, black ? FALSE : TRUE);
+        x4_gfx_draw_rect(&s_gfx, bx, by, bar_w, 44, 1, FALSE);
     }
-    s_q_about = lv_label_create(q_br);
-    lv_label_set_text(s_q_about,
-                       "SSD1677 soft-SPI\n"
-                       "Built " __DATE__ "\n"
-                       "Long PWR 3s -> sleep");
-    lv_obj_set_style_text_color(s_q_about, lv_color_hex(0x000000), LV_PART_MAIN);
-    __apply_body_font(s_q_about);
-    lv_obj_set_width(s_q_about, X4_QUAD_W - 16);
-
-    foot = lv_obj_create(scr);
-    lv_obj_set_size(foot, X4_RENDER_W, X4_FOOT_H);
-    lv_obj_set_style_layout(foot, LV_LAYOUT_FLEX, LV_PART_MAIN);
-    lv_obj_set_style_flex_main_place(foot, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_set_style_flex_cross_place(foot, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_set_style_pad_hor(foot, 10, LV_PART_MAIN);
-    lv_obj_set_style_bg_color(foot, lv_color_hex(0xD0D0D0), LV_PART_MAIN);
-    lv_obj_set_style_border_width(foot, 0, LV_PART_MAIN);
-    lv_obj_remove_flag(foot, LV_OBJ_FLAG_SCROLLABLE);
-
-    s_foot_lbl = lv_label_create(foot);
-    lv_obj_set_width(s_foot_lbl, X4_RENDER_W - 24);
-    lv_label_set_long_mode(s_foot_lbl, LV_LABEL_LONG_WRAP);
-    lv_label_set_text_fmt(s_foot_lbl, "%s | %s", PLATFORM_BOARD, PROJECT_NAME);
-    lv_obj_set_style_text_color(s_foot_lbl, lv_color_hex(0x000000), LV_PART_MAIN);
-    __apply_body_font(s_foot_lbl);
 
     s_hub_slow_tick = 0U;
     __dashboard_refresh_slow();
     if (OPRT_OK == board_x4_buttons_get_state(&st0)) {
-        __dashboard_bar_keys(st0);
         __refresh_keys_quadrant(st0);
     }
-    lv_obj_invalidate(scr);
+    __mark_dirty();
 }
 
-static void __pwroff_begin_countdown(void)
+/**
+ * @brief Update slow-changing dashboard fields.
+ * @return none
+ */
+static void __dashboard_refresh_slow(void)
 {
-    lv_obj_t *scr;
-    lv_obj_t *lbl_title;
+    char        line[288];
+    char        sd_line[160];
+    uint32_t    mv   = 0;
+    uint8_t     pct  = 0;
+    OPERATE_RET rt   = OPRT_OK;
+    // bool        chg  = false;
+    SYS_TIME_T  now  = tal_system_get_millisecond();
+    uint32_t    up_s = (uint32_t)((now - s_boot_ms) / 1000U);
 
-    s_pwr_hold_ms      = 0U;
-    s_pwroff_cd        = 3;
-    s_pwroff_cd_ms_acc = 0U;
+    snprintf(line, sizeof(line), "up %lu s", (unsigned long)up_s);
+    x4_gfx_fill_rect(&s_gfx, X4_ORIGIN_X + X4_RENDER_W - 128, X4_ORIGIN_Y + 10, 120, 18, TRUE);
+    x4_gfx_draw_text(&s_gfx, X4_ORIGIN_X + X4_RENDER_W - 120, X4_ORIGIN_Y + 12, line, FALSE);
 
-    scr = lv_screen_active();
-    lv_obj_clean(scr);
-    __clear_screen_ptrs();
-    lv_obj_set_style_bg_color(scr, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-    lv_obj_remove_flag(scr, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_layout(scr, LV_LAYOUT_FLEX, LV_PART_MAIN);
-    lv_obj_set_style_flex_flow(scr, LV_FLEX_FLOW_COLUMN, LV_PART_MAIN);
-    lv_obj_set_style_flex_main_place(scr, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_set_style_flex_cross_place(scr, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_set_style_pad_row(scr, 16, LV_PART_MAIN);
-    __scr_pad_viewable(scr);
-
-    lbl_title = lv_label_create(scr);
-    lv_label_set_text(lbl_title, "Shutting down");
-    __apply_title_font(lbl_title);
-    lv_obj_set_style_text_align(lbl_title, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_set_style_text_color(lbl_title, lv_color_hex(0x000000), LV_PART_MAIN);
-    lv_obj_set_width(lbl_title, X4_RENDER_W - 32);
-
-    s_lbl_cd_num = lv_label_create(scr);
-    lv_label_set_text(s_lbl_cd_num, "3");
-#if LV_FONT_MONTSERRAT_36
-    lv_obj_set_style_text_font(s_lbl_cd_num, &lv_font_montserrat_36, LV_PART_MAIN);
-#elif LV_FONT_MONTSERRAT_24
-    lv_obj_set_style_text_font(s_lbl_cd_num, &lv_font_montserrat_24, LV_PART_MAIN);
-#endif
-    lv_obj_set_style_text_align(s_lbl_cd_num, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_set_style_text_color(s_lbl_cd_num, lv_color_hex(0x000000), LV_PART_MAIN);
-    lv_obj_set_width(s_lbl_cd_num, X4_RENDER_W - 32);
-
-    lv_obj_invalidate(scr);
-}
-
-static void __lvgl_pump(int iterations)
-{
-    int j;
-
-    for (j = 0; j < iterations; j++) {
-        lv_timer_handler();
-    }
-}
-
-static void __epd_sync_from_lvgl(void)
-{
-    __lvgl_pump(120);
-    s_epd_dirty = TRUE;
-    (void)board_x4_epd_display(s_epd_fb);
-    s_epd_dirty = FALSE;
-    __lvgl_pump(40);
-}
-
-static void __styled_powered_off(lv_obj_t *scr, lv_obj_t *main, lv_obj_t *sub, bool invert)
-{
-    if (invert) {
-        lv_obj_set_style_bg_color(scr, lv_color_hex(0x000000), LV_PART_MAIN);
-        lv_obj_set_style_text_color(main, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-        lv_obj_set_style_text_color(sub, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
+    rt = board_x4_battery_read(&mv, &pct);
+    if (OPRT_OK == rt) {
+        // (void)board_x4_charge_sense_get(&chg); /* triggers ESP-IDF GPIO[20] log spam */
+        snprintf(line, sizeof(line), "%u%%\n%lu mV", (unsigned)pct, (unsigned long)mv);
     } else {
-        lv_obj_set_style_bg_color(scr, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-        lv_obj_set_style_text_color(main, lv_color_hex(0x000000), LV_PART_MAIN);
-        lv_obj_set_style_text_color(sub, lv_color_hex(0x000000), LV_PART_MAIN);
+        snprintf(line, sizeof(line), "read err %d", rt);
     }
+    x4_gfx_fill_rect(&s_gfx, X4_ORIGIN_X + 6, X4_ORIGIN_Y + X4_BAR_H + 24, X4_QUAD_W - 12, X4_QUAD_H - 30, TRUE);
+    x4_gfx_draw_text_wrap(&s_gfx, X4_ORIGIN_X + 6, X4_ORIGIN_Y + X4_BAR_H + 24, X4_QUAD_W - 12, line, FALSE);
+
+    __format_sd_line(sd_line, sizeof(sd_line));
+    snprintf(line, sizeof(line), "%s\n%s", sd_line, s_sd_smoke_msg);
+    x4_gfx_fill_rect(&s_gfx, X4_ORIGIN_X + X4_QUAD_W + X4_QUAD_GAP + 6, X4_ORIGIN_Y + X4_BAR_H + 24, X4_QUAD_W - 12,
+                     X4_QUAD_H - 30, TRUE);
+    x4_gfx_draw_text_wrap(&s_gfx, X4_ORIGIN_X + X4_QUAD_W + X4_QUAD_GAP + 6, X4_ORIGIN_Y + X4_BAR_H + 24,
+                          X4_QUAD_W - 12, line, FALSE);
+
+    snprintf(line, sizeof(line), "SSD1677 soft-SPI\nBuilt " __DATE__ "\nLong PWR 3s -> sleep");
+    x4_gfx_fill_rect(&s_gfx, X4_ORIGIN_X + X4_QUAD_W + X4_QUAD_GAP + 6,
+                     X4_ORIGIN_Y + X4_BAR_H + X4_QUAD_H + X4_QUAD_GAP + 80, X4_QUAD_W - 12, 56, TRUE);
+    x4_gfx_draw_text_wrap(&s_gfx, X4_ORIGIN_X + X4_QUAD_W + X4_QUAD_GAP + 6,
+                          X4_ORIGIN_Y + X4_BAR_H + X4_QUAD_H + X4_QUAD_GAP + 80, X4_QUAD_W - 12, line, FALSE);
+
+    snprintf(line, sizeof(line), "%s | %s | %s", PLATFORM_BOARD, PROJECT_NAME, s_cloud_status);
+    x4_gfx_fill_rect(&s_gfx, X4_ORIGIN_X + 8, X4_ORIGIN_Y + X4_RENDER_H - X4_FOOT_H + 8, X4_RENDER_W - 16,
+                     X4_FOOT_H - 16, TRUE);
+    x4_gfx_draw_text_wrap(&s_gfx, X4_ORIGIN_X + 10, X4_ORIGIN_Y + X4_RENDER_H - X4_FOOT_H + 12, X4_RENDER_W - 20,
+                          line, FALSE);
+    __mark_dirty();
 }
 
-static void __flash_powered_off_screen(lv_obj_t *scr, lv_obj_t *lbl_main, lv_obj_t *lbl_sub)
+/**
+ * @brief Draw deep-sleep power-off screen.
+ * @param[in] invert invert colors
+ * @return none
+ */
+static void __draw_power_off_screen(BOOL_T invert)
 {
-    uint32_t pass;
-
-    __styled_powered_off(scr, lbl_main, lbl_sub, false);
-    lv_obj_invalidate(scr);
-    __lvgl_pump(80);
-    __epd_sync_from_lvgl();
-
-    for (pass = 0U; pass < X4_PWR_OFF_FLASH_UPDATES; pass++) {
-        bool invert = (((unsigned)pass + 1U) & 1U) != 0U;
-
-        __styled_powered_off(scr, lbl_main, lbl_sub, invert);
-        lv_obj_invalidate(scr);
-        __epd_sync_from_lvgl();
-        tal_system_sleep(X4_PWR_OFF_FLASH_PAUSE_MS);
+    x4_gfx_clear(&s_gfx, invert ? FALSE : TRUE);
+    if (invert) {
+        x4_gfx_draw_text(&s_gfx, X4_ORIGIN_X + 280, X4_ORIGIN_Y + X4_RENDER_H / 2 - 24, "DEEP SLEEP", TRUE);
+        x4_gfx_draw_text_wrap(&s_gfx, X4_ORIGIN_X + 80, X4_ORIGIN_Y + X4_RENDER_H / 2 + 8, X4_RENDER_W - 160,
+                              "Hold PWR 3s after wake to run.\nRelease sooner to stay asleep.", TRUE);
+    } else {
+        x4_gfx_draw_text(&s_gfx, X4_ORIGIN_X + 280, X4_ORIGIN_Y + X4_RENDER_H / 2 - 24, "DEEP SLEEP", FALSE);
+        x4_gfx_draw_text_wrap(&s_gfx, X4_ORIGIN_X + 80, X4_ORIGIN_Y + X4_RENDER_H / 2 + 8, X4_RENDER_W - 160,
+                              "Hold PWR 3s after wake to run.\nRelease sooner to stay asleep.", FALSE);
     }
-
-    __styled_powered_off(scr, lbl_main, lbl_sub, false);
-    lv_obj_invalidate(scr);
-    __epd_sync_from_lvgl();
+    __mark_dirty();
 }
 
+/**
+ * @brief Flash power-off screen then enter deep sleep.
+ * @return none
+ */
 static void __user_power_off_sequence(void)
 {
-    lv_obj_t *scr;
-    lv_obj_t *lbl_main;
-    lv_obj_t *lbl_sub;
+    uint32_t pass;
 
     if (s_power_off_started) {
         return;
     }
     s_power_off_started = TRUE;
-    s_pwroff_cd         = -1;
-    s_pwroff_cd_ms_acc  = 0U;
-    s_lbl_cd_num        = NULL;
 
-    if (NULL != s_status_timer) {
-        lv_timer_delete(s_status_timer);
-        s_status_timer = NULL;
+    __draw_power_off_screen(FALSE);
+    __epd_push_if_dirty(FALSE);
+
+    for (pass = 0U; pass < X4_PWR_OFF_FLASH_UPDATES; pass++) {
+        BOOL_T invert = (((unsigned)pass + 1U) & 1U) != 0U;
+
+        __draw_power_off_screen(invert);
+        __epd_push_if_dirty(FALSE);
+        tal_system_sleep(X4_PWR_OFF_FLASH_PAUSE_MS);
     }
 
-    scr = lv_screen_active();
-    lv_obj_clean(scr);
-    __clear_screen_ptrs();
-    lv_obj_set_style_bg_color(scr, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-    lv_obj_remove_flag(scr, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_layout(scr, LV_LAYOUT_FLEX, LV_PART_MAIN);
-    lv_obj_set_style_flex_flow(scr, LV_FLEX_FLOW_COLUMN, LV_PART_MAIN);
-    lv_obj_set_style_flex_main_place(scr, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_set_style_flex_cross_place(scr, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_set_style_pad_row(scr, 16, LV_PART_MAIN);
-    __scr_pad_viewable(scr);
-
-    lbl_main = lv_label_create(scr);
-    lv_label_set_text(lbl_main, "DEEP SLEEP");
-    __apply_title_font(lbl_main);
-    lv_obj_set_style_text_align(lbl_main, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_set_width(lbl_main, X4_RENDER_W - 32);
-    lv_label_set_long_mode(lbl_main, LV_LABEL_LONG_WRAP);
-
-    lbl_sub = lv_label_create(scr);
-    lv_label_set_text(lbl_sub, "Hold PWR 3s after wake to run.\nRelease sooner to stay asleep.");
-    __apply_body_font(lbl_sub);
-    lv_obj_set_style_text_align(lbl_sub, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_set_width(lbl_sub, X4_RENDER_W - 48);
-    lv_label_set_long_mode(lbl_sub, LV_LABEL_LONG_WRAP);
-
-    lv_obj_invalidate(scr);
-    __flash_powered_off_screen(scr, lbl_main, lbl_sub);
-
-    __lvgl_pump(60);
-    s_epd_dirty = TRUE;
-    (void)board_x4_epd_display_full_refresh(s_epd_fb);
-    s_epd_dirty = FALSE;
+    __draw_power_off_screen(FALSE);
+    __epd_push_if_dirty(TRUE);
     tal_system_sleep(400);
 
     if (s_sd_mounted) {
@@ -902,22 +525,17 @@ static void __user_power_off_sequence(void)
     (void)board_x4_power_shutdown();
 }
 
-static void __status_timer_cb(lv_timer_t *t)
+/**
+ * @brief Poll buttons and refresh dashboard regions.
+ * @return none
+ */
+static void __poll_input(void)
 {
     OPERATE_RET rt_btn = OPRT_OK;
     uint8_t     st     = 0;
-    uint32_t    period_ms;
 
     if (s_power_off_started) {
         return;
-    }
-
-    (void)t;
-    period_ms = X4_INPUT_POLL_MS;
-
-    if (s_pwroff_cd >= 0) {
-        s_pwroff_cd = -1;
-        s_lbl_cd_num = NULL;
     }
 
     rt_btn = board_x4_buttons_get_state(&st);
@@ -929,7 +547,7 @@ static void __status_timer_cb(lv_timer_t *t)
     }
 
     if (0U != (st & X4_BTN_POWER)) {
-        s_pwr_hold_ms += period_ms;
+        s_pwr_hold_ms += X4_INPUT_POLL_MS;
     } else {
         s_pwr_hold_ms = 0U;
     }
@@ -938,7 +556,6 @@ static void __status_timer_cb(lv_timer_t *t)
         return;
     }
 
-    __dashboard_bar_keys(st);
     __refresh_keys_quadrant(st);
     s_hub_slow_tick++;
     if (s_hub_slow_tick >= X4_HUB_SLOW_N) {
@@ -947,27 +564,97 @@ static void __status_timer_cb(lv_timer_t *t)
     }
 }
 
-static void __switch_timer_cb(lv_timer_t *t)
+/**
+ * @brief Display thread: board bring-up, boot patterns, dashboard loop.
+ * @param[in] arg unused
+ * @return none
+ */
+static void __display_thread(void *arg)
 {
-    (void)t;
-    __build_dashboard();
-    s_hub_slow_tick = 0U;
-    s_status_timer  = lv_timer_create(__status_timer_cb, X4_INPUT_POLL_MS, NULL);
-}
+    uint32_t    last_poll_ms = 0;
+    uint32_t    last_push_ms = 0;
+    OPERATE_RET rt           = OPRT_OK;
 
-static void __lvgl_thread(void *arg)
-{
-    SYS_TIME_T last_ms = tal_system_get_millisecond();
     (void)arg;
 
-    for (;;) {
-        SYS_TIME_T now = tal_system_get_millisecond();
-        if (now >= last_ms) {
-            lv_tick_inc((uint32_t)(now - last_ms));
+    PR_NOTICE("xteink_x4_display thread start (lightweight gfx)");
+
+    (void)memset(s_epd_fb, 0xFF, sizeof(s_epd_fb));
+    x4_gfx_init(&s_gfx, s_epd_fb, X4_EPD_W, X4_EPD_H);
+    s_epd_dirty         = FALSE;
+    s_boot_ms           = tal_system_get_millisecond();
+    s_pwr_hold_ms       = 0U;
+    s_power_off_started = FALSE;
+    s_hub_slow_tick     = 0U;
+
+    TUYA_CALL_ERR_LOG(board_register_hardware());
+    if (OPRT_OK != rt) {
+        PR_ERR("X4 display: board_register_hardware failed, UI disabled");
+        __signal_display_ready();
+        return;
+    }
+#if !XTEINK_X4_ENABLE_CLOUD
+    {
+        X4_WAKEUP_CLASS_E cls;
+
+        if (OPRT_OK == board_x4_sleep_classify_wakeup(&cls)) {
+            if (X4_WAKEUP_CLASS_AFTER_USB_POWER == cls) {
+                PR_NOTICE("X4: wake classified as USB power boot -> deep sleep (CrossPoint policy)");
+                (void)board_x4_power_shutdown();
+            } else if (X4_WAKEUP_CLASS_POWER_BUTTON == cls) {
+                rt = board_x4_power_verify_gpio_wake((uint32_t)X4_PWR_HOLD_MS, FALSE);
+                TUYA_CALL_ERR_LOG(rt);
+            }
         }
-        last_ms = now;
-        lv_timer_handler();
-        tal_system_sleep(2);
+    }
+#endif
+#if !XTEINK_X4_ENABLE_CLOUD
+    __mount_sd_if_possible();
+
+    __build_splash_screen();
+    __epd_push_if_dirty(TRUE);
+    tal_system_sleep((uint32_t)X4_SPLASH_HOLD_MS);
+
+    __draw_checker_screen();
+    __epd_push_if_dirty(TRUE);
+    tal_system_sleep(400);
+
+    __fill_gray16_pattern_fb();
+    __epd_push_if_dirty(TRUE);
+    tal_system_sleep((uint32_t)X4_GRAY16_HOLD_MS);
+
+    __fill_fb_bullseye();
+    __epd_push_if_dirty(TRUE);
+    tal_system_sleep((uint32_t)X4_BULLSEYE_HOLD_MS);
+#else
+    /* Cloud: splash first so main thread can start WiFi/BLE after first frame. */
+    __build_splash_screen();
+    __epd_push_if_dirty(TRUE);
+    __signal_display_ready();
+    tal_system_sleep(600);
+#endif
+
+    __build_dashboard();
+    __epd_push_if_dirty(FALSE);
+#if XTEINK_X4_ENABLE_CLOUD
+    __signal_display_ready();
+#endif
+
+    last_poll_ms = tal_system_get_millisecond();
+    last_push_ms = last_poll_ms;
+
+    for (;;) {
+        uint32_t now = tal_system_get_millisecond();
+
+        if ((now - last_poll_ms) >= X4_INPUT_POLL_MS) {
+            last_poll_ms = now;
+            __poll_input();
+        }
+        if ((now - last_push_ms) >= X4_EPD_PUSH_MS) {
+            last_push_ms = now;
+            __epd_push_if_dirty(FALSE);
+        }
+        tal_system_sleep(5);
     }
 }
 
@@ -984,111 +671,47 @@ void xteink_x4_display_set_cloud_status(const char *status)
     snprintf(s_cloud_status, sizeof(s_cloud_status), "%s", status);
 }
 
-static void __display_thread(void *arg)
+/**
+ * @brief Block until EPD hardware init and first splash frame are done.
+ * @param[in] timeout_ms Max wait in milliseconds (0 = poll only)
+ * @return OPRT_OK when ready, OPRT_TIMEOUT on timeout, OPRT_COM_ERROR if display not started
+ */
+OPERATE_RET xteink_x4_display_wait_ready(uint32_t timeout_ms)
 {
-    static uint8_t lv_buf[X4_LV_BUF_BYTES];
-    lv_timer_t    *t_epd;
-    lv_timer_t    *t_switch;
-    OPERATE_RET    rt = OPRT_OK;
-    int            i;
-
-    (void)arg;
-
-    PR_NOTICE("xteink_x4_display thread start");
-
-    (void)memset(s_epd_fb, 0xFF, sizeof(s_epd_fb));
-    s_epd_dirty         = FALSE;
-    s_boot_ms           = tal_system_get_millisecond();
-    s_status_timer      = NULL;
-    s_hub_slow_tick     = 0U;
-    s_pwr_hold_ms       = 0U;
-    s_power_off_started = FALSE;
-    s_pwroff_cd         = -1;
-    s_pwroff_cd_ms_acc  = 0U;
-    s_lbl_cd_num        = NULL;
-    TUYA_CALL_ERR_LOG(board_register_hardware());
-    {
-        X4_WAKEUP_CLASS_E cls;
-
-        if (OPRT_OK == board_x4_sleep_classify_wakeup(&cls)) {
-            if (X4_WAKEUP_CLASS_AFTER_USB_POWER == cls) {
-                PR_NOTICE("X4: wake classified as USB power boot -> deep sleep (CrossPoint policy)");
-                (void)board_x4_power_shutdown();
-            } else if (X4_WAKEUP_CLASS_POWER_BUTTON == cls) {
-                rt = board_x4_power_verify_gpio_wake((uint32_t)X4_PWR_HOLD_MS, FALSE);
-                TUYA_CALL_ERR_LOG(rt);
-            }
-        }
+    if (TRUE == s_display_ready) {
+        return OPRT_OK;
     }
-    __mount_sd_if_possible();
-
-    lv_init();
-
-    s_disp = lv_display_create(X4_EPD_W, X4_EPD_H);
-    lv_display_set_default(s_disp);
-    lv_display_set_color_format(s_disp, LV_COLOR_FORMAT_RGB565);
-    lv_display_set_buffers(s_disp, lv_buf, NULL, (uint32_t)sizeof(lv_buf), LV_DISPLAY_RENDER_MODE_PARTIAL);
-    lv_display_set_flush_cb(s_disp, __x4_flush_cb);
-
-    t_epd = lv_timer_create(__epd_push_timer_cb, X4_EPD_PUSH_MS, NULL);
-    (void)t_epd;
-
-    __build_splash_screen();
-    for (i = 0; i < 80; i++) {
-        lv_timer_handler();
+    if (s_display_thread == NULL) {
+        return OPRT_COM_ERROR;
     }
-    (void)board_x4_epd_display_full_refresh(s_epd_fb);
-    s_epd_dirty = FALSE;
-    tal_system_sleep((uint32_t)X4_SPLASH_HOLD_MS);
-
-    __build_checker_screen();
-    for (i = 0; i < 24; i++) {
-        lv_timer_handler();
+    if (0U == timeout_ms) {
+        return OPRT_TIMEOUT;
     }
-    (void)board_x4_epd_display_full_refresh(s_epd_fb);
-    s_epd_dirty = FALSE;
-    tal_system_sleep(400);
-
-    __fill_gray16_pattern_fb();
-    (void)board_x4_epd_display_full_refresh(s_epd_fb);
-    s_epd_dirty = FALSE;
-    tal_system_sleep((uint32_t)X4_GRAY16_HOLD_MS);
-
-    __fill_fb_bullseye();
-    (void)board_x4_epd_display_full_refresh(s_epd_fb);
-    s_epd_dirty = FALSE;
-    tal_system_sleep((uint32_t)X4_BULLSEYE_HOLD_MS);
-
-    t_switch = lv_timer_create(__switch_timer_cb, 1, NULL);
-    lv_timer_set_repeat_count(t_switch, 1);
-
-    {
-        THREAD_CFG_T cfg = {0};
-        static char  lvgl_thread_name[] = "lvgl_x4";
-
-        cfg.stackDepth = 1024 * 10;
-        cfg.priority   = THREAD_PRIO_1;
-        cfg.thrdname   = lvgl_thread_name;
-        TUYA_CALL_ERR_LOG(tal_thread_create_and_start(&s_lvgl_thread, NULL, NULL, __lvgl_thread, NULL, &cfg));
+    if (s_display_ready_sem == NULL) {
+        return OPRT_COM_ERROR;
     }
+    return tal_semaphore_wait(s_display_ready_sem, timeout_ms);
 }
 
-static THREAD_HANDLE s_display_thread = NULL;
-
 /**
- * @brief Start LVGL + EPD UI in a background thread.
+ * @brief Start lightweight EPD UI in a background thread.
  * @return OPRT_OK on success
  */
 OPERATE_RET xteink_x4_display_start(void)
 {
     THREAD_CFG_T cfg = {0};
     static char  display_thread_name[] = "x4_display";
+    OPERATE_RET  rt = OPRT_OK;
 
     if (s_display_thread != NULL) {
         return OPRT_OK;
     }
 
-    cfg.stackDepth = 1024 * 12;
+    if (s_display_ready_sem == NULL) {
+        TUYA_CALL_ERR_RETURN(tal_semaphore_create_init(&s_display_ready_sem, 0, 1));
+    }
+
+    cfg.stackDepth = 1024 * 6;
     cfg.priority   = THREAD_PRIO_2;
     cfg.thrdname   = display_thread_name;
 

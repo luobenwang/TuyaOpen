@@ -57,8 +57,6 @@
 
 static BOOL_T              s_epd_inited   = FALSE;
 static BOOL_T              s_is_screen_on = FALSE;
-static BOOL_T              s_prev_valid   = FALSE;
-static uint8_t             s_prev_frame[X4_EPD_BUF_SIZE];
 static spi_device_handle_t s_epd_spi;
 
 /**
@@ -390,8 +388,6 @@ OPERATE_RET xteink_x4_epd_init(void)
         return OPRT_OK;
     }
 
-    (void)memset(s_prev_frame, 0xFF, sizeof(s_prev_frame));
-    s_prev_valid   = FALSE;
     s_is_screen_on = FALSE;
 
     TUYA_CALL_ERR_RETURN(__bus_init());
@@ -426,31 +422,18 @@ OPERATE_RET xteink_x4_epd_clear(void)
     }
 
     TUYA_CALL_ERR_RETURN(__refresh(true));
-    (void)memset(s_prev_frame, 0xFF, sizeof(s_prev_frame));
-    s_prev_valid = TRUE;
 
     return OPRT_OK;
 }
 
+/**
+ * @brief Display one frame. Always full refresh to avoid a second ~48KB prev buffer on ESP32-C3.
+ * @param[in] image 1bpp framebuffer
+ * @return OPRT_OK on success
+ */
 OPERATE_RET xteink_x4_epd_display(uint8_t *image)
 {
-    OPERATE_RET rt           = OPRT_OK;
-    bool        full_refresh = false;
-
-    if (!s_epd_inited || NULL == image) {
-        return OPRT_COM_ERROR;
-    }
-
-    full_refresh = (s_prev_valid == FALSE);
-    TUYA_CALL_ERR_RETURN(__set_ram_area(0, 0, X4_EPD_WIDTH, X4_EPD_HEIGHT));
-    TUYA_CALL_ERR_RETURN(__write_ram_buffer(CMD_WRITE_RAM_BW, image));
-    TUYA_CALL_ERR_RETURN(__write_ram_buffer(CMD_WRITE_RAM_RED, full_refresh ? image : s_prev_frame));
-    TUYA_CALL_ERR_RETURN(__refresh(full_refresh));
-
-    (void)memcpy(s_prev_frame, image, sizeof(s_prev_frame));
-    s_prev_valid = TRUE;
-
-    return OPRT_OK;
+    return xteink_x4_epd_display_full_refresh(image);
 }
 
 OPERATE_RET xteink_x4_epd_display_full_refresh(uint8_t *image)
@@ -465,9 +448,6 @@ OPERATE_RET xteink_x4_epd_display_full_refresh(uint8_t *image)
     TUYA_CALL_ERR_RETURN(__write_ram_buffer(CMD_WRITE_RAM_BW, image));
     TUYA_CALL_ERR_RETURN(__write_ram_buffer(CMD_WRITE_RAM_RED, image));
     TUYA_CALL_ERR_RETURN(__refresh(true));
-
-    (void)memcpy(s_prev_frame, image, sizeof(s_prev_frame));
-    s_prev_valid = TRUE;
 
     return OPRT_OK;
 }

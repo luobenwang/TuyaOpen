@@ -54,8 +54,8 @@
 /**
  * @brief Feature switches — edit 0/1 here, then rebuild (`tos.py build`).
  *        At least one must be 1.
- * @note Display=1 needs LVGL enabled in app_default.config
- *       (cp config/XTEINK_X4.config app_default.config).
+ * @note Display=1 uses lightweight 1bpp gfx (no LVGL). Copy
+ *       config/XTEINK_X4.config -> app_default.config for display+cloud.
  *       Cloud-only: DISPLAY=0 + XTEINK_X4_cloud_only.config.
  */
 #define XTEINK_X4_ENABLE_CLOUD   1
